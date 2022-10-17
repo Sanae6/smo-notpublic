@@ -2,31 +2,34 @@
 #include "patches.hpp"
 #include "nn/err.h"
 #include "logger/Logger.hpp"
-#include "fs.h"
 
+#include "nn/hid.h"
+#include "nn/fs.h"
+#include <typeinfo>
 #include <basis/seadRawPrint.h>
 #include <prim/seadSafeString.h>
 #include <resource/seadResourceMgr.h>
 #include <filedevice/nin/seadNinSDFileDeviceNin.h>
 #include <filedevice/seadFileDeviceMgr.h>
 #include <filedevice/seadPath.h>
-#include <resource/seadArchiveRes.h>
+#include <resource/seadSharcArchiveRes.h>
 #include <framework/seadFramework.h>
 #include <heap/seadHeapMgr.h>
 #include <heap/seadExpHeap.h>
 #include <devenv/seadDebugFontMgrNvn.h>
 #include <gfx/seadTextWriter.h>
-#include <gfx/seadViewport.h>
 
-#include "al/util.hpp"
+#include <gfx/seadViewport.h>
 #include "game/StageScene/StageScene.h"
 #include "game/System/GameSystem.h"
 #include "game/System/Application.h"
 #include "game/HakoniwaSequence/HakoniwaSequence.h"
-#include "rs/util.hpp"
 
-#include "al/util.hpp"
+#include "agl/detail/PrivateResource.h"
+#include "agl/utl.h"
 #include "al/fs/FileLoader.h"
+#include "al/util.hpp"
+#include "rs/util.hpp"
 
 static const char *DBG_FONT_PATH   = "DebugData/Font/nvn_font_jis1.ntx";
 static const char *DBG_SHADER_PATH = "DebugData/Font/nvn_font_shader_jis1.bin";
@@ -112,6 +115,7 @@ HOOK_DEFINE_TRAMPOLINE(DisableUserExceptionHandler) {
             {
                 Logger::log("my nuts! %p\n", CpuRegister.x);
             }
+
         }, exceptionStack, sizeof(exceptionStack), &exceptionInfo);
 
     }
@@ -128,7 +132,7 @@ HOOK_DEFINE_REPLACE(ReplaceSeadPrint) {
 
 HOOK_DEFINE_TRAMPOLINE(CreateFileDeviceMgr) {
     static void Callback(sead::FileDeviceMgr *thisPtr) {
-        
+
         Orig(thisPtr);
 
         thisPtr->mMountedSd = nn::fs::MountSdCardForDebug("sd").isSuccess();
@@ -149,7 +153,7 @@ HOOK_DEFINE_TRAMPOLINE(RedirectFileDevice) {
 
         if (!sead::Path::getDriveName(&driveName, path))
         {
-            
+
             device = thisPtr->findDevice("sd");
 
             if(!(device && device->isExistFile(path))) {
@@ -165,7 +169,7 @@ HOOK_DEFINE_TRAMPOLINE(RedirectFileDevice) {
             }else {
                 Logger::log("Found Replacement File on SD! Path: %s\n", path.cstr());
             }
-            
+
         }
         else
             device = thisPtr->findDevice(driveName);
@@ -183,7 +187,7 @@ HOOK_DEFINE_TRAMPOLINE(RedirectFileDevice) {
 HOOK_DEFINE_TRAMPOLINE(FileLoaderLoadArc) {
     static sead::ArchiveRes *Callback(al::FileLoader *thisPtr, sead::SafeString &path, const char *ext, sead::FileDevice *device) {
 
-        Logger::log("Path: %s\n", path.cstr());
+//        Logger::log("Path: %s\n", path.cstr());
 
         sead::FileDevice* sdFileDevice = sead::FileDeviceMgr::instance()->findDevice("sd");
 
@@ -241,18 +245,31 @@ HOOK_DEFINE_TRAMPOLINE(GameSystemInit) {
 };
 
 HOOK_DEFINE_TRAMPOLINE(DrawDebugMenu) {
-    static void Callback(HakoniwaSequence *thisPtr) { 
-
+    static void Callback(HakoniwaSequence *thisPtr) {
         Orig(thisPtr);
-        
+
         gTextWriter->beginDraw();
 
         gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, 10.f));
-        gTextWriter->printf("FPS: %d\n", static_cast<int>(round(Application::instance()->mFramework->calcFps())));
+//        nn::hid::MouseState state{};
+//        nn::hid::GetMouseState(&state);
+        gTextWriter->printf("FPS: %d\n", static_cast<int>(std::round(Application::instance()->mFramework->calcFps())));
+
+        al::GameDrawInfo* drawInfo = Application::instance()->mDrawInfo;
+
+        agl::DrawContext *context = drawInfo->mDrawContext;
+
+//        agl::utl::DevTools::beginDrawImm(context, sead::Matrix34<float>::ident,
+//                                         sead::Matrix44<float>::ident);
+//        sead::Vector2f screenSize = sead::Vector2f(1280.0f, 720.0f) / 2.0f;
+//        agl::utl::DevTools::drawCursor(context, screenSize, sead::Vector2f(((float)state.x - screenSize.x) / screenSize.x, ((float)-state.y + screenSize.y) / screenSize.y), 0.5f);
 
         gTextWriter->endDraw();
+//        drawBackground(context);
     }
 };
+
+void fpsInit();
 
 extern "C" void exl_main(void* x0, void* x1) {
     /* Setup hooking enviroment. */
@@ -281,7 +298,7 @@ extern "C" void exl_main(void* x0, void* x1) {
     DrawDebugMenu::InstallAtOffset(0x50F1D8);
 
     ControlHook::InstallAtSymbol("_ZN10StageScene7controlEv");
-
+    fpsInit();
 }
 
 extern "C" NORETURN void exl_exception_entry() {
