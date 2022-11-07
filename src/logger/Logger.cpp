@@ -26,10 +26,10 @@ nn::Result Logger::init(const char *ip, u16 port) {
 
     while (nn::nifm::IsNetworkRequestOnHold()) { }
 
-    if (!nn::nifm::IsNetworkAvailable()) {
-        mState = LoggerState::UNAVAILABLE;
-        return -1;
-    }
+//    if (!nn::nifm::IsNetworkAvailable()) {
+//        mState = LoggerState::UNAVAILABLE;
+//        return -1;
+//    }
 
     if ((mSocketFd = nn::socket::Socket(2, 1, 0)) < 0) {
         mState = LoggerState::UNAVAILABLE;

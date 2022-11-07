@@ -30,9 +30,9 @@
 #include <cstring>
 #include <stdlib.h>
 
+#include "logger/Logger.hpp"
 #include "nx_hook.hpp"
 #include "util/sys/rw_pages.hpp"
-
 
 #define __attribute __attribute__
 #define aligned(x) __aligned__(x)
@@ -54,7 +54,7 @@ namespace exl::hook::nx64 {
 
         // Hooking constants
         constexpr s64 MaxInstructions = 5;
-        constexpr u64 HookMax = 10;
+        constexpr u64 HookMax = 50;
         constexpr size_t TrampolineSize = MaxInstructions * 10;
         constexpr u64 MaxReferences = MaxInstructions * 2;
         constexpr u32 Aarch64Nop = 0xd503201f;
@@ -547,9 +547,10 @@ Result AllocForTrampoline(uint32_t** rx, uint32_t** rw) {
     static volatile s32 index = -1;
 
     uint32_t i = __atomic_increase(&index);
-    
-    if(i > HookMax)
+
+    if(i > HookMax) {
         return result::HookTrampolineAllocFail;
+    }
 
     HookPool* rwptr = (HookPool*)s_HookJit.rw_addr;
     HookPool* rxptr = (HookPool*)s_HookJit.rx_addr;

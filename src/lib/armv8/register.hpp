@@ -25,7 +25,9 @@ namespace exl::armv8::reg {
 
     #define REG(I)                                          \
         constexpr inline Register W##I(RegisterKind::W, I); \
-        constexpr inline Register X##I(RegisterKind::X, I);
+        constexpr inline Register X##I(RegisterKind::X, I); \
+        constexpr inline Register S##I(RegisterKind::W, I); \
+        constexpr inline Register D##I(RegisterKind::X, I);
 
     REG(0); REG(1); REG(2); REG(3); REG(4); REG(5); REG(6); REG(7); REG(8); REG(9); 
     REG(10);REG(11);REG(12);REG(13);REG(14);REG(15);REG(16);REG(17);REG(18);REG(19);

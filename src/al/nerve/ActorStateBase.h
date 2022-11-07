@@ -8,6 +8,7 @@ namespace al {
     public:
         ActorStateBase(const char*, al::LiveActor*);
 
+        LiveActor* getHost() const { return mLiveActor; }
     protected:
         LiveActor* mLiveActor;
     };

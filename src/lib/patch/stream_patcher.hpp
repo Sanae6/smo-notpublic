@@ -1,7 +1,8 @@
 #pragma once
 
-#include "patcher_impl.hpp"
 #include "armv8.hpp"
+#include "patcher_impl.hpp"
+#include "ro.h"
 
 namespace exl::patch {
     
@@ -67,6 +68,13 @@ namespace exl::patch {
             m_Current = address;
         }
 
+        /* Address relative to a symbol (Ro). */
+        inline void Seek(const char* name, ptrdiff_t rel) {
+            uintptr_t address = 0;
+            R_ABORT_UNLESS(nn::ro::LookupSymbol(&address, name));
+
+            Seek((void*)(address + rel));
+        }
         /* Address relative to the base (Ro). */
         inline void Seek(uintptr_t address) {
             SeekRel(RelativeAddressFromBase(address));

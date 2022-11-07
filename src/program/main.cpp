@@ -121,7 +121,7 @@ HOOK_DEFINE_TRAMPOLINE(DisableUserExceptionHandler) {
     }
 };
 
-HOOK_DEFINE_REPLACE(ReplaceSeadPrint) {
+HOOK_DEFINE_REPLACE(ReplacePrint){
     static void Callback(const char* format, ...) {
         va_list args;
         va_start(args, format);
@@ -244,21 +244,53 @@ HOOK_DEFINE_TRAMPOLINE(GameSystemInit) {
     }
 };
 
+extern nn::hid::KeyboardState keyboardState;
+extern nn::hid::MouseState mouseState;
+
 HOOK_DEFINE_TRAMPOLINE(DrawDebugMenu) {
     static void Callback(HakoniwaSequence *thisPtr) {
         Orig(thisPtr);
 
+        return;
+
         gTextWriter->beginDraw();
 
         gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, 10.f));
-//        nn::hid::MouseState state{};
-//        nn::hid::GetMouseState(&state);
         gTextWriter->printf("FPS: %d\n", static_cast<int>(std::round(Application::instance()->mFramework->calcFps())));
+
 
         al::GameDrawInfo* drawInfo = Application::instance()->mDrawInfo;
 
-        agl::DrawContext *context = drawInfo->mDrawContext;
+        gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, 100.f));
+        gTextWriter->printf(
+            "Keys: %s, %s, %s, %s, %s, %d\n",
+            BTOC(keyboardState.isKeyDown(nn::hid::KeyboardKey::W)),
+            BTOC(keyboardState.isKeyDown(nn::hid::KeyboardKey::A)),
+            BTOC(keyboardState.isKeyDown(nn::hid::KeyboardKey::S)),
+            BTOC(keyboardState.isKeyDown(nn::hid::KeyboardKey::D)),
+            BTOC(keyboardState.isKeyDown(nn::hid::KeyboardKey::Space)),
+            keyboardState.modifiers
+        );
+        gTextWriter->printf(
+            "Keys: %x\n"
+            "Keys pressed: ",
+            mouseState.buttons
+        );
+        bool showComma = false;
+        for (int i = 0; i < 256; i++) {
+            if (!keyboardState.isKeyDown(static_cast<nn::hid::KeyboardKey>(i))) continue;
+            if (showComma) {
+                gTextWriter->printf(", ");
+            }
+            showComma = true;
+            const int sb = nn::util::BitFlagSet<256, nn::hid::KeyboardKey>::storageBits;
+            gTextWriter->printf("%d-%d-%llx", i, i / sb, (1ull << i % sb));
+        }
 
+        //        agl::DrawContext *context = drawInfo->mDrawContext;
+
+//        nn::hid::MouseState state{};
+//        nn::hid::GetMouseState(&state);
 //        agl::utl::DevTools::beginDrawImm(context, sead::Matrix34<float>::ident,
 //                                         sead::Matrix44<float>::ident);
 //        sead::Vector2f screenSize = sead::Vector2f(1280.0f, 720.0f) / 2.0f;
@@ -276,7 +308,13 @@ extern "C" void exl_main(void* x0, void* x1) {
     envSetOwnProcessHandle(exl::util::proc_handle::Get());
     exl::hook::Initialize();
 
-    R_ABORT_UNLESS(Logger::instance().init(LOGGER_IP, 3080).value);
+    R_ABORT_UNLESS(Logger::instance().init(LOGGER_IP, 3080).value)
+
+    Logger::log("main nso target start: %p\n", exl::util::modules::GetTargetStart());
+//    auto& a = nn::ro::detail::g_pAutoLoadList.begin();
+//    a++;
+//    auto* ptr = (*a);
+//    ptr->dynsym[i].st_name
 
     runCodePatches();
 
@@ -291,7 +329,10 @@ extern "C" void exl_main(void* x0, void* x1) {
 
     // Sead Debugging Overriding
 
-    ReplaceSeadPrint::InstallAtOffset(0xB59E28);
+    ReplacePrint::InstallAtOffset(0xB59E28);
+    ReplacePrint::InstallAtSymbol("_ZN2nn3vfx6detail11OutputErrorEPKcz");
+    ReplacePrint::InstallAtSymbol("_ZN2nn3vfx6detail13OutputWarningEPKcz");
+    ReplacePrint::InstallAtSymbol("_ZN2nn3vfx6detail9OutputLogEPKcz");
 
     // Debug Text Writer Drawing
 
