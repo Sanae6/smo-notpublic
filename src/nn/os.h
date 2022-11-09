@@ -246,6 +246,7 @@ nn::os::Tick GetSystemTick();
 nn::os::Tick GetSystemTickFrequency();
 u64 GetThreadAvailableCoreMask();
 void SetMemoryHeapSize(u64 size);
+void QuickExit();
 
 // Thread-local storage
 struct TlsSlot {

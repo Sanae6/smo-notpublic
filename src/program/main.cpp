@@ -108,8 +108,9 @@ HOOK_DEFINE_TRAMPOLINE(DisableUserExceptionHandler) {
         Logger::log("this is so cool\n");
 
         static char ALIGNED(0x1000) exceptionStack[0x6000];
+        static char exceptionData[0x6000];
         static nn::os::UserExceptionInfo exceptionInfo;
-        Orig([](nn::os::UserExceptionInfo* exceptionInfo){
+        Orig([](nn::os::UserExceptionInfo* exceptionInfo) {
             Logger::log("Among us!!!!!! %p\n", exceptionInfo->PC.x);
             for (auto& CpuRegister : exceptionInfo->CpuRegisters)
             {
@@ -238,6 +239,7 @@ HOOK_DEFINE_TRAMPOLINE(GameSystemInit) {
         gTextWriter->setupGraphics(context);
 
         gTextWriter->mColor = sead::Color4f(1.f, 1.f, 1.f, 0.8f);
+        gTextWriter->beginDraw();
 
         Orig(thisPtr);
 
@@ -251,53 +253,23 @@ HOOK_DEFINE_TRAMPOLINE(DrawDebugMenu) {
     static void Callback(HakoniwaSequence *thisPtr) {
         Orig(thisPtr);
 
-        return;
+        gTextWriter->endDraw();
+        al::GameDrawInfo* drawInfo = Application::instance()->mDrawInfo;
+
+        agl::DrawContext *context = drawInfo->mDrawContext;
+
+        nn::hid::MouseState state{};
+        nn::hid::GetMouseState(&state);
+        agl::utl::DevTools::beginDrawImm(context, sead::Matrix34<float>::ident,
+                                         sead::Matrix44<float>::ident);
+        sead::Vector2f screenSize = sead::Vector2f(1280.0f, 720.0f) / 2.0f;
+        agl::utl::DevTools::drawCursor(context, screenSize, sead::Vector2f(((float)state.x - screenSize.x) / screenSize.x, ((float)-state.y + screenSize.y) / screenSize.y), 0.5f);
 
         gTextWriter->beginDraw();
 
         gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, 10.f));
         gTextWriter->printf("FPS: %d\n", static_cast<int>(std::round(Application::instance()->mFramework->calcFps())));
 
-
-        al::GameDrawInfo* drawInfo = Application::instance()->mDrawInfo;
-
-        gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, 100.f));
-        gTextWriter->printf(
-            "Keys: %s, %s, %s, %s, %s, %d\n",
-            BTOC(keyboardState.isKeyDown(nn::hid::KeyboardKey::W)),
-            BTOC(keyboardState.isKeyDown(nn::hid::KeyboardKey::A)),
-            BTOC(keyboardState.isKeyDown(nn::hid::KeyboardKey::S)),
-            BTOC(keyboardState.isKeyDown(nn::hid::KeyboardKey::D)),
-            BTOC(keyboardState.isKeyDown(nn::hid::KeyboardKey::Space)),
-            keyboardState.modifiers
-        );
-        gTextWriter->printf(
-            "Keys: %x\n"
-            "Keys pressed: ",
-            mouseState.buttons
-        );
-        bool showComma = false;
-        for (int i = 0; i < 256; i++) {
-            if (!keyboardState.isKeyDown(static_cast<nn::hid::KeyboardKey>(i))) continue;
-            if (showComma) {
-                gTextWriter->printf(", ");
-            }
-            showComma = true;
-            const int sb = nn::util::BitFlagSet<256, nn::hid::KeyboardKey>::storageBits;
-            gTextWriter->printf("%d-%d-%llx", i, i / sb, (1ull << i % sb));
-        }
-
-        //        agl::DrawContext *context = drawInfo->mDrawContext;
-
-//        nn::hid::MouseState state{};
-//        nn::hid::GetMouseState(&state);
-//        agl::utl::DevTools::beginDrawImm(context, sead::Matrix34<float>::ident,
-//                                         sead::Matrix44<float>::ident);
-//        sead::Vector2f screenSize = sead::Vector2f(1280.0f, 720.0f) / 2.0f;
-//        agl::utl::DevTools::drawCursor(context, screenSize, sead::Vector2f(((float)state.x - screenSize.x) / screenSize.x, ((float)-state.y + screenSize.y) / screenSize.y), 0.5f);
-
-        gTextWriter->endDraw();
-//        drawBackground(context);
     }
 };
 
@@ -311,10 +283,6 @@ extern "C" void exl_main(void* x0, void* x1) {
     R_ABORT_UNLESS(Logger::instance().init(LOGGER_IP, 3080).value)
 
     Logger::log("main nso target start: %p\n", exl::util::modules::GetTargetStart());
-//    auto& a = nn::ro::detail::g_pAutoLoadList.begin();
-//    a++;
-//    auto* ptr = (*a);
-//    ptr->dynsym[i].st_name
 
     runCodePatches();
 
@@ -330,9 +298,6 @@ extern "C" void exl_main(void* x0, void* x1) {
     // Sead Debugging Overriding
 
     ReplacePrint::InstallAtOffset(0xB59E28);
-    ReplacePrint::InstallAtSymbol("_ZN2nn3vfx6detail11OutputErrorEPKcz");
-    ReplacePrint::InstallAtSymbol("_ZN2nn3vfx6detail13OutputWarningEPKcz");
-    ReplacePrint::InstallAtSymbol("_ZN2nn3vfx6detail9OutputLogEPKcz");
 
     // Debug Text Writer Drawing
 

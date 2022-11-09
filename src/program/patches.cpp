@@ -80,12 +80,12 @@ namespace nn {
     } // namespace vfx
 } // namespace nn
 
-HOOK_DEFINE_TRAMPOLINE(ResourceCtor) {
-    static void Callback(nn::vfx::Resource* res, void* a, void* b, void* c, void* d, void* e, void* f, int g, void* h, bool i, void* j) {
-        Orig(res, a, b, c,d,e,f,g,h,i,j);
-        res->OutputResourceInfo();
-    }
-};
+//HOOK_DEFINE_TRAMPOLINE(ResourceCtor) {
+//    static void Callback(nn::vfx::Resource* res, void* a, void* b, void* c, void* d, void* e, void* f, int g, void* h, bool i, void* j) {
+//        Orig(res, a, b, c,d,e,f,g,h,i,j);
+//        res->OutputResourceInfo();
+//    }
+//};
 
 void costumeRoomPatches() {
     patch::CodePatcher p(0x262850);

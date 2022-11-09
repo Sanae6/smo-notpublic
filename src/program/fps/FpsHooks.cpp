@@ -6,6 +6,7 @@
 #include "al/util/VectorUtil.h"
 #include "fps/MouseCameraInput.hpp"
 #include "game/Player/PlayerActorHakoniwa.h"
+#include "gfx/seadTextWriter.h"
 #include "lib.hpp"
 #include "logger/Logger.hpp"
 #include "nn/hid.h"
@@ -209,7 +210,7 @@ HOOK_DEFINE_TRAMPOLINE(SequenceUpdate) { static void Callback(al::Sequence* sequ
     mapHook.update();
 
     if ((keyboardState.modifiers.isBitSet(nn::hid::KeyboardModifier::LeftAlt) || keyboardState.modifiers.isBitSet(nn::hid::KeyboardModifier::RightAlt)) && keyboardState.isKeyDown(nn::hid::KeyboardKey::F4)) {
-        svcExitProcess();
+        nn::os::QuickExit();
     }
 } };
 HOOK_DEFINE_TRAMPOLINE(Gun) { static bool Callback() { return mouseState.buttons.isBitSet(nn::hid::MouseButton::Right); } };
@@ -225,6 +226,17 @@ HOOK_DEFINE_TRAMPOLINE(KleptoGunPatch) { static bool Callback(al::ActorStateBase
     }
     return Orig(jango, msg, source, target);
 }};
+
+extern sead::TextWriter* gTextWriter;
+
+HOOK_DEFINE_TRAMPOLINE(InputLog) {
+    static u64 Callback(void* input, sead::Vector3<float>* out, sead::Vector3<float> const& in) {
+        u64 result = Orig(input, out, in);
+        gTextWriter->printf("Player input vector: %f %f %f\n", out->x, out->y, out->z);
+        Logger::log("Player input vector: %f %f %f\n", out->x, out->y, out->z);
+        return result; // idk if it actually returns anything just covering my ass in case it does
+    }
+};
 
 void fpsInit() {
     nn::hid::InitializeMouse();
@@ -257,6 +269,8 @@ void fpsInit() {
     patcher.Write(0xBD4DFD00); // ldr s0, [x8, #0xdfc] (loads 180f)
     patcher.Seek("_ZN29PlayerActionGroundMoveControl17updatePoseUpFrontERKN4sead7Vector3IfEES4_f", 0x0);
     patcher.Write(inst::Ret());
+    patcher.Seek(0x44efe4);
+    patcher.Write(inst::Movz(reg::X0, 1));
 
     SetCameraInputMouse::InstallAtSymbol("_ZN2al14CameraDirector14setCameraInputEPKNS_12ICameraInputE");
     InterpoleStopper::InstallAtSymbol("_ZN2al15CameraInterpole5startEPKNS_12CameraTicketEfi");
@@ -304,7 +318,7 @@ void fpsInit() {
     Gun::InstallAtSymbol("_ZN2al11isPadHoldZREi");
     KleptoGunPatch::InstallAtSymbol("_ZN18JangoStateCapCatch10receiveMsgEPKN2al9SensorMsgEPNS0_9HitSensorES5_");
 
-
+    InputLog::InstallAtSymbol("_ZNK11PlayerInput17calcMoveInputImplEPN4sead7Vector3IfEERKS2_bbb");
 
     /**
      * movement right walks up right diagonally
