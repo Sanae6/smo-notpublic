@@ -129,7 +129,7 @@ void invalidatePostProcessingFilter(al::Scene const*);
 void incrementPostProcessingFilterPreset(al::Scene const*);
 void decrementPostProcessingFilterPreset(al::Scene const*);
 void getPostProcessingFilterPresetId(al::Scene const*);
-void isActiveDemo(al::Scene const*);
+bool isActiveDemo(al::Scene const*);
 void getActiveDemoName(al::Scene const*);
 void getDemoActorList(al::Scene const*);
 void getDemoActorNum(al::Scene const*);

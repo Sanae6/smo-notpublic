@@ -29,7 +29,7 @@ nn::hid::MouseState InputHelper::prevMouseState{};
 
 ulong InputHelper::selectedPort = -1;
 bool InputHelper::isReadInput = true;
-bool InputHelper::toggleInput = true;
+bool InputHelper::toggleInput = false;
 
 const char *getStyleName(nn::hid::NpadStyleSet style) {
 
@@ -72,9 +72,9 @@ void InputHelper::updatePadState() {
     prevMouseState = curMouseState;
     nn::hid::GetMouseState(&curMouseState);
 
-    if (isHoldZL() && isPressZR()) {
-        toggleInput = !toggleInput;
-    }
+//    if (isHoldZL() && isPressZR()) {
+//        toggleInput = !toggleInput;
+//    }
 }
 
 bool InputHelper::tryGetContState(nn::hid::NpadBaseState *state, ulong port) {

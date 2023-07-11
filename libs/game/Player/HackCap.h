@@ -27,13 +27,13 @@ class PlayerSeparateCapFlag;
 
 class CapTargetInfo;
 
-class PlayerActorHakoniwa; // use a stub instead of the actual class file 
+class PlayerActorHakoniwa; // use a stub instead of the actual class file
 
 
 #define HACKSIZE sizeof(al::LiveActor)
 
 class HackCap : public al::LiveActor {
-    public: 
+    public:
 
         HackCap(al::LiveActor const*,char const*,PlayerInput const*, struct PlayerAreaChecker const*, PlayerWallActionHistory const*, PlayerCapActionHistory const*, PlayerEyeSensorHitHolder const*,PlayerSeparateCapFlag const*,IUsePlayerCollision const*,  IUsePlayerHeightCheck const*,  PlayerWetControl const*,  PlayerJointControlKeeper const*, HackCapJudgePreInputSeparateThrow *, HackCapJudgePreInputSeparateJump *);
 
@@ -52,7 +52,7 @@ class HackCap : public al::LiveActor {
         void updateFrameOutLayout(void);
         void attackSpin(al::HitSensor *,al::HitSensor *,float);
         void prepareLockOn(al::HitSensor *);
-        void sendMsgStartHack(al::HitSensor *);
+        bool sendMsgStartHack(al::HitSensor *);
         void receiveRequestTransferHack(al::HitSensor *,al::HitSensor *);
         void startThrowSeparatePlayHack(al::HitSensor *, sead::Vector3f const&, sead::Vector3f const&,float);
         void startHack(void);
@@ -194,7 +194,7 @@ class HackCap : public al::LiveActor {
         void exeRebound(void);
         void exeReturn(void);
         void exeBlow(void);
-        
+
         void *unkPtr1; // 0x108
         void *unkPtr2; // 0x110
         al::LiveActor *mLockOnEyes; // 0x118

@@ -17,7 +17,7 @@ void resetQuatPosition(al::LiveActor* actor, const sead::Quatf& quat, const sead
 void resetMtxPosition(al::LiveActor* actor, const sead::Matrix34f& mtx);
 void resetActorPosition(al::LiveActor* actor, const al::LiveActor* target);
 bool trySetPosOnGround(al::LiveActor* actor);
-void getVelocity(const al::LiveActor* actor);
+sead::Vector3f& getVelocity(const al::LiveActor* actor);
 void getVelocityPtr(al::LiveActor* actor);
 void separateVelocityHV(sead::Vector3f*, sead::Vector3f*, const al::LiveActor* actor);
 void separateVelocityDirHV(sead::Vector3f*, sead::Vector3f*, const al::LiveActor* actor, const sead::Vector3f&);

@@ -8,9 +8,8 @@
         void execute(al::NerveKeeper* keeper) const override {  \
             keeper->getParent<Namespace Class>()->exe##Func();  \
         }                                                       \
-    public:                                                     \
-        static Class##Nrv##Action sInstance;                    \
-    }
+    };                                                          \
+    Class##Nrv##Action nrv##Class##Action;
 
 #define MAKE_NERVE(Class, Action) MAKE_NERVE_FUNC(Class, Action, Action,)
 #define MAKE_NERVE_NAMESPACE(Class, Action, Namespace) MAKE_NERVE_FUNC(Class, Action, Action, Namespace::)

@@ -136,26 +136,10 @@ namespace al {
         al::ModelKeeper* getModelKeeper() const { return mModelKeeper; }
         al::ActorPoseKeeperBase* getPoseKeeper() const { return mPoseKeeper; }
         al::ActorExecuteInfo* getExecuteInfo() const { return mExecuteInfo; }
+        al::HitSensorKeeper* getHitSensorKeeper() const { return mHitSensorKeeper; }
 
         void setName(const char* newName) { mActorName = newName; }
     };
 
-    struct LiveActorFlag {
-        bool isDead = true;
-        bool isClipped = false;
-        bool isClippingInvalid = true;
-        bool isDrawClipped = false;
-        bool isCalcAnim = false;
-        bool isModelVisible = false;
-        bool isCollideOff = true;
-        bool field_07 = false;
-        bool isMaterialCodeValid = false;
-        bool isPuddleMaterialValid = false;
-        bool isAreaTargetOn = true;
-        bool isUpdateOn = true;
-
-        LiveActorFlag();
-    };
-    static_assert(sizeof(LiveActorFlag) == 0xC);
 
 }  // namespace al

@@ -9,8 +9,7 @@
 #include "ExceptionHandler.h"
 
 #include <basis/seadRawPrint.h>
-#include <prim/seadSafeString.h>
-#include <resource/seadResourceMgr.h>
+#include <devenv/seadDebugFontMgrNvn.h>
 #include <filedevice/nin/seadNinSDFileDeviceNin.h>
 #include <filedevice/seadFileDeviceMgr.h>
 #include <filedevice/seadPath.h>
@@ -19,19 +18,30 @@
 #include <devenv/seadDebugFontMgrNvn.h>
 #include <gfx/seadTextWriter.h>
 #include <gfx/seadViewport.h>
+#include <heap/seadExpHeap.h>
+#include <heap/seadHeapMgr.h>
+#include <cmath>
+#include <koopa/Koopa.hpp>
+#include <prim/seadSafeString.h>
+#include <resource/seadArchiveRes.h>
+#include <resource/seadResourceMgr.h>
 
 #include <al/Library/File/FileLoader.h>
 #include <al/Library/File/FileUtil.h>
 
-#include <game/StageScene/StageScene.h>
-#include <game/System/GameSystem.h>
-#include <game/System/Application.h>
-#include <game/HakoniwaSequence/HakoniwaSequence.h>
+#include <al/LiveActor/LiveActorFlag.hpp>
 #include <game/GameData/GameDataFunction.h>
+#include <game/HakoniwaSequence/HakoniwaSequence.h>
+#include <game/StageScene/StageScene.h>
+#include <game/System/Application.h>
+#include <game/System/GameSystem.h>
+#include <gfx/seadPrimitiveRenderer.h>
 
 #include "rs/util.hpp"
 
 #include "agl/utl.h"
+#include <al/Library/Nerve/NerveKeeper.h>
+#include <al/Library/Player/PlayerHolder.h>
 
 static const char *DBG_FONT_PATH = "DebugData/Font/nvn_font_jis1.ntx";
 static const char *DBG_SHADER_PATH = "DebugData/Font/nvn_font_shader_jis1.bin";
@@ -255,32 +265,82 @@ HOOK_DEFINE_TRAMPOLINE(GameSystemInit) {
 
         gTextWriter->mColor = sead::Color4f(1.f, 1.f, 1.f, 0.8f);
 
+        sead::PrimitiveRenderer* renderer = sead::PrimitiveRenderer::instance();
+
+        renderer->setDrawContext(context);
+        renderer->setModelMatrix(sead::Matrix34f::ident);
+
         Orig(thisPtr);
 
     }
 };
 
+
+extern Koopa* koopa;
+extern bool wasHacked;
+extern bool demoage;
+const al::Nerve* getPlayerHack();
+const char* getPlayerHackPtr();
+bool isNerve(al::IUseNerve* nerveUser, const al::Nerve* nerve);
+void koopaDrawDebug(sead::PrimitiveRenderer& renderer);
 HOOK_DEFINE_TRAMPOLINE(DrawDebugMenu) {
     static void Callback(HakoniwaSequence *thisPtr) {
-
         Orig(thisPtr);
 
-        gTextWriter->beginDraw();
+//        if (thisPtr->mCurrentScene && strstr(typeid(*al::getCurrentNerve(thisPtr)).name(), "Destroy") == nullptr) {
+//            al::Scene* scene = thisPtr->mCurrentScene;
+//        }
 
+        gTextWriter->beginDraw();
+//
         gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, 10.f));
-        gTextWriter->printf("FPS: %d\n", static_cast<int>(round(Application::instance()->mFramework->calcFps())));
+        gTextWriter->printf("FPS: %d\n", static_cast<int>(std::round(Application::instance()->mFramework->calcFps())));
+        if (koopa){
+            auto* flags = (bool*)koopa->getFlags();
+            for (int i = 0; i < 12; i++) {
+                gTextWriter->printf("Koopa flag %d: %s\n", i, BTOC(flags[i]));
+            }
+            if (koopa->getNerveKeeper())
+                gTextWriter->printf("Nerve name %s\n", typeid(*koopa->getNerveKeeper()->getCurrentNerve()).name());
+            gTextWriter->printf("Hack exists %s\n", BTOC(koopa->mPlayerHack));
+            gTextWriter->printf("wasHacked %s\n", BTOC(wasHacked));
+            gTextWriter->printf("demoage %d\n", demoage);
+            if (koopa->getSceneInfo() && koopa->getSceneInfo()->mDemoDirector)
+                gTextWriter->printf("demo active %s\n", BTOC(rs::isActiveDemo(koopa)));
+
+#define OFFSET(ptr, offset) (((u8*)ptr) + ((size_t)offset))
+
+            if (koopa->getSceneInfo()) {
+                auto* player = (PlayerActorHakoniwa*)al::getPlayerActor(koopa, 0);
+                if (player && player->getNerveKeeper()) {
+                    gTextWriter->printf("Player name %s\n",
+                                        typeid(*player->getNerveKeeper()->getCurrentNerve()).name());
+                    gTextWriter->printf("Expected name %s\n", getPlayerHackPtr());
+                    if (isNerve(player, getPlayerHack()) && player->getNerveKeeper()->mStateCtrl->mCurrentState) {
+                        gTextWriter->printf("Player name %s\n",
+                                        typeid(*player->getNerveKeeper()->mStateCtrl->mCurrentState->state->mNerveKeeper->getCurrentNerve()).name());
+                    }
+                }
+                if (player && player->mHackCap)
+                    gTextWriter->printf("Target info %s", BTOC((CapTargetInfo*)OFFSET(player->mHackCap, 0x228)));
+            }
+        }
 
         gTextWriter->endDraw();
 
     }
 };
 
+void koopaPatchesInit();
+
 extern "C" void exl_main(void *x0, void *x1) {
     /* Setup hooking enviroment. */
     exl::hook::Initialize();
 
-    nn::os::SetUserExceptionHandler(exception_handler, nullptr, 0, nullptr);
-    installExceptionStub();
+    handler::installExceptionHandler([](handler::ExceptionInfo& info) {
+        handler::printCrashReport(info);
+        return false;
+    });
 
     Logger::instance().init(LOGGER_IP, 3080);
 
@@ -299,7 +359,6 @@ extern "C" void exl_main(void *x0, void *x1) {
             "_ZNK2al10FileLoader14isExistArchiveERKN4sead14SafeStringBaseIcEEPNS1_10FileDeviceE");
 
     // Sead Debugging Overriding
-
     ReplaceSeadPrint::InstallAtOffset(0xB59E28);
 
     // Debug Text Writer Drawing
@@ -317,6 +376,7 @@ extern "C" void exl_main(void *x0, void *x1) {
     nvnImGui::addDrawFunc(drawDebugWindow);
 #endif
 
+    koopaPatchesInit();
 }
 
 extern "C" NORETURN void exl_exception_entry() {
