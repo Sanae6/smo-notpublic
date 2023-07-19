@@ -5,18 +5,22 @@
 
 #pragma once
 
-#include <al/Library/LiveActor/LiveActor.h>
 #include "game/Interfaces/IUsePlayerHack.h"
 #include "game/Player/HackCap.h"
 #include "game/Player/HackCap/CapTargetInfo.h"
 #include "game/Player/PlayerCollider.h"
 #include "game/Player/PlayerInput.h"
+#include <al/Library/LiveActor/LiveActor.h>
 
 struct HackEndParam;
 struct PlayerRecoverySafetyPoint;
 struct PlayerDamageKeeper;
 struct IPlayerModelChanger;
 struct IUsePlayerHeightCheck;
+
+namespace al {
+    struct CollisionPartsFilterBase;
+}
 
 class PlayerHackKeeper {
 public:
@@ -70,8 +74,36 @@ public:
     void startDemo(void);
     void endDemo(void);
 
-    PlayerInput* getPlayerInput() { return reinterpret_cast<PlayerInput*>(&padding[0x28]); }
-    char padding[0x68];
-    al::LiveActor* currentHackActor;
-    // 0x98 PlayerHackStartTexKeeper
+    PlayerInput* getPlayerInput() { return input; }
+    al::LiveActor* player;
+    HackCap* cap;
+    PlayerRecoverySafetyPoint* safetyPoint;
+    void* gap1;
+    void* gap2;
+    PlayerInput* input;
+    sead::Matrix34f* matrix;
+    PlayerDamageKeeper* damageKeeper;
+    IPlayerModelChanger* modelChanger;
+    IUsePlayerHeightCheck* playerHeightChecker;
+    al::HitSensor* playerHitSensor;
+    bool unused;
+    bool cancellingHack;
+    bool hackDemoStarted;
+    bool unusedFlag2;
+    bool regularDemoStarted;
+    bool unusedFlag3;
+    bool tookDamage;
+    al::CollisionPartsFilterBase* collisionFilter;
+    al::LiveActor* actor;
+    al::HitSensor* actorSensor;
+    struct HackObjInfo* hackObjInfo;
+    al::HitSensor* stageStartActorSensor;
+    CapTargetInfo* stageStartCapTargetInfo;
+    al::LiveActor* stageStartActor;
+    struct PlayerHackStartTexKeeper* hackStartTexKeeper;
+    al::LiveActor* hackModel;
+//    sead::PtrArray<int> hackModelArray1;
+//    sead::Matrix34f* hackModelArray2;
+//    int unknownA, unknownB, unknownC;
+
 };

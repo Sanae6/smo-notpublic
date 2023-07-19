@@ -40,6 +40,7 @@
 #include "rs/util.hpp"
 
 #include "agl/utl.h"
+#include "al/Library/Controller/JoyPadUtil.h"
 #include <al/Library/Nerve/NerveKeeper.h>
 #include <al/Library/Player/PlayerHolder.h>
 
@@ -277,8 +278,9 @@ HOOK_DEFINE_TRAMPOLINE(GameSystemInit) {
 
 
 extern Koopa* koopa;
-extern bool wasHacked;
+extern bool haveIBeenPwned;
 extern bool demoage;
+
 const al::Nerve* getPlayerHack();
 const char* getPlayerHackPtr();
 bool isNerve(al::IUseNerve* nerveUser, const al::Nerve* nerve);
@@ -303,7 +305,7 @@ HOOK_DEFINE_TRAMPOLINE(DrawDebugMenu) {
             if (koopa->getNerveKeeper())
                 gTextWriter->printf("Nerve name %s\n", typeid(*koopa->getNerveKeeper()->getCurrentNerve()).name());
             gTextWriter->printf("Hack exists %s\n", BTOC(koopa->mPlayerHack));
-            gTextWriter->printf("wasHacked %s\n", BTOC(wasHacked));
+            gTextWriter->printf("pwned %s\n", BTOC(haveIBeenPwned));
             gTextWriter->printf("demoage %d\n", demoage);
             if (koopa->getSceneInfo() && koopa->getSceneInfo()->mDemoDirector)
                 gTextWriter->printf("demo active %s\n", BTOC(rs::isActiveDemo(koopa)));
@@ -316,13 +318,22 @@ HOOK_DEFINE_TRAMPOLINE(DrawDebugMenu) {
                     gTextWriter->printf("Player name %s\n",
                                         typeid(*player->getNerveKeeper()->getCurrentNerve()).name());
                     gTextWriter->printf("Expected name %s\n", getPlayerHackPtr());
+                    gTextWriter->printf("Freddy fast bear %s\n", BTOC(isNerve(player, getPlayerHack())));
                     if (isNerve(player, getPlayerHack()) && player->getNerveKeeper()->mStateCtrl->mCurrentState) {
                         gTextWriter->printf("Player name %s\n",
                                         typeid(*player->getNerveKeeper()->mStateCtrl->mCurrentState->state->mNerveKeeper->getCurrentNerve()).name());
                     }
+                    gTextWriter->printf("2D %s\n", BTOC(rs::isPlayer2D(player)));
                 }
-                if (player && player->mHackCap)
-                    gTextWriter->printf("Target info %s", BTOC((CapTargetInfo*)OFFSET(player->mHackCap, 0x228)));
+                if (player && player->mHackCap) {
+                    gTextWriter->printf("Target info %s\n", BTOC(*(CapTargetInfo**)OFFSET(player->mHackCap, 0x228)));
+
+                    if (*(u8**)OFFSET(player->mHackCap, 0x228) && al::isPadTriggerRight(-1))
+                        *(CapTargetInfo**)OFFSET(player->mHackCap, 0x228) = nullptr;
+                    if (player->mHackCap->getNerveKeeper())
+                        gTextWriter->printf("Player name %s\n",
+                                            typeid(*player->mHackCap->getNerveKeeper()->getCurrentNerve()).name());
+                }
             }
         }
 
@@ -370,11 +381,7 @@ extern "C" void exl_main(void *x0, void *x1) {
     ControlHook::InstallAtSymbol("_ZN10StageScene7controlEv");
 
     // ImGui Hooks
-#if IMGUI_ENABLED
     nvnImGui::InstallHooks();
-
-    nvnImGui::addDrawFunc(drawDebugWindow);
-#endif
 
     koopaPatchesInit();
 }

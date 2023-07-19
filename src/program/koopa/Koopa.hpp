@@ -9,6 +9,7 @@
 
 struct KoopaPartialAnimator {
     void appear();
+    void clear();
     void attackSensor(al::HitSensor* target, al::HitSensor* source);
     void stop();
 };

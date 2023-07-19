@@ -232,10 +232,8 @@ bool nvnImGui::InitImGui() {
 
         InputHelper::setPort(0); // set input helpers default port to zero
 
-
-#if IMGUI_USEEXAMPLE_DRAW
-        IMGUINVN_DRAWFUNC(
-                ImGui::ShowDemoWindow();
+        addDrawFunc([]() {
+            ImGui::ShowDemoWindow();
             //    ImGui::ShowStyleSelector("Style Selector");
             //        ImGui::ShowMetricsWindow();
             //        ImGui::ShowDebugLogWindow();
@@ -243,8 +241,7 @@ bool nvnImGui::InitImGui() {
             //        ImGui::ShowAboutWindow();
             //        ImGui::ShowFontSelector("Font Selector");
             //        ImGui::ShowUserGuide();
-        )
-#endif
+        });
 
         return true;
 
