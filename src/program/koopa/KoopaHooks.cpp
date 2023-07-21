@@ -657,6 +657,7 @@ void koopaPatchesInit() {
     koopaSideInit(p);
 
     nvnImGui::addDrawFunc([]() {
+        Logger::log("Imgui")
         ImGui::Begin("PlayerHackKeeper", nullptr, ImGuiWindowFlags_NoCollapse);
         bool koopaExists = koopa, sceneExists = koopaExists && koopa->getSceneInfo(), playerExists = sceneExists &&  al::tryGetPlayerActor(koopa, 0);
         ImGui::BeginGroup();

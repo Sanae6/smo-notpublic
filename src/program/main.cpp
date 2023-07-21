@@ -48,8 +48,6 @@ static const char *DBG_FONT_PATH = "DebugData/Font/nvn_font_jis1.ntx";
 static const char *DBG_SHADER_PATH = "DebugData/Font/nvn_font_shader_jis1.bin";
 static const char *DBG_TBL_PATH = "DebugData/Font/nvn_font_jis1_tbl.bin";
 
-#define IMGUI_ENABLED true
-
 sead::TextWriter *gTextWriter;
 
 void drawDebugWindow() {
@@ -353,7 +351,7 @@ extern "C" void exl_main(void *x0, void *x1) {
         return false;
     });
 
-    Logger::instance().init(LOGGER_IP, 3080);
+    Logger::instance().init(LOGGER_IP, 3085);
 
     runCodePatches();
 
