@@ -95,3 +95,6 @@ void Logger::log(const char *fmt, va_list args) {
         nn::socket::Send(instance().mSocketFd, buffer, strlen(buffer), 0);
     }
 }
+void Logger::logBuffer(const void* data, size_t size) {
+    nn::socket::Send(instance().mSocketFd, data, size, 0);
+}

@@ -19,8 +19,8 @@ public:
     nn::Result init(const char *ip, u16 port);
 
     static void log(const char *fmt, ...);
-
     static void log(const char *fmt, va_list args);
+    static void logBuffer(const void* data, size_t size);
 
 private:
     LoggerState mState;

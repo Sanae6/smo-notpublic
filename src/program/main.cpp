@@ -43,6 +43,7 @@
 #include "al/Library/Controller/JoyPadUtil.h"
 #include <al/Library/Nerve/NerveKeeper.h>
 #include <al/Library/Player/PlayerHolder.h>
+#include <al/Project/HitSensor/HitSensor.h>
 
 static const char *DBG_FONT_PATH = "DebugData/Font/nvn_font_jis1.ntx";
 static const char *DBG_SHADER_PATH = "DebugData/Font/nvn_font_shader_jis1.bin";
@@ -309,6 +310,7 @@ HOOK_DEFINE_TRAMPOLINE(DrawDebugMenu) {
                 gTextWriter->printf("demo active %s\n", BTOC(rs::isActiveDemo(koopa)));
 
 #define OFFSET(ptr, offset) (((u8*)ptr) + ((size_t)offset))
+#define OFFSET_CAST(ptr, offset, type) ((type)(OFFSET(ptr, offset)))
 
             if (koopa->getSceneInfo()) {
                 auto* player = (PlayerActorHakoniwa*)al::getPlayerActor(koopa, 0);
@@ -329,9 +331,16 @@ HOOK_DEFINE_TRAMPOLINE(DrawDebugMenu) {
                     if (*(u8**)OFFSET(player->mHackCap, 0x228) && al::isPadTriggerRight(-1))
                         *(CapTargetInfo**)OFFSET(player->mHackCap, 0x228) = nullptr;
                     if (player->mHackCap->getNerveKeeper())
-                        gTextWriter->printf("Player name %s\n",
+                        gTextWriter->printf("Hat nerve name %s\n",
                                             typeid(*player->mHackCap->getNerveKeeper()->getCurrentNerve()).name());
+                    if (*OFFSET_CAST(player->mHackCap, 0x1d0, al::HitSensor**))
+                        gTextWriter->printf("Head hit sensor host %s\n",
+                                            typeid((*OFFSET_CAST(player->mHackCap, 0x1d0, al::HitSensor**))->host).name());
                 }
+
+                if (player->getPlayerHackKeeper()->actorSensor)
+                    gTextWriter->printf("hackKeeperActorSensor %s\n", player->getPlayerHackKeeper()->actorSensor->name);
+                gTextWriter->printf("hackKeeper demo started %s\n", BTOC(player->getPlayerHackKeeper()->hackDemoStarted));
             }
         }
 

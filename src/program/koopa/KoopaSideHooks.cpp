@@ -25,6 +25,13 @@ struct OffFinish : public exl::hook::impl::TrampolineHook<OffFinish> {
     }
 };
 
+extern "C" void _ZN18BombTailBombHolder4killEv(void*);
+struct ForceDisappearKill : public exl::hook::impl::ReplaceHook<ForceDisappearKill> {
+    static void Callback(void* holder) {
+        _ZN18BombTailBombHolder4killEv(holder);
+    }
+};
+
 void koopaSideInit(patch::CodePatcher& patcher) {
     // broodal patches
     patcher.Seek(0xbca30); // topper stomp related
@@ -37,9 +44,8 @@ void koopaSideInit(patch::CodePatcher& patcher) {
     patcher.Seek(0xb364); // hariet
     patcher.WriteInst(inst::Nop());
     patcher.Seek(0xb1b4); // hariet
-    patcher.BranchInst((void*)&checkHariet);
-    patcher.Seek(0xe2c0); // hariet kill bombs
-    patcher.BranchInst((void*)&killActor);
+    patcher.BranchLinkInst((void*)&checkHariet);
+    ForceDisappearKill::InstallAtSymbol("_ZN18BombTailBombHolder14forceDisappearEv"); // hariet kill bombs
     patcher.Seek(0x59340); // spewert
     patcher.WriteInst(inst::Nop());
     patcher.Seek(0x519e0); // rango

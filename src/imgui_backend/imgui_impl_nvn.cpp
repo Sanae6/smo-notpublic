@@ -649,12 +649,12 @@ namespace ImguiNvnBackend {
 
         // we dont need to process any data if it isnt valid
         if (!drawData->Valid) {
-//            Logger::log("Draw Data was Invalid! Skipping Render.");
+            Logger::log("Draw Data was Invalid! Skipping Render.");
             return;
         }
         // if we dont have any command lists to draw, we can stop here
         if (drawData->CmdListsCount == 0) {
-//            Logger::log("Command List was Empty! Skipping Render.\n");
+            Logger::log("Command List was Empty! Skipping Render.\n");
             return;
         }
 

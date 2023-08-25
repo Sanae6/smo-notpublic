@@ -1,3 +1,4 @@
+#include "AmongWriteStream.h"
 #include "KoopaStateRoll.hpp"
 #include "al/Library/LiveActor/ActorInitInfo.h"
 #include "al/Library/Nerve/NerveSetupUtil.h"
@@ -32,6 +33,7 @@
 #include <typeinfo>
 
 #define OFFSET(ptr, offset) (((u8*)ptr) + ((size_t)offset))
+#define OFFSET_CAST(ptr, offset, type) ((type)(OFFSET(ptr, offset)))
 
 namespace patch = exl::patch;
 namespace inst = exl::armv8::inst;
@@ -100,7 +102,14 @@ namespace rs {
     bool isTouchHackDamageCollisionCode(al::LiveActor const*, IUsePlayerCollision const*);
     void requestStageStartHack(const al::LiveActor* self, al::HitSensor* sensor, const CapTargetInfo* info,
                                al::LiveActor* unused);
+    bool sendMsgStartHack(al::HitSensor*, al::HitSensor*);
+    bool isActiveDemo(const al::LiveActor* actor);
 } // namespace rs
+
+struct PlayerStartObj : al::LiveActor {
+    void exeDemoWait();
+    void exeBindEnd();
+};
 
 namespace {
     MAKE_NERVE(Koopa, Bind);
@@ -116,6 +125,8 @@ namespace {
     MAKE_NERVE(Koopa, 2D);
     MAKE_NERVE(Koopa, Roll);
     MAKE_NERVE(PlayerActorHakoniwa, Hack);
+    MAKE_NERVE(HackCap, LockOn);
+    MAKE_NERVE(PlayerStartObj, DemoWait);
     class KoopaNrvWaitReset : public al::Nerve {
         void execute(al::NerveKeeper* keeper) const override {}
     };
@@ -142,7 +153,7 @@ static al::PlacementInfo* setupKoopaPlacementInfo(al::Resource* res) {
     return &placementInfo;
 }
 
-bool haveIBeenPwned = false;
+bool haveIBeenPwned = true;
 int demoage = 0;
 const int reactedCreatureCount = 10;
 struct {
@@ -175,7 +186,30 @@ void tickReacted() {
     }
 }
 
+void setSecretTwelfthFlag(al::LiveActor* actor, bool value) {
+    auto* flags = actor->getFlags();
+    bool& secretTwelthFlag = flags->mSecretTwelfthFlagHehe;
+    if (secretTwelthFlag != value) {
+        secretTwelthFlag = value;
+        if (value) {
+            al::hideModel(actor);
+            flags->mClipped = false;
+            flags->mNoCollide = true;
+            flags->mUpdateMovementEffectAudioCollisionSensor = false;
+            al::invalidateDepthShadowMap(actor, "BodyHack");
+            al::invalidateDepthShadowMap(actor, "GroundHack");
+            Logger::log("Made actor eepy!!!\n");
+        } else {
+            flags->mClipped = false;
+            flags->mNoCollide = false;
+            flags->mUpdateMovementEffectAudioCollisionSensor = true;
+            al::showModel(actor);
+        }
+    }
+}
+
 void handleKoopaHack(Koopa* koopa) {
+    setSecretTwelfthFlag(koopa, false);
     al::invalidateClipping(koopa);
     al::invalidateOcclusionQuery(koopa);
     al::tryOnStageSwitch(koopa, "SwitchRestartOn");
@@ -196,41 +230,23 @@ void handleKoopaHack(Koopa* koopa) {
     al::tryOnStageSwitch(koopa, "SwitchAfterPlayableOn");
     al::setNerve(koopa, &nrvKoopaWait);
     haveIBeenPwned = true;
+    auto* player = (PlayerActorHakoniwa*)al::getPlayerActor(koopa, 0);
+    player->mModelChanger->hideModel();
+    player->mModelChanger->syncHost(true);
+    Logger::log("Hack started!\n");
 }
 
 class ShineTowerRocket : al::LiveActor {};
 
-void setSecretTwelfthFlag(al::LiveActor* actor, bool value) {
-    auto* flags = actor->getFlags();
-    bool& secretTwelthFlag = flags->mSecretTwelfthFlagHehe;
-    if (secretTwelthFlag != value) {
-        secretTwelthFlag = value;
-        if (value) {
-            al::hideModel(actor);
-            flags->mClipped = true;
-            flags->mNoCollide = true;
-            flags->mUpdateMovementEffectAudioCollisionSensor = false;
-            al::invalidateDepthShadowMap(actor, "BodyHack");
-            al::invalidateDepthShadowMap(actor, "GroundHack");
-            Logger::log("Made actor eepy!!!\n");
-        } else {
-            flags->mClipped = false;
-            flags->mNoCollide = false;
-            flags->mUpdateMovementEffectAudioCollisionSensor = true;
-            al::showModel(actor);
-        }
-    }
-}
-
-static bool StartedDemo;
+static int StartedDemo;
 struct KoopaReceiveMsg : public exl::hook::impl::ReplaceHook<KoopaReceiveMsg> {
     static bool Callback(Koopa* koopa, const al::SensorMsg* msg, al::HitSensor* source, al::HitSensor* target) {
         if (al::getSensorHost(target) != koopa ||
             typeid(*al::getSensorHost(target)).hash_code() == typeid(ShineTowerRocket).hash_code())
             return false;
-        if (al::getSensorHost(target) != koopa ||
-            typeid(*al::getSensorHost(target)).hash_code() == typeid(ShineTowerRocket).hash_code())
-            return false;
+        //        if (al::getSensorHost(target) != koopa ||
+        //            typeid(*al::getSensorHost(target)).hash_code() == typeid(ShineTowerRocket).hash_code())
+        //            return false;
         if (isNerve(koopa, &nrvKoopaDead) || isNerve(koopa, &nrvKoopaDeadFall))
             return false;
         if (rs::tryReceiveMsgInitCapTargetAndSetCapTargetInfo(msg, koopa->mCapTargetInfo)) {
@@ -251,6 +267,7 @@ struct KoopaReceiveMsg : public exl::hook::impl::ReplaceHook<KoopaReceiveMsg> {
             return true;
         IUsePlayerHack** hack = &koopa->mPlayerHack;
         if (rs::isMsgHackDirectStageInit(hack, msg)) {
+            Logger::log("Tried to stage start hack\n");
             auto* player = al::getPlayerActor(koopa, 0);
             al::resetQuatPosition(koopa, al::getQuat(player), al::getTrans(player));
             handleKoopaHack(koopa);
@@ -301,6 +318,7 @@ struct KoopaReceiveMsg : public exl::hook::impl::ReplaceHook<KoopaReceiveMsg> {
             // demo end hacks don't count, haveIBeenPwned = true still
             rs::endHack(&koopa->mPlayerHack);
             koopa->mPlayerHack = nullptr;
+            al::tryKillEmitterAndParticleAll(koopa);
             al::setNerve(koopa, &nrvKoopaWaitReset);
             StartedDemo = true;
             return true;
@@ -321,7 +339,7 @@ struct KoopaReceiveMsg : public exl::hook::impl::ReplaceHook<KoopaReceiveMsg> {
             return true;
         }
 
-        if (!koopa->getFlags()->mSecretTwelfthFlagHehe && demoage == 0 && !al::isActiveDemo(koopa->scene) &&
+        if (!koopa->getFlags()->mSecretTwelfthFlagHehe && demoage == 0 && !rs::isActiveDemo(koopa) &&
             (rs::isMsgCancelHack(msg) || rs::isMsgKillByHomeDemo(msg) || rs::isMsgCancelHackByDokan(msg))) {
             Logger::log("Cancelled hack: %s (%s) from %s\n", typeid(*msg).name(), typeid(msg).name(),
                         typeid(*source->host).name());
@@ -330,6 +348,7 @@ struct KoopaReceiveMsg : public exl::hook::impl::ReplaceHook<KoopaReceiveMsg> {
             haveIBeenPwned = false;
             al::validateOcclusionQuery(koopa);
             al::startVisAnim(koopa, "HackOff");
+            al::tryKillEmitterAndParticleAll(koopa);
 
             const al::Nerve* nextNerve =
                 rs::isMsgHackMarioDead(msg)
@@ -361,41 +380,59 @@ struct KoopaReceiveMsg : public exl::hook::impl::ReplaceHook<KoopaReceiveMsg> {
             return true;
         }
 
-        //        Logger::log("Got unhandled message: %s (%s) from %s\n", typeid(*msg).name(), typeid(msg).name(),
-        //                    typeid(*source->host).name());
+        if (!al::isEqualString(typeid(*source->host).name(), typeid(PlayerActorHakoniwa).name()))
+            Logger::log("Got unhandled message: %s (%s) from %s\n", typeid(*msg).name(), typeid(msg).name(),
+                        typeid(*source->host).name());
 
         return false;
     }
 };
 
-bool koopaAttackSensorPlus(Koopa* koopa, al::HitSensor* target, al::HitSensor* source) {
+bool koopaAttackSensorPlus(al::LiveActor* actor, al::HitSensor* target, al::HitSensor* source) {
+    if (isReacted(target->host))
+        return true;
+    if (rs::sendMsgTRexAttackAll(source, target)) {
+        return true;
+    }
+    if (rs::sendMsgWanwanEnemyAttack(source, target) || rs::sendMsgWanwanReboundAttack(source, target)) {
+        addReacted(target->host, 120);
+        Logger::log("Attacked wanwan!\n");
+        return true;
+    }
     if (al::sendMsgPlayerItemGet(source, target) || rs::sendMsgShineGet(source, target))
-        return true;
-    if (al::sendMsgPlayerAttackTrample(source, target, nullptr))
-        return true;
-    if (al::sendMsgPlayerHipDrop(source, target, nullptr))
         return true;
     if (rs::sendMsgCapStartLockOn(source, target))
         return true;
-    if ((rs::sendMsgWanwanReboundAttack(source, target)) && !isReacted(target->host)) {
+
+    if (rs::sendMsgSenobiCancelStretch(source, target) || rs::sendMsgHackUpperPunch(source, target) ||
+        rs::sendMsgKoopaHackPunch(source, target) || rs::sendMsgTankBullet(source, target) ||
+        rs::sendMsgBossKnuckleKillerAttack(source, target) || al::sendMsgPlayerAttackTrample(source, target, nullptr) ||
+        al::sendMsgPlayerHipDrop(source, target, nullptr) || rs::sendMsgCapAttack(source, target) ||
+        rs::sendMsgCapReflect(source, target) || rs::sendMsgBossKnuckleKillerAttack(source, target)) {
         addReacted(target->host, 120);
         return true;
     }
-
-    if ((rs::sendMsgSenobiCancelStretch(source, target) || rs::sendMsgHackUpperPunch(source, target) ||
-         rs::sendMsgKoopaHackPunch(source, target) || rs::sendMsgTankBullet(source, target) ||
-         rs::sendMsgBossKnuckleKillerAttack(source, target) ||
-         al::sendMsgPlayerAttackTrample(source, target, nullptr) || al::sendMsgPlayerHipDrop(source, target, nullptr) ||
-         rs::sendMsgCapAttack(source, target) || rs::sendMsgCapReflect(source, target))) {
-        return true;
-    }
     if (al::sendMsgPlayerTrampleReflect(source, target, nullptr)) {
-        al::addVelocityJump(koopa, 10);
+        al::addVelocityJump(actor, 10);
         return true;
     }
 
     return false;
 }
+
+Koopa* koopa = nullptr;
+
+struct FireballAttackSensor : public exl::hook::impl::TrampolineHook<FireballAttackSensor> {
+    static void Callback(al::LiveActor* fireball, al::HitSensor* target, al::HitSensor* source) {
+        if (target->host == koopa)
+            return;
+
+        if (koopaAttackSensorPlus(fireball, target, source))
+            return;
+
+        Orig(fireball, target, source);
+    }
+};
 
 struct KoopaAttackSensor : public exl::hook::impl::ReplaceHook<KoopaAttackSensor> {
     static void Callback(Koopa* koopa, al::HitSensor* target, al::HitSensor* source) {
@@ -443,6 +480,22 @@ struct KoopaMovementWrapper : public exl::hook::impl::TrampolineHook<KoopaMoveme
         al::LiveActorFlag* flags = koopa->getFlags();
 
         tickReacted();
+        if (StartedDemo > 0) {
+            StartedDemo--;
+            if (StartedDemo == 0) {
+                auto* player = (PlayerActorHakoniwa*)al::getPlayerActor(koopa, 0);
+                if (!rs::isPlayer2D(player)) {
+                    Logger::log("Tried restarting bowser\n");
+                    al::updatePoseTrans(koopa, al::getTrans(player));
+                    al::resetPosition(koopa);
+                    al::validateHitSensors(koopa);
+                    al::invalidateOcclusionQuery(koopa);
+                    setSecretTwelfthFlag(koopa, false);
+                    auto* head = al::getHitSensor(koopa, "SwoonHead");
+                    player->mHackCap->prepareLockOn(head);
+                }
+            }
+        }
 
         auto* player = (PlayerActorHakoniwa*)al::getPlayerActor(koopa, 0);
         //        if (demoage > 0) {
@@ -461,31 +514,49 @@ struct KoopaMovementWrapper : public exl::hook::impl::TrampolineHook<KoopaMoveme
         //            }
         //        }
 
+        //        if (koopa->mPlayerHack)
+        //            *(CapTargetInfo**)OFFSET(player->mHackCap, 0x228) = koopa->mCapTargetInfo;
+        if (koopa->mPlayerHack)
+            player->mModelChanger->update(true, false);
+//        if (al::isPadTriggerRightStick(-1)) {
+//            AmongWriteStream stream;
+//            sead::HeapMgr::dumpTreeYAML(stream);
+//        }
+        if (al::isPadTriggerLeft(-1)) {
+            if (flags->mSecretTwelfthFlagHehe && !rs::isActiveDemo(koopa) &&
+                !isNerve(player, &nrvPlayerActorHakoniwaHack) && !rs::isPlayer2D(player)) {
+                Logger::log("Tried restarting bowser\n");
+                al::updatePoseTrans(koopa, al::getTrans(player));
+                al::resetPosition(koopa);
+                al::validateHitSensors(koopa);
+                auto* head = al::getHitSensor(koopa, "SwoonHead");
+                player->mHackCap->prepareLockOn(head);
+                //                player->getPlayerHackKeeper()->requestForceHackStageStart(head, koopa->mCapTargetInfo,
+                //                nullptr);
+                //                player->getPlayerHackKeeper()->executeForceHackStageStart(player->mBodyHitSensor,
+                //                player); player->mModelChanger->hideModel(); player->mModelChanger->syncHost(true);
+                //                al::tryKillEmitterAndParticleAll(player);
+                ////                *(CapTargetInfo**)OFFSET(player->mHackCap, 0x228) = koopa->mCapTargetInfo;
+                //                player->mPlayerStateHack->startsHacked = true;
+                //                al::setNerve(player, &nrvPlayerActorHakoniwaHack);
+            } else
+                Logger::log("Failed to restart bowser, %s %s %s %s\n", BTOC(flags->mSecretTwelfthFlagHehe),
+                            BTOC(!rs::isActiveDemo(koopa)), typeid(*player->getNerveKeeper()->getCurrentNerve()).name(),
+                            BTOC(!rs::isPlayer2D(player)));
+        }
+
         if (!flags->mSecretTwelfthFlagHehe) {
             Orig(koopa);
             return;
         }
 
-        //        if (koopa->mPlayerHack)
-        //            *(CapTargetInfo**)OFFSET(player->mHackCap, 0x228) = koopa->mCapTargetInfo;
-
-        if (al::isPadTriggerLeft(-1) && !al::isActiveDemo(koopa->scene) &&
-            !isNerve(player, &nrvPlayerActorHakoniwaHack) && !rs::isPlayer2D(player)) {
-            Logger::log("Tried restarting bowser\n");
-            al::updatePoseTrans(koopa, al::getTrans(player));
-            al::resetPosition(koopa);
-            al::invalidateOcclusionQuery(koopa);
-            setSecretTwelfthFlag(koopa, false);
-            auto* head = al::getHitSensor(koopa, "SwoonHead");
-            player->mHackCap->prepareLockOn(head);
-        }
         _ZN2al9LiveActor8movementEv(koopa);
     }
 };
 
 struct KoopaControlWrapper : public exl::hook::impl::TrampolineHook<KoopaControlWrapper> {
     static void Callback(Koopa* koopa) {
-        if (!al::isActiveDemo(koopa->scene)) {
+        if (!rs::isActiveDemo(koopa)) {
             if (koopa->mPlayerHack && rs::isTouchHackDamageCollisionCode(koopa, nullptr))
                 rs::requestDamage(koopa->mPlayerHack);
             Orig(koopa);
@@ -508,8 +579,6 @@ void koopaUpdateCollider(Koopa* koopa) {
     al::setVelocity(koopa, curVel);
     koopa->playerPushReceiver->clear();
 }
-
-Koopa* koopa = nullptr;
 
 void koopaInit(al::Scene* scene, const al::ActorInitInfo& initInfo, char* listName) {
     al::initPlacementObjectMap(scene, initInfo, listName);
@@ -540,11 +609,34 @@ void koopaDrawDebug(sead::PrimitiveRenderer& renderer) {
 
 // sead::Quatf* getQuatPtrKoopa(al::LiveActor* actor) { return al::getQuatPtr(actor); }
 
+int blackListedDemoTypes[] = {5, 3};
+const char* whiteListedDemoNames = {
+    ""
+};
+
 struct DemoStartHandler : public exl::hook::impl::TrampolineHook<DemoStartHandler> {
     static bool Callback(al::DemoDirector* demoDirector, const char* name, int demoType) {
         Logger::log("Started demo (%d), wowie %s\n", demoType, name);
-        if (koopa && koopa->mPlayerHack) {
-            rs::sendMsgHackDemoStart(koopa->mHitSensorKeeper->getSensor(0), koopa->mHitSensorKeeper->getSensor(0));
+
+        int* foundType = std::find(std::begin(blackListedDemoTypes), std::begin(blackListedDemoTypes), demoType);
+
+        if (koopa && foundType == nullptr) {
+            if (koopa->mPlayerHack)
+                rs::sendMsgHackDemoStart(koopa->mHitSensorKeeper->getSensor(0), koopa->mHitSensorKeeper->getSensor(0));
+            else {
+                al::invalidateClipping(koopa);
+                al::invalidateDepthShadowMap(koopa, "BodyHack");
+                al::invalidateDepthShadowMap(koopa, "GroundHack");
+                al::startAction(koopa, "Wait");
+                al::startHitReaction(koopa, "死亡");
+                al::updatePoseTrans(koopa, al::getTrans(al::getPlayerActor(koopa, 0)));
+                al::resetPosition(koopa);
+                al::validateOcclusionQuery(koopa);
+                al::setVelocityZero(koopa);
+                al::invalidateHitSensors(koopa);
+                setSecretTwelfthFlag(koopa, true);
+                al::setNerve(koopa, &nrvKoopaWaitReset);
+            }
         }
         bool res = Orig(demoDirector, name, demoType);
         return res;
@@ -555,23 +647,7 @@ struct DemoEndHandler : public exl::hook::impl::TrampolineHook<DemoEndHandler> {
     static void Callback(al::DemoDirector* demoDirector, const char* name, int demoType) {
         Orig(demoDirector, name, demoType);
         Logger::log("Ended demo %s\n", name);
-        if (koopa && StartedDemo) {
-            auto* player = (PlayerActorHakoniwa*)al::getPlayerActor(koopa, 0);
-            if (!rs::isPlayer2D(player)) {
-                Logger::log("Tried restarting bowser\n");
-                al::updatePoseTrans(koopa, al::getTrans(player));
-                al::resetPosition(koopa);
-                al::validateHitSensors(koopa);
-                al::invalidateOcclusionQuery(koopa);
-                setSecretTwelfthFlag(koopa, false);
-                auto* head = al::getHitSensor(koopa, "SwoonHead");
-                player->mHackCap->prepareLockOn(head);
-            }
-        }
         StartedDemo = false;
-        //        if (koopa && koopa->mPlayerHack)
-        //            rs::sendMsgHackDemoEnd(koopa->mHitSensorKeeper->getSensor(0),
-        //            koopa->mHitSensorKeeper->getSensor(0));
     }
 };
 
@@ -580,6 +656,7 @@ struct EndInitHandler : public exl::hook::impl::TrampolineHook<EndInitHandler> {
         Orig(scene);
         koopa = nullptr;
         demoage = 0;
+        StartedDemo = false;
     }
 };
 
@@ -587,18 +664,64 @@ void onlyHackIfNeeded(Koopa* koopa, al::HitSensor* sensor, const CapTargetInfo* 
     if (haveIBeenPwned)
         haveIBeenPwned = !rs::isPlayer2D(koopa);
 
+    Logger::log("Hack setup start as hacked? %s\n", BTOC(haveIBeenPwned));
     if (haveIBeenPwned)
         rs::requestStageStartHack(koopa, sensor, info, unused);
     else {
+        al::invalidateClipping(koopa);
+        al::invalidateDepthShadowMap(koopa, "BodyHack");
+        al::invalidateDepthShadowMap(koopa, "GroundHack");
+        al::startAction(koopa, "Wait");
+        al::startHitReaction(koopa, "死亡");
+        al::updatePoseTrans(koopa, al::getTrans(al::getPlayerActor(koopa, 0)));
+        al::resetPosition(koopa);
+        al::validateOcclusionQuery(koopa);
         al::setVelocityZero(koopa);
         al::invalidateHitSensors(koopa);
-        al::invalidateOcclusionQuery(koopa);
         setSecretTwelfthFlag(koopa, true);
         al::setNerve(koopa, &nrvKoopaWaitReset);
+        koopa->mKoopaPartialAnimator->clear();
     }
 }
 
+struct SendMsgStartHack : exl::hook::impl::TrampolineHook<SendMsgStartHack> {
+    static bool Callback(HackCap* cap, al::HitSensor* bodySensor) {
+        if (!isNerve(cap, &nrvHackCapLockOn))
+            return false;
+        Logger::log("send Msg hack Start!! %p %s %d %s\n", *OFFSET_CAST(cap, 0x1d0, al::HitSensor**),
+                    BTOC(*(OFFSET_CAST(cap, 0x2a6, bool*))), cap->getNerveKeeper()->getCurrentStep(),
+                    BTOC(*(OFFSET_CAST(cap, 0x2a6, bool*)) && !al::isGreaterStep(cap, 5)));
+        if (*(OFFSET_CAST(cap, 0x2a6, bool*)) && !al::isGreaterStep(cap, 5)) {
+            return rs::sendMsgStartHack(*OFFSET_CAST(cap, 0x1d0, al::HitSensor**), bodySensor);
+        }
+        return false;
+    }
+};
+
+struct FixWalkInDemo : public exl::hook::impl::TrampolineHook<FixWalkInDemo> {
+    static bool Callback(al::LiveActor* actor) {
+        actor->kill();
+        return false;
+        //        handler::tryCatch(
+        //            []() {
+        //                uintptr_t a = 5;
+        //                *((uintptr_t*)a) = 5;
+        //            },
+        //            [](handler::ExceptionInfo& info) {
+        //                handler::printCrashReport(info);
+        //                return true;
+        //            });
+        //        Logger::log("Walk in clinic: %s\n", BTOC(haveIBeenPwned));
+        //        return !haveIBeenPwned && Orig(actor);
+    }
+};
+
+/*
+ * PlayerCameraFunction::setCameraHackName
+ */
+
 void koopaSideInit(patch::CodePatcher& patcher);
+void enemyHooks(patch::CodePatcher& patcher);
 void koopaPatchesInit() {
     patch::CodePatcher p(0x4ca0e4);
     p.BranchLinkInst((void*)&koopaInit); // setup init
@@ -607,9 +730,10 @@ void koopaPatchesInit() {
     p.WriteInst(inst::Nop());
     p.Seek(0x4cfeb4); //
     p.WriteInst(inst::Movz(reg::X0, 0x1));
-    p.Seek(0x550520); // walk-in demo
-    p.WriteInst(inst::Ret());
-    p.Seek(0x45ade4);
+    p.Seek(0x2e4410); // walk-in demo wait
+    p.WriteInst(inst::Movz(reg::X0, 0x0));
+    p.Seek(0x45ade4); // removes a isHackInvalidLifeRecovery check for PlayerJudgeRecoveryLifeFast (pretty sure this
+                      // crashed something?)
     p.WriteInst(inst::MovRegister(reg::X0, reg::None64));
     p.Seek(0x3de4d4);
     p.WriteInst(inst::MovRegister(reg::X0, reg::None64));
@@ -627,15 +751,15 @@ void koopaPatchesInit() {
     p.BranchLinkInst((void*)&koopaMovement);
     p.Seek(0x7da3c); // change max nerve state count to 3
     p.WriteInst(inst::Movz(reg::W2, 0x3));
-    p.Seek(0x3f4200); // disable effect thingy
+    p.Seek(0x3f4200); // disable effect thingy for yukimaru state move
     p.WriteInst(inst::Nop());
     //    p.Seek(0x7e7dc);
     //    p.BranchLinkInst((void*)&is2DNerve);
     //    p.Seek(0x3f4b48);
     //    p.BranchLinkInst((void*)&getQuatPtrKoopa);
-    p.Seek(0x3f4d08);
+    p.Seek(0x3f4d08); //  for yukimaru state move
     p.WriteInst(inst::MovRegister(reg::W8, reg::None32));
-    p.Seek(0x3f4b3c);
+    p.Seek(0x3f4b3c); ///  for yukimaru state move
     p.WriteInst(inst::Movz(reg::X0, 1));
     p.Seek(0x7fc14);
     p.WriteInst(inst::Movz(reg::W1, 16));
@@ -655,57 +779,60 @@ void koopaPatchesInit() {
     p.Seek(0x7dfdc);
     p.BranchLinkInst((void*)&onlyHackIfNeeded);
     koopaSideInit(p);
+    enemyHooks(p);
 
-    nvnImGui::addDrawFunc([]() {
-        Logger::log("Imgui")
-        ImGui::Begin("PlayerHackKeeper", nullptr, ImGuiWindowFlags_NoCollapse);
-        bool koopaExists = koopa, sceneExists = koopaExists && koopa->getSceneInfo(), playerExists = sceneExists &&  al::tryGetPlayerActor(koopa, 0);
-        ImGui::BeginGroup();
-        ImGui::Checkbox("Koopa", &koopaExists);
-        ImGui::Checkbox("SceneInfo", &sceneExists);
-        ImGui::Checkbox("Player", &playerExists);
-        ImGui::EndGroup();
-        if (koopa && koopa->getSceneInfo() && al::tryGetPlayerActor(koopa, 0)) {
-            auto* player = (PlayerActorHakoniwa*)al::tryGetPlayerActor(koopa, 0);
-            auto* keeper = player->getPlayerHackKeeper();
-            ImGui::Text("player %p", keeper->player);
-            ImGui::Text("cap %p", keeper->cap);
-            ImGui::Text("safetyPoint %p", keeper->safetyPoint);
-            ImGui::Text("gap1 %p", keeper->gap1);
-            ImGui::Text("gap2 %p", keeper->gap2);
-            ImGui::Text("input %p", keeper->input);
-            ImGui::Text("matrix %p", keeper->matrix);
-            ImGui::Text("damageKeeper %p", keeper->damageKeeper);
-            ImGui::Text("modelChanger %p", keeper->modelChanger);
-            ImGui::Text("playerHeightChecker %p", keeper->playerHeightChecker);
-            ImGui::Text("playerHitSensor %p", keeper->playerHitSensor);
-            ImGui::BeginGroup();
-            ImGui::Checkbox("Unused flag", &keeper->unused);
-            ImGui::Checkbox("Hack cancelling ", &keeper->cancellingHack);
-            ImGui::Checkbox("Hack demo", &keeper->hackDemoStarted);
-            ImGui::Checkbox("Unused flag", &keeper->unusedFlag2);
-            ImGui::Checkbox("Demo started", &keeper->regularDemoStarted);
-            ImGui::Checkbox("Unused flag", &keeper->unusedFlag3);
-            ImGui::Checkbox("Took damage", &keeper->tookDamage);
-            ImGui::EndGroup();
-            ImGui::Text("collisionFilter %p", keeper->collisionFilter);
-            ImGui::Text("actor %p", keeper->actor);
-            ImGui::Text("actorSensor %p", keeper->actorSensor);
-            ImGui::Text("hackObjInfo %p", keeper->hackObjInfo);
-            ImGui::Text("stageStartActorSensor %p", keeper->stageStartActorSensor);
-            ImGui::Text("stageStartCapTargetInfo %p", keeper->stageStartCapTargetInfo);
-            ImGui::Text("stageStartActor %p", keeper->stageStartActor);
-            ImGui::Text("hackStartTexKeeper %p", keeper->hackStartTexKeeper);
-            ImGui::Text("hackModel %p", keeper->hackModel);
-        }
-        ImGui::End();
-    });
+    //    nvnImGui::addDrawFunc([]() {
+    ////        Logger::log("Imgui");
+    //        ImGui::Begin("PlayerHackKeeper", nullptr, ImGuiWindowFlags_NoCollapse);
+    //        bool koopaExists = koopa, sceneExists = koopaExists && koopa->getSceneInfo(), playerExists = sceneExists
+    //        &&  al::tryGetPlayerActor(koopa, 0); ImGui::BeginGroup(); ImGui::Checkbox("Koopa", &koopaExists);
+    //        ImGui::Checkbox("SceneInfo", &sceneExists);
+    //        ImGui::Checkbox("Player", &playerExists);
+    //        ImGui::EndGroup();
+    //        if (koopa && koopa->getSceneInfo() && al::tryGetPlayerActor(koopa, 0)) {
+    //            auto* player = (PlayerActorHakoniwa*)al::tryGetPlayerActor(koopa, 0);
+    //            auto* keeper = player->getPlayerHackKeeper();
+    //            ImGui::Text("player %p", keeper->player);
+    //            ImGui::Text("cap %p", keeper->cap);
+    //            ImGui::Text("safetyPoint %p", keeper->safetyPoint);
+    //            ImGui::Text("gap1 %p", keeper->gap1);
+    //            ImGui::Text("gap2 %p", keeper->gap2);
+    //            ImGui::Text("input %p", keeper->input);
+    //            ImGui::Text("matrix %p", keeper->matrix);
+    //            ImGui::Text("damageKeeper %p", keeper->damageKeeper);
+    //            ImGui::Text("modelChanger %p", keeper->modelChanger);
+    //            ImGui::Text("playerHeightChecker %p", keeper->playerHeightChecker);
+    //            ImGui::Text("playerHitSensor %p", keeper->playerHitSensor);
+    //            ImGui::BeginGroup();
+    //            ImGui::Checkbox("Unused flag", &keeper->unused);
+    //            ImGui::Checkbox("Hack cancelling ", &keeper->cancellingHack);
+    //            ImGui::Checkbox("Hack demo", &keeper->hackDemoStarted);
+    //            ImGui::Checkbox("Unused flag", &keeper->unusedFlag2);
+    //            ImGui::Checkbox("Demo started", &keeper->regularDemoStarted);
+    //            ImGui::Checkbox("Unused flag", &keeper->unusedFlag3);
+    //            ImGui::Checkbox("Took damage", &keeper->tookDamage);
+    //            ImGui::EndGroup();
+    //            ImGui::Text("collisionFilter %p", keeper->collisionFilter);
+    //            ImGui::Text("actor %p", keeper->actor);
+    //            ImGui::Text("actorSensor %p", keeper->actorSensor);
+    //            ImGui::Text("hackObjInfo %p", keeper->hackObjInfo);
+    //            ImGui::Text("stageStartActorSensor %p", keeper->stageStartActorSensor);
+    //            ImGui::Text("stageStartCapTargetInfo %p", keeper->stageStartCapTargetInfo);
+    //            ImGui::Text("stageStartActor %p", keeper->stageStartActor);
+    //            ImGui::Text("hackStartTexKeeper %p", keeper->hackStartTexKeeper);
+    //            ImGui::Text("hackModel %p", keeper->hackModel);
+    //        }
+    //        ImGui::End();
+    //    });
 
     KoopaReceiveMsg::InstallAtOffset(0x7ed3c);
     KoopaAttackSensor::InstallAtOffset(0x7ec00);
+    FireballAttackSensor::InstallAtSymbol("_ZN13KoopaFireBall12attackSensorEPN2al9HitSensorES2_");
     KoopaControlWrapper::InstallAtSymbol("_ZN5Koopa7controlEv");
     KoopaMovementWrapper::InstallAtSymbol("_ZN5Koopa8movementEv");
     DemoStartHandler::InstallAtSymbol("_ZN2al12DemoDirector16requestStartDemoEPKc");
     DemoEndHandler::InstallAtSymbol("_ZN2al12DemoDirector14requestEndDemoEPKc");
     EndInitHandler::InstallAtSymbol("_ZN2al5Scene4killEv");
+    SendMsgStartHack::InstallAtSymbol("_ZN7HackCap16sendMsgStartHackEPN2al9HitSensorE");
+    FixWalkInDemo::InstallAtSymbol("_ZN2rs36requestStartDemoSceneStartPlayerWalkEPN2al9LiveActorE");
 }

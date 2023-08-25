@@ -12,6 +12,7 @@ public:
     PlayerModelChangerHakoniwa(al::LiveActor const*, PlayerModelHolder*, PlayerPainPartsKeeper*, PlayerCostumeInfo*,
                                IUseDimension const*);
     void syncHost(bool);
+    void update(bool alive, bool bound);
     virtual bool isFireFlower() const;
     virtual bool isMini() const;
     virtual bool is2DModel() const;
