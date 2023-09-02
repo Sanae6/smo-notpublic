@@ -320,7 +320,7 @@ struct KoopaReceiveMsg : public exl::hook::impl::ReplaceHook<KoopaReceiveMsg> {
             koopa->mPlayerHack = nullptr;
             al::tryKillEmitterAndParticleAll(koopa);
             al::setNerve(koopa, &nrvKoopaWaitReset);
-            StartedDemo = true;
+            StartedDemo = 20;
             return true;
         }
 
@@ -482,6 +482,9 @@ struct KoopaMovementWrapper : public exl::hook::impl::TrampolineHook<KoopaMoveme
         tickReacted();
         if (StartedDemo > 0) {
             StartedDemo--;
+            if (rs::isActiveDemo(koopa)) {
+                StartedDemo = 20;
+            }
             if (StartedDemo == 0) {
                 auto* player = (PlayerActorHakoniwa*)al::getPlayerActor(koopa, 0);
                 if (!rs::isPlayer2D(player)) {
@@ -609,18 +612,21 @@ void koopaDrawDebug(sead::PrimitiveRenderer& renderer) {
 
 // sead::Quatf* getQuatPtrKoopa(al::LiveActor* actor) { return al::getQuatPtr(actor); }
 
-int blackListedDemoTypes[] = {5, 3};
-const char* whiteListedDemoNames = {
+int blackListedDemoTypes[] = {5, 3, 1};
+const char* whiteListedDemoNames[] = {
     ""
+//    "シナリオカメラデモ",
+//    "シャイン出現デモ"
 };
 
 struct DemoStartHandler : public exl::hook::impl::TrampolineHook<DemoStartHandler> {
     static bool Callback(al::DemoDirector* demoDirector, const char* name, int demoType) {
         Logger::log("Started demo (%d), wowie %s\n", demoType, name);
 
-        int* foundType = std::find(std::begin(blackListedDemoTypes), std::begin(blackListedDemoTypes), demoType);
+        int* foundType = std::find(std::begin(blackListedDemoTypes), std::end(blackListedDemoTypes), demoType);
+        const char** foundName = std::find(std::begin(whiteListedDemoNames), std::end(whiteListedDemoNames), name);
 
-        if (koopa && foundType == nullptr) {
+        if (koopa && (foundName != nullptr || foundType == nullptr)) {
             if (koopa->mPlayerHack)
                 rs::sendMsgHackDemoStart(koopa->mHitSensorKeeper->getSensor(0), koopa->mHitSensorKeeper->getSensor(0));
             else {
@@ -647,7 +653,7 @@ struct DemoEndHandler : public exl::hook::impl::TrampolineHook<DemoEndHandler> {
     static void Callback(al::DemoDirector* demoDirector, const char* name, int demoType) {
         Orig(demoDirector, name, demoType);
         Logger::log("Ended demo %s\n", name);
-        StartedDemo = false;
+//        StartedDemo = false;
     }
 };
 
