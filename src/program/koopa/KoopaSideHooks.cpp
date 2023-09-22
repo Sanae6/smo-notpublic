@@ -81,4 +81,6 @@ void koopaSideInit(patch::CodePatcher& patcher) {
     patcher.Seek(0xa4af4); // exeCatchCapStart
     patcher.WriteInst(inst::Movz(reg::X0, 0));
 
+    patcher.Seek(0x26e3d8);
+    patcher.WriteInst(inst::Movz(reg::X0, 0));
 }

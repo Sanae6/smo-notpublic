@@ -8,6 +8,7 @@ endif ()
 
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if (LOGGER_IP)
     add_compile_definitions(LOGGER_IP="${LOGGER_IP}")

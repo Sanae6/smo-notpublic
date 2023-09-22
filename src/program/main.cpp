@@ -328,8 +328,8 @@ HOOK_DEFINE_TRAMPOLINE(DrawDebugMenu) {
                 if (player && player->mHackCap) {
                     gTextWriter->printf("Target info %s\n", BTOC(*(CapTargetInfo**)OFFSET(player->mHackCap, 0x228)));
 
-                    if (*(u8**)OFFSET(player->mHackCap, 0x228) && al::isPadTriggerRight(-1))
-                        *(CapTargetInfo**)OFFSET(player->mHackCap, 0x228) = nullptr;
+                    // if (*(u8**)OFFSET(player->mHackCap, 0x228) && al::isPadTriggerRight(-1))
+                    //     *(CapTargetInfo**)OFFSET(player->mHackCap, 0x228) = nullptr;
                     if (player->mHackCap->getNerveKeeper())
                         gTextWriter->printf("Hat nerve name %s\n",
                                             typeid(*player->mHackCap->getNerveKeeper()->getCurrentNerve()).name());
@@ -381,14 +381,14 @@ extern "C" void exl_main(void *x0, void *x1) {
 
     // Debug Text Writer Drawing
 
-    DrawDebugMenu::InstallAtOffset(0x50F1D8);
+    // DrawDebugMenu::InstallAtOffset(0x50F1D8);
 
     // General Hooks
 
     ControlHook::InstallAtSymbol("_ZN10StageScene7controlEv");
 
     // ImGui Hooks
-    nvnImGui::InstallHooks();
+    // nvnImGui::InstallHooks();
 
     koopaPatchesInit();
 }
