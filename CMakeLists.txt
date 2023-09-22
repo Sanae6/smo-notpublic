@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.21)
 project(subsdk CXX C ASM)
 
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    add_compile_options (-fdiagnostics-color=always)
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    add_compile_options (-fcolor-diagnostics)
+endif ()
+
 ## Error if not using switch toolchain file
 if (NOT SWITCH)
     message(FATAL_ERROR "Not targeting switch, make sure to specify -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain.cmake")

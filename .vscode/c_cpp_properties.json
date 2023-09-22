@@ -3,10 +3,10 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/src/**",
-                "${workspaceFolder}/src/nn/**",
-                "${workspaceFolder}/src/sead/**",
-                "${workspaceFolder}/src/lib/**"
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/src/nn",
+                "${workspaceFolder}/src/sead",
+                "${workspaceFolder}/src/lib"
             ],
             "defines": [],
             "compilerPath": "/opt/devkitpro/devkitA64/bin/aarch64-none-elf-g++",

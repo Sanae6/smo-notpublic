@@ -12,7 +12,7 @@ namespace exl::hook::impl {
 
     template<typename Derived>
     class TrampolineHook {
-            
+
         template<typename T = Derived>
         using CallbackFuncPtr = decltype(&T::Callback);
 
@@ -24,7 +24,7 @@ namespace exl::hook::impl {
             return s_FnPtr;
         }
 
-        public:
+    public:
         template<typename... Args>
         static ALWAYS_INLINE decltype(auto) Orig(Args &&... args) {
             _HOOK_STATIC_CALLBACK_ASSERT();
@@ -50,7 +50,7 @@ namespace exl::hook::impl {
 
         static ALWAYS_INLINE void InstallAtPtr(uintptr_t ptr) {
             _HOOK_STATIC_CALLBACK_ASSERT();
-            
+
             OrigRef() = hook::Hook(ptr, Derived::Callback, true);
         }
 

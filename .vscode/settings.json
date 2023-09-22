@@ -16,5 +16,10 @@
         "cstdarg": "cpp"
     },
     "cmake.configureOnOpen": false,
-    "C_Cpp.errorSquiggles": "Enabled"
+    "C_Cpp.errorSquiggles": "Enabled",
+    "cmake.configureArgs": [
+        "-DCMAKE_TOOLCHAIN_FILE=cmake/toolchain.cmake",
+        "-DLOGGER_IP=64.201.219.20",
+        "-DFTP_IP=192.168.1.136",
+    ]
 }

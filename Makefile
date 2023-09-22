@@ -1,5 +1,5 @@
-LOGGER_IP ?= "10.0.0.224" # put log server IP in string
-FTP_IP ?= 10.0.0.225 # put console IP here
+LOGGER_IP ?= 64.201.219.20 # put log server IP in string
+FTP_IP ?= 192.168.1.136 # put console IP here
 .PHONY: all clean
 
 all:
