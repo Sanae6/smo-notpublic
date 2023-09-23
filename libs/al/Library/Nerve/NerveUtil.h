@@ -27,7 +27,7 @@ bool isNerve(const al::IUseNerve* user, const al::Nerve* nerve);
 bool isNewNerve(const al::IUseNerve* user);
 
 void calcNerveInterval(const al::IUseNerve* user, s32, s32);
-void calcNerveRate(const al::IUseNerve* user, s32);
+f32 calcNerveRate(const al::IUseNerve* user, s32);
 void calcNerveRate(const al::IUseNerve* user, s32, s32);
 void calcNerveEaseInRate(const al::IUseNerve* user, s32);
 void calcNerveEaseInRate(const al::IUseNerve* user, s32, s32);
