@@ -24,6 +24,7 @@
 #include <game/System/Application.h>
 #include <game/System/GameSystem.h>
 #include <hook/trampoline.hpp>
+#include <logger/SocketInterface.h>
 #include <troller/BulletPatches.h>
 #include <troller/FishPatches.h>
 #include <troller/HeartPatches.h>
@@ -188,7 +189,8 @@ extern "C" void exl_main(void *x0, void *x1) {
         return false;
     });
 
-    Logger::instance().init(LOGGER_IP, 3085);
+    EXL_ASSERT(SocketInterface::instance().init(LOGGER_IP, 3085), "SOCKET SERVER MUST BE GAMING!");
+    SocketInterface::instance().waitForConnection();
 
     runCodePatches();
 

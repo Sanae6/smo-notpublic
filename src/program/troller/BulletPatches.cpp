@@ -2,13 +2,14 @@
 #include <al/Library/LiveActor/ActorSensorFunction.h>
 #include <al/Library/LiveActor/LiveActor.h>
 #include <lib.hpp>
+#include <logger/Params.h>
 
 struct ExplodeIntoPiecesBigger : exl::hook::impl::ReplaceHook<ExplodeIntoPiecesBigger> {
     static void Callback(al::LiveActor* actor) {
-        const s32 length = 60;
-        const f32 regularSize = 1000.0f;
-        const f32 wideSize = 1000.0f;
-        const f32 scale = 10;
+        const s32 length = getParam("Length", 60);
+        const f32 regularSize = getParam("RegularSize", 1000.0f);
+        const f32 wideSize = getParam("WideSize", 1000.0f);
+        const f32 scale = getParam("Scale", 10.0f);
 
         sead::Vector3 scaleVec(scale, scale, scale);
         al::setEffectEmitterVolumeScale(actor,"Explosion", scaleVec);
@@ -22,9 +23,7 @@ struct ExplodeIntoPiecesBigger : exl::hook::impl::ReplaceHook<ExplodeIntoPiecesB
             al::invalidateHitSensor(actor, "Explosion");
             al::invalidateHitSensor(actor, "ExplosionWide");
             actor->kill();
-            return;
         }
-        return;
     }
 };
 

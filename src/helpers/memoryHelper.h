@@ -1,7 +1,7 @@
 #pragma once
 
 #include "logger/Logger.hpp"
-
+#include <cstddef>
 
 namespace MemoryHelper {
     template<class T>
@@ -11,4 +11,3 @@ namespace MemoryHelper {
 
     void logBytes(void *ptr, size_t size);
 }
-

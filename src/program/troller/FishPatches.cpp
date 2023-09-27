@@ -12,6 +12,7 @@
 #include <gfx/seadTextWriter.h>
 #include <lib.hpp>
 #include <logger/Logger.hpp>
+#include <logger/Params.h>
 #include <program/troller/Helpers.h>
 #include <program/troller/StageState.h>
 #include <rs/util/SensorUtil.h>
@@ -108,7 +109,7 @@ struct FishHandleHack : exl::hook::impl::TrampolineHook<FishHandleHack> {
                 al::invalidateClipping(fish);
                 al::onCollide(fish);
                 setNerveOffset(fish, 0x1ca6058); // CaptureWait
-                Logger::log("Attempted to fish a success, detroit became fish\n");
+                Logger::log("Attempted to fish a success, detroit became fishy fish\n");
                 return true;
             }
         }
@@ -181,6 +182,9 @@ void fishPatches() {
     patcher.BranchLinkInst((void*)fishyDeadStatus);
 }
 
-void fishDrawText(sead::TextWriter& writer) {}
+void fishDrawText(sead::TextWriter& writer) {
+    writer.printf("Stateful state: %u\n", getParam<u32>("Stateful", 0));
+    writer.printf("Fateful state: %s\n", getStringParam("Fateful", "Sussy"));
+}
 
 #pragma clang diagnostic pop
