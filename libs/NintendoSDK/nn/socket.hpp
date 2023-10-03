@@ -125,7 +125,7 @@ namespace nn {
 
         s32 Bind(int, sockaddr const *, uint);
 
-        nn::Result Connect(s32 socket, const sockaddr *address, u32 addressLen);
+        s32 Connect(s32 socket, const sockaddr *address, u32 addressLen);
 
         s32 GetPeerName(int, sockaddr *, uint *);
 

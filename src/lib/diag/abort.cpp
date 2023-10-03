@@ -33,9 +33,10 @@ namespace exl::diag {
             AbortToPayload(ctx);
         } else
 #endif
-            // If this ever needs to be updated to a better color:
-            // https://chrisyeh96.github.io/2020/03/28/terminal-colors.html
-            Logger::log("\x1b[31m");
+
+        // If this ever needs to be updated to a better color:
+        // https://chrisyeh96.github.io/2020/03/28/terminal-colors.html
+        Logger::log("\x1b[31m");
         Logger::log("\n\nAssertion failed: %s = %u\n", ctx.expr, ctx.value);
         Logger::log("At %s:%u\n", ctx.file, ctx.line);
         Logger::log("  %s\n", ctx.func);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <devenv/seadDebugFontMgrNvn.h>
 #include <gfx/seadColor.h>
 #include <math/seadBoundBox.h>
 
@@ -15,7 +16,7 @@ public:
     virtual ~TextWriter();
     TextWriter(sead::DrawContext *);
     TextWriter(sead::DrawContext *, sead::Viewport const *);
-    
+
     void printImpl_(char const*, int, bool, sead::BoundBox2<float>*);
     void printf(char const*, ...);
     void printf(char16_t const*, ...);

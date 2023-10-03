@@ -231,7 +231,8 @@ namespace nn {
         void ClearEvent(EventType *);
 
 // LIGHT EVENTS
-        void InitializeLightEvent(LightEventType *, bool initiallySignaled, bool autoclear);
+        enum class EventClearMode {Manual, Auto};
+        void InitializeLightEvent(LightEventType *, bool initiallySignaled, EventClearMode);
 
         void FinalizeLightEvent(LightEventType *);
 
