@@ -4,7 +4,7 @@
 #include <lib.hpp>
 #include <nifm.h>
 #include <socket.hpp>
-#include <troller/Helpers.h>
+#include <utils/Helpers.h>
 
 static char socketPool[0x400000 + 0x20000] __attribute__((aligned(0x1000)));
 static u8 threadStack[0x8000] __attribute__((aligned(0x1000)));
