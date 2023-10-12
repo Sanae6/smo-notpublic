@@ -62,8 +62,8 @@ struct PlayerControlEnableFishy : exl::hook::impl::TrampolineHook<PlayerControlE
             !isNerve<PlayerActorHakoniwaNrvHack>(player) && !rs::isPlayer2D(player)) {
             state.fish->appear();
             al::resetActorPosition(state.fish, player);
-            if (rs::isOnGround(player, player->getPlayerCollision()))
-                *al::getTransPtr(state.fish) += sead::Vector3f::ey * 100;
+//            if (rs::isOnGround(player, player->getPlayerCollision()))
+                *al::getTransPtr(state.fish) += sead::Vector3f::ey * 105;
             al::setNerve(state.fish, &PukupukuNrvDoNothing::sInstance);
             player->mHackCap->prepareLockOn(state.fishSensor);
             Logger::log("detroit become fish\n");

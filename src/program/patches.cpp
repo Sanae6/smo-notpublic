@@ -14,6 +14,11 @@ void costumeRoomPatches() {
     p.WriteInst(inst::Movz(reg::W0, 1));
     p.Seek(0x25FF74);
     p.WriteInst(inst::Movz(reg::W0, 0));
+
+    // CHECKPOINT WARP
+    p.Seek(0x1f2998);
+    p.WriteInst(inst::Movz(reg::X0, 0));
+    p.WriteInst(inst::Ret());
 }
 
 void stubSocketInit() {

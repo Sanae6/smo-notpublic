@@ -168,14 +168,14 @@ HOOK_DEFINE_TRAMPOLINE(DrawDebugMenu) {
 
         Orig(thisPtr);
 
-        gTextWriter->beginDraw();
-
-        gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, 10.f));
-        gTextWriter->printf("FPS: %d\n", static_cast<int>(round(Application::instance()->mFramework->calcFps())));
-        gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, 200.f));
-        fishDrawText(*gTextWriter);
-
-        gTextWriter->endDraw();
+//        gTextWriter->beginDraw();
+//
+//        gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, 10.f));
+//        gTextWriter->printf("FPS: %d\n", static_cast<int>(round(Application::instance()->mFramework->calcFps())));
+//        gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, 200.f));
+//        fishDrawText(*gTextWriter);
+//
+//        gTextWriter->endDraw();
 
     }
 };
@@ -190,7 +190,7 @@ extern "C" void exl_main(void *x0, void *x1) {
     });
 
     EXL_ASSERT(SocketInterface::instance().init(LOGGER_IP, 3085), "SOCKET SERVER MUST BE GAMING!");
-    SocketInterface::instance().waitForConnection();
+//    SocketInterface::instance().waitForConnection();
 
     runCodePatches();
 
