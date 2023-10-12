@@ -18,6 +18,7 @@
 #include <al/Library/File/FileLoader.h>
 #include <al/Library/File/FileUtil.h>
 
+#include <bonk/StageState.hpp>
 #include <game/GameData/GameDataFunction.h>
 #include <game/HakoniwaSequence/HakoniwaSequence.h>
 #include <game/StageScene/StageScene.h>
@@ -197,6 +198,8 @@ extern "C" void exl_main(void *x0, void *x1) {
     // Debug Text Writer Drawing
 
     DrawDebugMenu::InstallAtOffset(0x50F1D8);
+
+    bm::stageStatePatches();
 
     // ImGui Hooks
 #if IMGUI_ENABLED
