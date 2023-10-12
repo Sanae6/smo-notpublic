@@ -1,38 +1,42 @@
 #pragma once
 
-#include <al/Library/System/GameDrawInfo.h>
-
-namespace al
-{
-    struct NetworkSystem;
-    struct HtmlViewer;
-    struct EffectSystem;
-    struct LayoutSystem;
-    struct MessageSystem;
-    struct GamePadSystem;
-    struct AudioSystem;
-    struct WaveVibrationHolder; // :: aal::IAudioFrameProcess;
-} // namespace al
-
-struct ProjectNfpDirector;
-struct ApplicationMessageReceiver;
+#include <basis/seadTypes.h>
+#include <agl/RenderBuffer.h>
 
 namespace al {
+    class EffectSystem;
+    class LayoutSystem;
+    class MessageSystem;
+    class NetworkSystem;
+    class AudioSystem;
+    class GamePadSystem;
+    class HtmlViewer;
+    class WaveVibrationHolder;
+    class FontHolder;
+    class NfpDirector;
+    class ApplicationMessageReceiver;
 
-    class GameSystemInfo {
-        public:
-            void *gap1;
-            al::EffectSystem *mEffectSys;                  // 0x08 
-            al::LayoutSystem *mLayoutSys;                  // 0x10 
-            al::MessageSystem *mMessageSys;                // 0x18 
-            al::NetworkSystem *mNetworkSys;                // 0x20 
-            al::AudioSystem *mAudioSys;                    // 0x28 
-            al::GamePadSystem *mGamePadSys;                // 0x30 
-            al::GameDrawInfo *mDrawInfo;                   // 0x38 from Application::sInstance + 0x30
-            ProjectNfpDirector *mProjNfpDirector;          // 0x48 
-            al::HtmlViewer *mHtmlViewer;                   // 0x50 
-            ApplicationMessageReceiver *mMessageReciever;  // 0x58 
-            al::WaveVibrationHolder *mWaveVibrationHolder; // 0x60 
-            void *gap2;
+    struct DrawSystemInfo {
+        agl::RenderBuffer* dockedRenderBuffer;
+        agl::RenderBuffer* handheldRenderBuffer;
+        bool isDocked;
+        agl::DrawContext* drawContext;
+        agl::RenderBuffer* getRenderBuffer() { return isDocked ? dockedRenderBuffer : handheldRenderBuffer; }
     };
-}
+
+    struct GameSystemInfo {
+        al::AudioSystem* audioSystem;
+        al::EffectSystem* effectSystem;
+        al::LayoutSystem* layoutSystem;
+        al::MessageSystem* messageSystem;
+        al::NetworkSystem* networkSystem;
+        void* field_28;
+        al::GamePadSystem* gamePadSystem;
+        al::DrawSystemInfo* drawSystemInfo;
+        al::FontHolder* fontHolder;
+        al::NfpDirector* nfpDirector;
+        al::HtmlViewer* htmlViewer;
+        al::ApplicationMessageReceiver* applicationMessageReciever;
+        al::WaveVibrationHolder* waveVibrationHolder;
+    };
+}  // namespace al

@@ -15,3 +15,6 @@
 
 #define MAKE_NERVE(Class, Action) MAKE_NERVE_FUNC(Class, Action, Action, )
 #define MAKE_NERVE_NAMESPACE(Class, Action, Namespace) MAKE_NERVE_FUNC(Class, Action, Action, Namespace::)
+#define NERVE_DEF(Class, Action)                                                                                       \
+    MAKE_NERVE_FUNC(Class, Action, Action, );                                                                          \
+    Class##Nrv##Action Class##Nrv##Action::sInstance

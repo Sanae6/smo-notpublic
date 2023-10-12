@@ -415,8 +415,8 @@ namespace handler {
             exl::util::RwPages patcher(exl::util::GetRtldModuleInfo().m_Text.m_Start + 0xb0, 0x4);
             u32* branchPtr = reinterpret_cast<u32*>(patcher.GetRw());
             branchPtr[0] = exl::armv8::inst::Branch(0x1c).Value();
-            branchPtr[0] = inst::Movz(reg::X0, 1).Value();
-            branchPtr[1] = 0xD4000501;
+//            branchPtr[0] = inst::Movz(reg::X0, 1).Value();
+//            branchPtr[1] = 0xD4000501;
         }
         auto& handlerFunctionOffset = *(uintptr_t*)(exl::util::GetRtldModuleInfo().m_Data.m_Start + 0x1d0);
         handlerFunctionOffset = reinterpret_cast<uintptr_t>(detail::phaseOneHandler);

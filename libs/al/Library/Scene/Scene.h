@@ -24,7 +24,7 @@ class Scene : public al::NerveExecutor,
               public al::IUseAudioKeeper,
               public al::IUseCamera,
               public al::IUseSceneObjHolder {
-private:
+protected:
     bool mIsAlive;
 
     sead::FixedSafeString<0x40> mName;
@@ -56,9 +56,6 @@ public:
     AudioKeeper* getAudioKeeper() const override;
     SceneObjHolder* getSceneObjHolder() const override;
     CameraDirector* getCameraDirector() const override;
-    LayoutKit* getLayoutKit() const;
-    SceneStopCtrl* getSceneStopCtrl() const;
-    SceneMsgCtrl* getSceneMsgCtrl() const;
     void initializeAsync(const al::SceneInitInfo &);
     void initDrawSystemInfo(const al::SceneInitInfo &);
     void initSceneObjHolder(al::SceneObjHolder *);

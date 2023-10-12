@@ -25,6 +25,7 @@
 #include <game/System/GameSystem.h>
 #include <hook/trampoline.hpp>
 #include <logger/SocketInterface.h>
+#include <scene/ScenePatches.hpp>
 
 #include "rs/util.hpp"
 
@@ -205,6 +206,7 @@ extern "C" void exl_main(void *x0, void *x1) {
     nvnImGui::addDrawFunc(drawDebugWindow);
 #endif
 
+    scenePatchesInit();
 }
 
 extern "C" NORETURN void exl_exception_entry() {

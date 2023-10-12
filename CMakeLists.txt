@@ -26,7 +26,7 @@ if (LOGGER_IP)
 endif ()
 
 ## this is gross, but we use it to access everything in headers from the games libraries
-add_compile_definitions(private=public)
+add_compile_definitions(private=public protected=public)
 
 ## Title Id
 set(TITLE_ID 0100000000010000)
@@ -35,6 +35,7 @@ add_compile_definitions(EXL_PROGRAM_ID=${CONFIG_TITLE_ID} NNSDK=1 IMGUI_USER_CON
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/module/subsdk9.json.template ${CMAKE_CURRENT_BINARY_DIR}/subsdk9.json)
 
 ## Project sources
+include_directories(${PROJECT_SOURCE_DIR}/src/program)
 include_directories(${PROJECT_SOURCE_DIR}/libs)
 
 # include_directories(${PROJECT_SOURCE_DIR}/libs/exl)
@@ -48,7 +49,6 @@ include_directories(${PROJECT_SOURCE_DIR}/libs/NintendoSDK/nvnTool)
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
 include_directories(${PROJECT_SOURCE_DIR}/src/lib)
-include_directories(${PROJECT_SOURCE_DIR}/src/program)
 
 include_directories(${PROJECT_SOURCE_DIR}/imgui)
 

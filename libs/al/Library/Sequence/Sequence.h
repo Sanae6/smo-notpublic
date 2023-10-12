@@ -1,83 +1,59 @@
 #pragma once
 
 #include <al/Library/Audio/AudioKeeper.h>
-#include <al/Library/Audio/AudioDirector.h>
-#include <al/Library/Audio/IUseAudioKeeper.h>
 #include <al/Library/Nerve/NerveExecutor.h>
-#include <al/Library/Scene/SceneCreator.h>
 #include <al/Library/System/GameSystemInfo.h>
-
 #include <prim/seadSafeString.h>
 
 namespace al {
-
+    struct GameSystemInfo;
     struct SequenceInitInfo {
-        al::GameSystemInfo* mGsysInfo;
+        GameSystemInfo* gameSystemInfo;
     };
-
-    class AudioSystemInfo;
-
+    struct AudioSystemInfo;
+    class AudioDirector;
     class Scene;
 
-    class DrawSystemInfo;
+    class SceneCreator;
+    class IUseSceneCreator {
+        virtual ~IUseSceneCreator() = 0;
+        virtual SceneCreator* getSceneCreator() const = 0;
+        virtual void setSceneCreator(al::SceneCreator* sceneCreator) = 0;
+    };
 
     class Sequence : public al::NerveExecutor, public al::IUseAudioKeeper, public al::IUseSceneCreator {
-    public:
-        Sequence(const char *name);
-
-        virtual ~Sequence() override;
-
-        virtual void init(const al::SequenceInitInfo &initInfo);
-
-        virtual void update();
-
-        virtual void kill();
-
-        virtual void drawMain() const;
-
-        virtual void drawSub() const;
-
-        virtual bool isDisposable() { return false; }
-
-        virtual al::Scene *getCurrentScene() const;
-
-        virtual al::SceneCreator *getSceneCreator() const override;
-
-        virtual void setSceneCreator(al::SceneCreator *sceneCreator) override;
-
-        virtual al::AudioKeeper *getAudioKeeper() const override;
-
-        void initAudio(const al::GameSystemInfo &, const char *, int, int, int, const char *);
-
-        void initAudioKeeper(const char *);
-
-        void initDrawSystemInfo(const al::SequenceInitInfo &);
-
-        al::AudioSystemInfo *getAudioSystemInfo();
-
-        al::DrawSystemInfo *getDrawSystemInfo() const {
-            return mGameDrawInfo;
-        }
-
-        al::AudioDirector *getAudioDirector() const {
-            return mAudioDirector;
-        }
-
-        void setNextScene(al::Scene *scene) {
-            mNextScene = scene;
-        }
-
-        const sead::SafeString &getName() const {
-            return mName;
-        }
-    private:
-        const sead::FixedSafeString<0x40> mName;
-        al::Scene *mNextScene;
-        al::Scene *mCurrentScene;
-        al::SceneCreator *mSceneCreator;
-        al::AudioDirector *mAudioDirector;
-        al::AudioKeeper *mAudioKeeper;
-        al::DrawSystemInfo *mGameDrawInfo;
+    protected:
+        sead::FixedSafeString<0x40> mName;
+        al::Scene* mNextScene;
+        al::Scene* mCurrentScene;
+        al::SceneCreator* mSceneCreator;
+        al::AudioDirector* mAudioDirector;
+        al::AudioKeeper* mAudioKeeper;
+        al::DrawSystemInfo* mGameDrawInfo;
         bool mIsAlive;
+
+    public:
+        Sequence(const char* name);
+        virtual ~Sequence() override;
+        virtual void init(const al::SequenceInitInfo& initInfo);
+        virtual void update();
+        virtual void kill();
+        virtual void drawMain() const;
+        virtual void drawSub() const;
+        virtual bool isDisposable() { return false; }
+        virtual al::Scene* getCurrentScene() const;
+        virtual al::SceneCreator* getSceneCreator() const override;
+        virtual void setSceneCreator(al::SceneCreator* sceneCreator) override;
+
+        void initAudio(const al::GameSystemInfo&, const char*, s32, s32, s32, const char*);
+        void initAudioKeeper(const char*);
+        void initDrawSystemInfo(const al::SequenceInitInfo& initInfo);
+
+        al::AudioKeeper* getAudioKeeper() const override;
+        al::AudioSystemInfo* getAudioSystemInfo() const;
+        auto getName() const { return mName; }
+
+    protected:
+        al::DrawSystemInfo* getDrawInfo() const { return mGameDrawInfo; }
     };
-}
+} // namespace al

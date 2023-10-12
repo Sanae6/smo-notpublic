@@ -38,4 +38,9 @@ public:
     void appear(void);
     void kill(void);
 };
+
+class IUseAudioKeeper {
+public:
+    virtual AudioKeeper* getAudioKeeper() const = 0;
+};
 }  // namespace al

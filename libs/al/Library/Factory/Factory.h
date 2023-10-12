@@ -28,7 +28,7 @@ public:
         initFactory(entries);
     }
     template <int N>
-    inline void initFactory(al::NameToCreator<T> (&entries)[N]) {
+    inline void initFactory(al::NameToCreator<T> (&entries)[N] ) {
         mFactoryEntries = entries;
         mNumFactoryEntries = N;
     }
