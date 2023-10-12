@@ -6,6 +6,7 @@
 #include <al/Library/LiveActor/LiveActor.h>
 #include <game/Player/CapFunction.h>
 #include <game/Player/PlayerActorHakoniwa.h>
+#include <game/Player/PlayerDamageKeeper.h>
 #include <game/Player/PlayerFunction.h>
 #include <game/Player/States/PlayerStateHack.h>
 #include <game/StageScene/StageScene.h>
@@ -46,7 +47,7 @@ struct PlayerControlEnableFishy : exl::hook::impl::TrampolineHook<PlayerControlE
             al::killPrePassLight(state.fish, "Front", -1);
             al::tryGetSubActor(state.fish, "ライト")->kill();
         }
-        state.fish->kill();
+        s   tate.fish->kill();
     }
 
     static void Callback(PlayerActorHakoniwa* player) {
@@ -58,12 +59,15 @@ struct PlayerControlEnableFishy : exl::hook::impl::TrampolineHook<PlayerControlE
             return;
         }
 
+        if (isNerve<PlayerActorHakoniwaNrvAbyss>(player) || player->mPlayerDamageKeeper->mHitPoint == 0)
+            state.hasDied = true;
+
         if (shouldEnableFishy(player) && !state.isFishCapture() && !rs::isActiveDemo(player) &&
-            !isNerve<PlayerActorHakoniwaNrvHack>(player) && !rs::isPlayer2D(player)) {
+            !isNerve<PlayerActorHakoniwaNrvHack>(player) && !rs::isPlayer2D(player) && !state.hasDied) {
             state.fish->appear();
             al::resetActorPosition(state.fish, player);
-//            if (rs::isOnGround(player, player->getPlayerCollision()))
-                *al::getTransPtr(state.fish) += sead::Vector3f::ey * 105;
+            //            if (rs::isOnGround(player, player->getPlayerCollision()))
+            *al::getTransPtr(state.fish) += sead::Vector3f::ey * 105;
             al::setNerve(state.fish, &PukupukuNrvDoNothing::sInstance);
             player->mHackCap->prepareLockOn(state.fishSensor);
             Logger::log("detroit become fish\n");

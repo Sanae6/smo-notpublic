@@ -39,5 +39,6 @@ namespace rs {
 
 namespace {
     MAKE_NERVE_FAKE(PlayerActorHakoniwa, Hack)
+    MAKE_NERVE_FAKE(PlayerActorHakoniwa, Abyss)
     MAKE_NERVE_FAKE(Pukupuku, BlowDownFromCapture)
 } // namespace

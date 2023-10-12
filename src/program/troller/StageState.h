@@ -13,6 +13,7 @@ struct StageState : public al::ISceneObj {
     Pukupuku* fish = nullptr;
     al::HitSensor* fishSensor;
     al::NerveStateBase* fishBlowDownState;
+    bool hasDied = false;
 
     static bool isSceneWithMario(const al::ActorInitInfo& initInfo);
     static al::AreaObjGroup* getFishEnableAreaGroup(al::LiveActor* actor);
