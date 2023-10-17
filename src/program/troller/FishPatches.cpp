@@ -47,7 +47,7 @@ struct PlayerControlEnableFishy : exl::hook::impl::TrampolineHook<PlayerControlE
             al::killPrePassLight(state.fish, "Front", -1);
             al::tryGetSubActor(state.fish, "ライト")->kill();
         }
-        s   tate.fish->kill();
+        state.fish->kill();
     }
 
     static void Callback(PlayerActorHakoniwa* player) {
@@ -187,8 +187,8 @@ void fishPatches() {
 }
 
 void fishDrawText(sead::TextWriter& writer) {
-    writer.printf("Stateful state: %u\n", getParam<u32>("Stateful", 0));
-    writer.printf("Fateful state: %s\n", getStringParam("Fateful", "Sussy"));
+    writer.printf("Stateful state: %u\n", par::get<u32>("Stateful", 0));
+    writer.printf("Fateful state: %s\n", par::get("Fateful", "Sussy"));
 }
 
 #pragma clang diagnostic pop

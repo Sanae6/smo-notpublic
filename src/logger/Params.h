@@ -31,11 +31,13 @@ public:
     }
 };
 
-static const char* getStringParam(const char* name, const char* defValue) {
-    return Params::instance().getString(name, defValue);
-}
+namespace par {
+    [[maybe_unused]] static const char* get(const char* name, const char* defValue) {
+        return Params::instance().getString(name, defValue);
+    }
 
-template <typename T>
-static T getParam(const char* name, const T defValue) {
-    return Params::instance().get(name, defValue);
+    template <typename T>
+    [[maybe_unused]] static T get(const char* name, const T defValue) {
+        return Params::instance().get(name, defValue);
+    }
 }

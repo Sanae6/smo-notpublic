@@ -9,14 +9,14 @@
 class SocketInterface {
     static SocketInterface sInstance;
 
-    s32 fd;
+    s32 fd{};
     in_addr hostAddress{};
     sockaddr serverAddress{};
-    bool startedUp;
-    bool connected;
-    nn::os::ThreadType thread;
-    nn::os::LightEventType connectedEvent;
-    nn::os::LightEventType initializedEvent;
+    bool startedUp{};
+    bool connected{};
+    nn::os::ThreadType thread{};
+    nn::os::LightEventType connectedEvent{};
+    nn::os::LightEventType initializedEvent{};
 
     static void threadEntrypoint(void*);
     void threadMain();

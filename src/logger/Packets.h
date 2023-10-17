@@ -6,6 +6,7 @@ enum class PacketType : u16 {
     Log,
     ParamApply,
     ParamDelete,
+    Trigger,
 };
 
 struct Packet {

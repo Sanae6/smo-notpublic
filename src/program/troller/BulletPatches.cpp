@@ -6,10 +6,10 @@
 
 struct ExplodeIntoPiecesBigger : exl::hook::impl::ReplaceHook<ExplodeIntoPiecesBigger> {
     static void Callback(al::LiveActor* actor) {
-        const s32 length = getParam("Length", 60);
-        const f32 regularSize = getParam("RegularSize", 1000.0f);
-        const f32 wideSize = getParam("WideSize", 1000.0f);
-        const f32 scale = getParam("Scale", 10.0f);
+        const s32 length = par::get("Length", 60);
+        const f32 regularSize = par::get("RegularSize", 1000.0f);
+        const f32 wideSize = par::get("WideSize", 1000.0f);
+        const f32 scale = par::get("Scale", 10.0f);
 
         sead::Vector3 scaleVec(scale, scale, scale);
         al::setEffectEmitterVolumeScale(actor,"Explosion", scaleVec);

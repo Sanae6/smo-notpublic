@@ -15,7 +15,7 @@ Params::Param& Params::getOrCreateParam(const char* name, const u8* value, size_
             return params[i];
 
     auto& param = params[length++];
-//    Logger::log("Created new param: %s %d %d\n", name, size, length - 1);
+    //    Logger::log("Created new param: %s %d %d\n", name, size, length - 1);
     auto nameLen = strlen(name);
     auto* nameAlloc = new (heap) char[nameLen + 1];
     nameAlloc[nameLen] = '\0';
@@ -38,7 +38,7 @@ void Params::handleApply(ParamApplyPacket* packet) {
     }
     memset(param.data, 0, param.size);
     memcpy(param.data, packet->value(), packet->valueLen());
-//    Logger::log("Got parameter apply %s\n", packet->name());
+    //    Logger::log("Got parameter apply %s\n", packet->name());
 }
 void Params::handleApply(ParamDeletePacket* packet) {
     if (length == 0)
