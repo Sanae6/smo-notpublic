@@ -120,7 +120,7 @@ public:
     explicit ContainerWrapper(T& container) : mContainer(&container) {}
 
     auto begin() const { return Iterator(mContainer, 0); }
-    auto end() const { return Iterator(mContainer, mContainer->size()); }
+    auto end() const { return Iterator(mContainer, mContainer->floats()); }
 
 private:
     T* mContainer;

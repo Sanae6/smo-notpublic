@@ -26,6 +26,7 @@
 #include <game/System/GameSystem.h>
 #include <hook/trampoline.hpp>
 #include <logger/SocketInterface.h>
+#include <utils/SpeedbootTwo.hpp>
 
 #include "rs/util.hpp"
 
@@ -142,10 +143,10 @@ HOOK_DEFINE_TRAMPOLINE(GameSystemInit) {
 
         sead::TextWriter::setDefaultFont(sead::DebugFontMgrJis1Nvn::instance());
 
-        al::GameDrawInfo *drawInfo = Application::instance()->mDrawInfo;
+        al::DrawSystemInfo*drawInfo = Application::instance()->mDrawInfo;
 
-        agl::DrawContext *context = drawInfo->mDrawContext;
-        agl::RenderBuffer *renderBuffer = drawInfo->mFirstRenderBuffer;
+        agl::DrawContext *context = drawInfo->drawContext;
+        agl::RenderBuffer *renderBuffer = drawInfo->getRenderBuffer();
 
         sead::Viewport *viewport = new sead::Viewport(*renderBuffer);
 
@@ -200,6 +201,7 @@ extern "C" void exl_main(void *x0, void *x1) {
     DrawDebugMenu::InstallAtOffset(0x50F1D8);
 
     bm::stageStatePatches();
+    sb::speedbootPatches();
 
     // ImGui Hooks
 #if IMGUI_ENABLED

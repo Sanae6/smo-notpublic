@@ -1,6 +1,6 @@
 #pragma once
 
-#include <al/Library/System/GameDrawInfo.h>
+#include <al/Library/System/DrawSystemInfo.h>
 
 namespace al
 {
@@ -28,7 +28,7 @@ namespace al {
             al::NetworkSystem *mNetworkSys;                // 0x20 
             al::AudioSystem *mAudioSys;                    // 0x28 
             al::GamePadSystem *mGamePadSys;                // 0x30 
-            al::GameDrawInfo *mDrawInfo;                   // 0x38 from Application::sInstance + 0x30
+            al::DrawSystemInfo*mDrawInfo;                   // 0x38 from Application::sInstance + 0x30
             ProjectNfpDirector *mProjNfpDirector;          // 0x48 
             al::HtmlViewer *mHtmlViewer;                   // 0x50 
             ApplicationMessageReceiver *mMessageReciever;  // 0x58 

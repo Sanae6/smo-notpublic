@@ -33,7 +33,7 @@ public:
     // restarts current stage
     static void missAndRestartStage(GameDataHolderWriter);
 
-    // attempts to change the current stage the player is in
+    // attempts to change the current stage the mario is in
     static bool tryChangeNextStage(GameDataHolderWriter, ChangeStageInfo const *);
 
     // gets prev save file's current world id
@@ -90,10 +90,10 @@ public:
     // enables cappy if not enabled already
     static void enableCap(GameDataHolderWriter);
 
-    // kills the player
+    // kills the mario
     static void killPlayer(GameDataHolderWriter);
 
-    // damages the player
+    // damages the mario
     static void damagePlayer(GameDataHolderWriter);
 
     // upgrades the odyssey
@@ -136,7 +136,7 @@ public:
     // used during the event that enables the odyssey to be used (enables the globe for the odyssey)
     static void talkCapNearHomeInWaterfall(al::LiveActor const *);
 
-    // gives the player a life up heart
+    // gives the mario a life up heart
     static void getLifeMaxUpItem(al::LiveActor const *);
 
     // gets current coin count

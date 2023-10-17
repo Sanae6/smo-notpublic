@@ -44,7 +44,7 @@ class HakoniwaSequence : public al::Sequence {
         void update(void);
         bool isEnableSave(void);
         void drawMain(void);
-        al::Scene* getCurrentScene(void) const;  // {return this->mStageScene}
+        al::Scene* getCurrentScene(void) const override;  // {return this->mStageScene}
 
         void exeBootLoadData();
         void exeDemoOpening();

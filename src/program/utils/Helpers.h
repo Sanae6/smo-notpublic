@@ -3,17 +3,22 @@
 #include <al/Library/Base/String.h>
 #include <al/Library/Nerve/IUseNerve.h>
 #include <al/Library/Nerve/Nerve.h>
+#include <al/Library/Nerve/Nerve.h>
 #include <al/Library/Nerve/NerveUtil.h>
 #include <lib.hpp>
 #include <typeinfo>
 
 template <typename Right, typename Left>
 bool isSameType([[maybe_unused]] const Left* leftVal) {
-    return al::isEqualString(typeid(*leftVal).name(), typeid(Right).name());
+    return leftVal != nullptr && al::isEqualString(typeid(*leftVal).name(), typeid(Right).name());
+}
+template <typename Left>
+bool isSameType([[maybe_unused]] const Left* leftVal, const std::type_info& rightValue) {
+    return leftVal != nullptr && al::isEqualString(typeid(*leftVal).name(), rightValue.name());
 }
 template <typename Right>
 bool isNerve(const al::IUseNerve* user) {
-    return isSameType<Right, al::Nerve>(user->getNerveKeeper()->getCurrentNerve());
+    return isSameType<Right>(user->getNerveKeeper()->getCurrentNerve());
 }
 template <typename Cast, typename Host>
 Cast& unsafeRef(Host* host, ptrdiff_t offset) {

@@ -7,7 +7,7 @@
 namespace al {
 
 class ActorPoseKeeperBase {
-protected:  // protected so it's visible to all sub-classes (TFSV, TFGSV, ...)
+public:  // protected so it's visible to all sub-classes (TFSV, TFGSV, ...)
     sead::Vector3f mTrans{0, 0, 0};
 
     static sead::Vector3f sDefaultVelocity;

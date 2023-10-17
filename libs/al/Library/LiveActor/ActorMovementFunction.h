@@ -115,7 +115,7 @@ void reboundVelocityFromActor(al::LiveActor* actor, const al::LiveActor* target,
 void reboundVelocityFromActor(al::LiveActor* actor, const al::LiveActor* target, const sead::Vector3f&, f32);
 void reboundVelocityFromSensor(al::LiveActor* actor, const al::HitSensor*, f32);
 void reboundVelocityFromSensor(al::LiveActor* actor, const al::HitSensor*, const sead::Vector3f&, f32);
-void calcDirToActor(sead::Vector3f*, const al::LiveActor* actor, const al::LiveActor* target);
+bool calcDirToActor(sead::Vector3f*, const al::LiveActor* actor, const al::LiveActor* target);
 void reboundVelocityBetweenActor(al::LiveActor* actor, al::LiveActor* target, f32);
 void reboundVelocityBetweenSensor(al::HitSensor*, al::HitSensor*, f32);
 void calcVelocityKeepLengthBetweenActor(sead::Vector3f*, const al::LiveActor* actor, const al::LiveActor* target, f32, f32);

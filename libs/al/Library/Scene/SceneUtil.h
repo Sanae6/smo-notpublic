@@ -24,7 +24,7 @@ void getStageResourceMap(al::Scene const*,int);
 void tryGetStageResourceDesign(al::Scene const*,int);
 void tryGetStageResourceSound(al::Scene const*,int);
 void getSceneFrameBufferMain(al::Scene const*);
-void getSceneDrawContext(al::Scene const*);
+agl::DrawContext* getSceneDrawContext(al::Scene const*);
 void getSceneFrameBufferConsole(al::Scene const*);
 void getSceneFrameBufferHandheld(al::Scene const*);
 void getSceneFrameBufferMainAspect(al::Scene const*);

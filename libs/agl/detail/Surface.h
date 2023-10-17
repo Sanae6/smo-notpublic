@@ -29,19 +29,19 @@ namespace agl
 
             u16 mWidth;
             u16 mHeight;
-            u16 _4;
-            u16 _6;
-            u8 _8;
-            u8 _9;
-            u16 _A;
-            u8 xC[0x1A-0xC];
-            u8 _1A;
-            u8 _1B;
-            u32 _1C;
-            u8 _20;
-            u8 _21;
-            u8 _22;
-            u8 _23;
+            u16 depth;
+            u16 driverFormat;
+            u8 multiSampleType;
+            u8 levels;
+            u16 textureType;
+            u32 storageAlignment;
+            u32 storageSize;
+            u32 unk0;
+            u16 storageClass;
+            u8 textureAttribute;
+            u8 pixelByteSize;
+            u32 stride;
+            u8 compSel[4];
         };
 
         struct SurfaceBase

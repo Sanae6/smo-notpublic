@@ -14,7 +14,9 @@
 
 namespace agl
 {
-    typedef u64 GPUMemVoidAddr;
+    struct GPUMemVoidAddr {
+        class GPUMemAddrBase* base;
+    };
 
     class GPUMemBlockBase
     {

@@ -5,4 +5,8 @@
 class GameDataHolderWriter {
 public:
     GameDataHolder *mData;
+
+    operator GameDataHolder*() {
+        return mData;
+    }
 };

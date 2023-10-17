@@ -8,6 +8,7 @@
 #ifdef SWITCH
 #include <nvn_Cpp.h>
 #endif
+#include <thread/seadAtomic.h>
 
 namespace sead {
 

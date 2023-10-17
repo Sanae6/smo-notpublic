@@ -8,7 +8,7 @@
 #include <utility>
 
 namespace handler {
-    char handlerStack[0x20000] = {};
+    char handlerStack[0x10000] = {};
     CatchFunc handlerFunc = nullptr;
     ExceptionInfo exceptionInfo = {};
 

@@ -13,5 +13,7 @@ namespace agl
         void* unk1;
         TextureData mTextureData;
         char unk2[0x40];
+
+        void applyTextureData(const agl::TextureData&);
     };
 };

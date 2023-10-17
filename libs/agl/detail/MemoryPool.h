@@ -6,10 +6,11 @@
 #pragma once
 
 #include "types.h"
+#include <nvn/nvn.h>
 
 namespace agl
 {
-    typedef s32 MemoryAttribute;
+    enum class MemoryAttribute {};
 
     namespace detail
     {
@@ -32,8 +33,8 @@ namespace agl
 
             void finalize();
 
-            u8 _0[0x104]; // todo: where do the parent 0x100 bytes come from?
-
+            NVNmemoryPool pool;
+            s32 memoryPoolType;
         };
     };
 };
