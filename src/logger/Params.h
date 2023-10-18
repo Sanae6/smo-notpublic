@@ -12,13 +12,16 @@ class Params {
     };
     static Param staticParamBuffer[];
 
-    sead::Heap* heap;
+    sead::Heap* heap = nullptr;
 
-    Param* params;
+    Param* params = nullptr;
     u64 length = 0;
     Params::Param& getOrCreateParam(const char* name, const u8* value, size_t valueSize);
 public:
     static Params& instance();
+    static bool isInitialized() {
+        return instance().heap != nullptr;
+    }
     void initialize();
     void handleApply(ParamApplyPacket* packet);
     void handleApply(ParamDeletePacket* packet);
@@ -33,11 +36,13 @@ public:
 
 namespace par {
     [[maybe_unused]] static const char* get(const char* name, const char* defValue) {
+        if (!Params::isInitialized()) return defValue;
         return Params::instance().getString(name, defValue);
     }
 
     template <typename T>
     [[maybe_unused]] static T get(const char* name, const T defValue) {
+        if (!Params::isInitialized()) return defValue;
         return Params::instance().get(name, defValue);
     }
 }

@@ -189,7 +189,7 @@ extern "C" void exl_main(void *x0, void *x1) {
         return false;
     });
 
-    EXL_ASSERT(SocketInterface::instance().init(LOGGER_IP, 3085), "SOCKET SERVER MUST BE GAMING!");
+//    EXL_ASSERT(SocketInterface::instance().init(LOGGER_IP, 3085), "SOCKET SERVER MUST BE GAMING!");
 //    SocketInterface::instance().waitForConnection();
 
     runCodePatches();
