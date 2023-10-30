@@ -50,7 +50,7 @@ namespace bm {
         virtual void activate() { active = true; }
         virtual void show() { visible = true; }
         virtual void hide() { visible = false; }
-        void update() {
+        virtual void update() {
             if (pauseTimer >= 0) {
                 pauseTimer--;
                 return;

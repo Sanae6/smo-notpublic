@@ -19,3 +19,10 @@ class GameDataHolderAccessor : public GameDataHolderWriter
         GameDataHolderAccessor(al::IUseSceneObjHolder const *IUseObjHolder) {mData = (GameDataHolder*)al::getSceneObj(IUseObjHolder, 18);}
         GameDataHolderAccessor(al::SceneObjHolder const *objHolder) {mData = (GameDataHolder*)objHolder->getObj(18); }
 };
+
+[[maybe_unused]] static GameDataHolder* getGameDataHolder(al::IUseSceneObjHolder* sceneObjHolder) {
+    return GameDataHolderAccessor(sceneObjHolder);
+}
+[[maybe_unused]] static GameDataHolder* getGameDataHolder(al::SceneObjHolder* sceneObjHolder) {
+    return GameDataHolderAccessor(sceneObjHolder);
+}

@@ -3,6 +3,7 @@
 #include <basis/seadTypes.h>
 
 enum class PacketType : u16 {
+    Ping,
     Log,
     ParamApply,
     ParamDelete,
@@ -46,5 +47,9 @@ struct ParamApplyPacket : Packet {
 };
 
 struct ParamDeletePacket : Packet {
+    const char name[];
+};
+
+struct TriggerPacket : Packet {
     const char name[];
 };

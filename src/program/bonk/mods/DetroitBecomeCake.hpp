@@ -6,6 +6,5 @@ namespace bm {
         al::LiveActor* cakeModel;
         void activate() override;
         void sceneStart(const al::ActorInitInfo &initInfo) override;
-        void control() override;
     };
 } // namespace bm

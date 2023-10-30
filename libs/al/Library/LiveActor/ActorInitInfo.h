@@ -220,7 +220,7 @@ bool tryAddDisplayOffset(al::LiveActor* actor, const al::ActorInitInfo& initInfo
 bool tryAddDisplayScale(al::LiveActor* actor, const al::ActorInitInfo& initInfo);
 
 al::PlacementInfo* getPlacementInfo(const al::ActorInitInfo& initInfo);
-const al::LayoutInitInfo* getLayoutInitInfo(const al::ActorInitInfo& initInfo);
+const al::LayoutInitInfo& getLayoutInitInfo(const al::ActorInitInfo& initInfo);
 al::AudioDirector* getAudioDirector(const al::ActorInitInfo& initInfo);
 al::CollisionDirector* getCollisionDirectorFromInfo(const al::ActorInitInfo& initInfo);
 const al::SceneCameraInfo* getSceneCameraInfoFromInfo(const al::ActorInitInfo& initInfo);

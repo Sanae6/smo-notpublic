@@ -29,4 +29,5 @@
 #define MAKE_NERVE(Class, Action) MAKE_NERVE_FUNC(Class, Action, Action, )
 #define MAKE_NERVE_BASE(Class, Action) MAKE_NERVE_BASE_FUNC(Class, Action, Action, )
 #define MAKE_NERVE_IMPL(Class, Action) MAKE_NERVE_IMPL_FUNC(Class, Action, Action, )
+#define MAKE_NERVE_BOTH(Class, Action) MAKE_NERVE_BASE_FUNC(Class, Action, Action, ); MAKE_NERVE_IMPL_FUNC(Class, Action, Action, )
 #define MAKE_NERVE_NAMESPACE(Class, Action, Namespace) MAKE_NERVE_FUNC(Class, Action, Action, Namespace::)

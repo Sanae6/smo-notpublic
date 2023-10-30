@@ -126,6 +126,9 @@ void SocketInterface::handlePacket(Packet* packet) {
     case PacketType::ParamDelete:
         Params::instance().handleApply(reinterpret_cast<ParamDeletePacket*>(packet));
         break;
+    case PacketType::Trigger:
+        Params::instance().handleApply(reinterpret_cast<TriggerPacket*>(packet));
+        break;
     }
 }
 void SocketInterface::signalInit() { nn::os::SignalLightEvent(&initializedEvent); }

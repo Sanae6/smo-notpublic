@@ -7,7 +7,8 @@
 
 #include <gfx/seadColor.h>
 #include <lib/nx/types.h>
-#include <nn/util.h>
+#include <nn/util/util_BitFlagSet.h>
+#include <nn/util/util_BitPack.h>
 
 namespace nn {
     namespace hid {

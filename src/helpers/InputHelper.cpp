@@ -35,20 +35,20 @@ const char *getStyleName(nn::hid::NpadStyleSet style) {
 
     u32 index = -1;
 
-    if (style.isBitSet(nn::hid::NpadStyleTag::NpadStyleFullKey)) { index = 0; }
-    if (style.isBitSet(nn::hid::NpadStyleTag::NpadStyleHandheld)) { index = 1; }
-    if (style.isBitSet(nn::hid::NpadStyleTag::NpadStyleJoyDual)) { index = 2; }
-    if (style.isBitSet(nn::hid::NpadStyleTag::NpadStyleJoyLeft)) { index = 3; }
-    if (style.isBitSet(nn::hid::NpadStyleTag::NpadStyleJoyRight)) { index = 4; }
-    if (style.isBitSet(nn::hid::NpadStyleTag::NpadStyleGc)) { index = 5; }
-    if (style.isBitSet(nn::hid::NpadStyleTag::NpadStylePalma)) { index = 6; }
-    if (style.isBitSet(nn::hid::NpadStyleTag::NpadStyleLark)) { index = 7; }
-    if (style.isBitSet(nn::hid::NpadStyleTag::NpadStyleHandheldLark)) { index = 8; }
-    if (style.isBitSet(nn::hid::NpadStyleTag::NpadStyleLucia)) { index = 9; }
-    if (style.isBitSet(nn::hid::NpadStyleTag::NpadStyleLagon)) { index = 10; }
-    if (style.isBitSet(nn::hid::NpadStyleTag::NpadStyleLager)) { index = 11; }
-    if (style.isBitSet(nn::hid::NpadStyleTag::NpadStyleSystemExt)) { index = 12; }
-    if (style.isBitSet(nn::hid::NpadStyleTag::NpadStyleSystem)) { index = 13; }
+    if (style.Test(nn::hid::NpadStyleTag::NpadStyleFullKey)) { index = 0; }
+    if (style.Test(nn::hid::NpadStyleTag::NpadStyleHandheld)) { index = 1; }
+    if (style.Test(nn::hid::NpadStyleTag::NpadStyleJoyDual)) { index = 2; }
+    if (style.Test(nn::hid::NpadStyleTag::NpadStyleJoyLeft)) { index = 3; }
+    if (style.Test(nn::hid::NpadStyleTag::NpadStyleJoyRight)) { index = 4; }
+    if (style.Test(nn::hid::NpadStyleTag::NpadStyleGc)) { index = 5; }
+    if (style.Test(nn::hid::NpadStyleTag::NpadStylePalma)) { index = 6; }
+    if (style.Test(nn::hid::NpadStyleTag::NpadStyleLark)) { index = 7; }
+    if (style.Test(nn::hid::NpadStyleTag::NpadStyleHandheldLark)) { index = 8; }
+    if (style.Test(nn::hid::NpadStyleTag::NpadStyleLucia)) { index = 9; }
+    if (style.Test(nn::hid::NpadStyleTag::NpadStyleLagon)) { index = 10; }
+    if (style.Test(nn::hid::NpadStyleTag::NpadStyleLager)) { index = 11; }
+    if (style.Test(nn::hid::NpadStyleTag::NpadStyleSystemExt)) { index = 12; }
+    if (style.Test(nn::hid::NpadStyleTag::NpadStyleSystem)) { index = 13; }
 
     if (index != -1) {
         return styleNames[index];
@@ -83,15 +83,15 @@ bool InputHelper::tryGetContState(nn::hid::NpadBaseState *state, ulong port) {
     isReadInput = true;
     bool result = true;
 
-    if (styleSet.isBitSet(nn::hid::NpadStyleTag::NpadStyleFullKey)) {
+    if (styleSet.Test(nn::hid::NpadStyleTag::NpadStyleFullKey)) {
         nn::hid::GetNpadState((nn::hid::NpadFullKeyState *) state, port);
-    } else if (styleSet.isBitSet(nn::hid::NpadStyleTag::NpadStyleHandheld)) {
+    } else if (styleSet.Test(nn::hid::NpadStyleTag::NpadStyleHandheld)) {
         nn::hid::GetNpadState((nn::hid::NpadHandheldState *) state, port);
-    } else if (styleSet.isBitSet(nn::hid::NpadStyleTag::NpadStyleJoyDual)) {
+    } else if (styleSet.Test(nn::hid::NpadStyleTag::NpadStyleJoyDual)) {
         nn::hid::GetNpadState((nn::hid::NpadJoyDualState *) state, port);
-    } else if (styleSet.isBitSet(nn::hid::NpadStyleTag::NpadStyleJoyLeft)) {
+    } else if (styleSet.Test(nn::hid::NpadStyleTag::NpadStyleJoyLeft)) {
         nn::hid::GetNpadState((nn::hid::NpadJoyLeftState *) state, port);
-    } else if (styleSet.isBitSet(nn::hid::NpadStyleTag::NpadStyleJoyRight)) {
+    } else if (styleSet.Test(nn::hid::NpadStyleTag::NpadStyleJoyRight)) {
         nn::hid::GetNpadState((nn::hid::NpadJoyRightState *) state, port);
     } else {
         result = false;
@@ -104,39 +104,39 @@ bool InputHelper::tryGetContState(nn::hid::NpadBaseState *state, ulong port) {
 }
 
 bool InputHelper::isButtonHold(nn::hid::NpadButton button) {
-    return curControllerState.mButtons.isBitSet(button);
+    return curControllerState.mButtons.Test(button);
 }
 
 bool InputHelper::isButtonPress(nn::hid::NpadButton button) {
-    return curControllerState.mButtons.isBitSet(button) && !prevControllerState.mButtons.isBitSet(button);
+    return curControllerState.mButtons.Test(button) && !prevControllerState.mButtons.Test(button);
 }
 
 bool InputHelper::isButtonRelease(nn::hid::NpadButton button) {
-    return !curControllerState.mButtons.isBitSet(button) && prevControllerState.mButtons.isBitSet(button);
+    return !curControllerState.mButtons.Test(button) && prevControllerState.mButtons.Test(button);
 }
 
 bool InputHelper::isKeyHold(nn::hid::KeyboardKey key) {
-    return curKeyboardState.keys.isBitSet(key);
+    return curKeyboardState.keys.Test(key);
 }
 
 bool InputHelper::isKeyPress(nn::hid::KeyboardKey key) {
-    return curKeyboardState.keys.isBitSet(key) && !prevKeyboardState.keys.isBitSet(key);
+    return curKeyboardState.keys.Test(key) && !prevKeyboardState.keys.Test(key);
 }
 
 bool InputHelper::isKeyRelease(nn::hid::KeyboardKey key) {
-    return !curKeyboardState.keys.isBitSet(key) && prevKeyboardState.keys.isBitSet(key);
+    return !curKeyboardState.keys.Test(key) && prevKeyboardState.keys.Test(key);
 }
 
 bool InputHelper::isMouseHold(nn::hid::MouseButton button) {
-    return curMouseState.buttons.isBitSet(button);
+    return curMouseState.buttons.Test(button);
 }
 
 bool InputHelper::isMousePress(nn::hid::MouseButton button) {
-    return curMouseState.buttons.isBitSet(button) && !prevMouseState.buttons.isBitSet(button);
+    return curMouseState.buttons.Test(button) && !prevMouseState.buttons.Test(button);
 }
 
 bool InputHelper::isMouseRelease(nn::hid::MouseButton button) {
-    return !curMouseState.buttons.isBitSet(button) && prevMouseState.buttons.isBitSet(button);
+    return !curMouseState.buttons.Test(button) && prevMouseState.buttons.Test(button);
 }
 
 void InputHelper::getMouseCoords(float *x, float *y) {

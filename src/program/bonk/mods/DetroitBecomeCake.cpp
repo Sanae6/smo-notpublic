@@ -1,9 +1,29 @@
+#include <al/Library/Demo/DemoFunction.h>
 #include <al/Library/LiveActor/ActorModelFunction.h>
 #include <al/Library/LiveActor/ActorPoseKeeper.h>
 #include <bonk/mods/DetroitBecomeCake.hpp>
 #include <logger/Logger.hpp>
 
 namespace bm {
+    struct CakeMario : public al::LiveActor {
+        CakeMario() : al::LiveActor("ケーキ") {}
+        PlayerActorHakoniwa* getMario() const {
+            return static_cast<PlayerActorHakoniwa*>(mSceneInfo->mPlayerHolder->getPlayer(0));
+        }
+        void init(const al::ActorInitInfo &info) override {
+            al::initActorWithArchiveName(this, info, "WeddingCake", nullptr);
+
+            al::copyPose(this, getMario());
+            al::setScale(this, sead::Vector3f::ones * par::get("CakeScale", 1.0f));
+            al::registActorToDemoInfo(this, info);
+            kill();
+        }
+        void control() override {
+            al::LiveActor::control();
+            al::copyPose(this, getMario());
+            al::setScale(this, sead::Vector3f::ones * par::get("CakeScale", 1.0f));
+        }
+    };
     struct AlwaysHidePlayer : Replace<AlwaysHidePlayer> {
         static void Callback(PlayerModelChangerHakoniwa* modelChanger) {
             modelChanger->isDirty = true;
@@ -43,18 +63,11 @@ namespace bm {
     }
     void DetroitBecomeCake::sceneStart(const al::ActorInitInfo& initInfo) {
         Mod::sceneStart(initInfo);
-        cakeModel = new al::LiveActor("ケーキ");
-        al::initActorWithArchiveName(cakeModel, initInfo, "WeddingCake", nullptr);
+        cakeModel = new CakeMario();
 
-        al::copyPose(cakeModel, getMario());
-        al::setScale(cakeModel, sead::Vector3f::ones * par::get("CakeScale", 1.0f));
+        cakeModel->init(initInfo);
 
         if (active)
             cakeModel->appear();
-    }
-    void DetroitBecomeCake::control() {
-        Mod::control();
-        al::copyPose(cakeModel, getMario());
-        al::setScale(cakeModel, sead::Vector3f::ones * par::get("CakeScale", 1.0f));
     }
 } // namespace bm

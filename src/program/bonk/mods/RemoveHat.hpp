@@ -1,5 +1,17 @@
 #pragma once
 
+#include <bonk/Mod.hpp>
 namespace bm {
-    class RemoveHat {};
+    struct RemoveHat : public NerveMod {
+
+        bool levelStartedWithHat = false;
+        RemoveHat();
+        void sceneStart(const al::ActorInitInfo &initInfo) override;
+        void sceneEnd() override;
+        void activate() override;
+        void update() override;
+        void control() override;
+        void exeHide();
+        void exeShow();
+    };
 } // namespace bm

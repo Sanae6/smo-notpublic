@@ -15,7 +15,6 @@ namespace bm {
         MapPartSwap,
         CostumeChanger,
         GunMod,
-        BonkFarmer, // is this even a good idea
         NoOxygen,
         Hardcore,
 

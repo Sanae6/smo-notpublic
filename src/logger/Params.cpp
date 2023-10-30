@@ -57,3 +57,9 @@ void Params::handleApply(ParamDeletePacket* packet) {
         heap->free(params->data);
     }
 }
+void Params::handleApply(TriggerPacket* packet) {
+    bool value = true;
+    Param& param = getOrCreateParam(packet->name, reinterpret_cast<const u8*>(&value), sizeof(bool));
+    param.data[0] = true;
+    Logger::log("Got trigger (game) %s\n", packet->name);
+}

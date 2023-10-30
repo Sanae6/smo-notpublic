@@ -9,6 +9,7 @@
 #include <game/StageScene/StageScene.h>
 #include <game/System/GameSystem.h>
 #include <logger/Logger.hpp>
+#include <logger/SocketInterface.h>
 #include <utils/Helpers.h>
 
 class RootTask;
@@ -77,6 +78,10 @@ namespace bm {
     struct StageSceneControl : public Trampoline<StageSceneControl> {
         static void Callback(StageScene* scene) {
             Orig(scene);
+            if (al::isIntervalStep(scene, 60, 0)) {
+                Packet packet(PacketType::Ping, 0);
+                SocketInterface::instance().send(&packet);
+            }
             stageState(scene).update(true);
         }
     };
