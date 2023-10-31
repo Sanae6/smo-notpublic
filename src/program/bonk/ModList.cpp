@@ -1,7 +1,10 @@
 #include <al/Library/Memory/HeapUtil.h>
 #include <bonk/StageState.hpp>
+#include <bonk/mods/CameraLock.hpp>
 #include <bonk/mods/DetroitBecomeCake.hpp>
 #include <bonk/mods/GreenDemonMod.hpp>
+#include <bonk/mods/InputRandomizer.hpp>
+#include <bonk/mods/InvisibleMan.hpp>
 #include <bonk/mods/NoOxygen.hpp>
 #include <bonk/mods/PlayerConstMod.hpp>
 #include <bonk/mods/PoseRandomizer.hpp>
@@ -26,8 +29,11 @@ namespace bm {
         bm::addMod<NoOxygen>()/*->activate()*/;
         bm::addMod<GreenDemonMod>()/*->activate()*/;
         bm::addMod<DetroitBecomeCake>()/*->activate()*/;
+        bm::addMod<InvisibleMan>()/*->activate()*/;
+        bm::addMod<InputRandomizer>()/*->activate()*/;
         bm::addMod<StickDelay>()/*->activate()*/;
         bm::addMod<RemoveHat>()/*->activate()*/;
-        bm::addMod<TwitchChat>()->activate();
+        bm::addMod<CameraLock>()->activate();
+//        bm::addMod<TwitchChat>()->activate();
     }
 } // namespace bm

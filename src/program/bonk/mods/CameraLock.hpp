@@ -1,5 +1,23 @@
 #pragma once
 
+#include <bonk/Mod.hpp>
+#include <al/Library/Camera/CameraTargetBase.h>
+
 namespace bm {
-    class CameraLock {};
+    struct DummyCameraTarget : public al::CameraTargetBase {
+        sead::Vector3f lastTrans;
+        const char * getTargetName() override { return "鬼ヶ島"; }
+        void calcTrans(sead::Vector3f *trans) override {
+            *trans = lastTrans;
+        }
+    };
+    class CameraLock : public NerveMod {
+    public:
+        DummyCameraTarget target;
+
+        void activate() override;
+
+        void exeLock();
+        void exeUnlocked();
+    };
 } // namespace bm

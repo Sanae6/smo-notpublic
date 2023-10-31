@@ -5,31 +5,29 @@
 
 #pragma once
 
+#include "DrawContext.h"
 #include "RenderTargetColor.h"
 #include "RenderTargetDepth.h"
-#include "DrawContext.h"
 
 #include "sead/gfx/seadFrameBuffer.h"
 
-namespace agl
-{
-    class RenderBuffer : public sead::FrameBuffer
-    {
+namespace agl {
+    class RenderBuffer : public sead::FrameBuffer {
     public:
         RenderBuffer();
-        RenderBuffer(sead::Vector2<f32> const &, sead::BoundBox2<f32> const &);
-        RenderBuffer(sead::Vector2<f32> const &, f32, f32, f32, f32);
+        RenderBuffer(sead::Vector2<f32> const&, sead::BoundBox2<f32> const&);
+        RenderBuffer(sead::Vector2<f32> const&, f32, f32, f32, f32);
         virtual ~RenderBuffer();
 
-        virtual void copyToDisplayBuffer(sead::DrawContext *, sead::DisplayBuffer const *);
-        virtual void clear(sead::DrawContext *, u32, sead::Color4f const &, f32, u32);
-        virtual void bindImpl_(sead::DrawContext *) const;
+        void copyToDisplayBuffer(sead::DrawContext*, sead::DisplayBuffer const*) const override;
+        void clear(u32, sead::Color4f const&, f32, u32) const override;
+        void bindImpl_() const override;
 
         void initialize_();
         void setRenderTargetColorNullAll();
         void adjustPhysicalAreaAndVirtualSizeFromColorTarget(u32);
-        void invalidateGPUCache(agl::DrawContext *) const;
-        void bind_(agl::DrawContext *, u16) const;
+        void invalidateGPUCache(agl::DrawContext*) const;
+        void bind_(agl::DrawContext*, u16) const;
 
         u32 _8;
         u32 C;
@@ -46,4 +44,4 @@ namespace agl
         agl::RenderTargetColor* _58;
         agl::RenderTargetDepth* _60;
     };
-};
+}; // namespace agl

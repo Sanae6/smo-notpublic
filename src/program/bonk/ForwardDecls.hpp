@@ -3,6 +3,7 @@
 #include <agl/TextureData.h>
 #include <agl/gpu.h>
 #include <agl/util.h>
+#include <al/Library/Camera/CameraTargetBase.h>
 #include <al/Library/Layout/LayoutActor.h>
 #include <al/Library/LiveActor/LiveActor.h>
 #include <al/Library/Nerve/NerveSetupUtil.h>
@@ -52,6 +53,10 @@ namespace al {
     class OneMeshFixMapParts {};
     class LiveActor;
     class LayoutResource;
+    class CameraTargetHolder {
+    public:
+        al::CameraTargetBase* getViewTarget(int) const;
+    };
 
     void startHitReaction(const al::LiveActor*, const char*);
     void startAction(al::LiveActor*, const char*);

@@ -1,13 +1,15 @@
 #pragma once
 #include <audio.hpp>
+#include <heap/seadHeap.h>
 
-namespace bm {
+namespace au {
     struct IffSignature {
         const char name[4];
         u32 size;
     };
     struct WaveHeader {
         IffSignature base;
+        u32 format;
         IffSignature fmt;
         u16 audioFormat;
         u16 channelCount;
@@ -19,12 +21,16 @@ namespace bm {
         u8 restOfData[];
     };
 
-    class AudioWrap {
+    struct AudioWrap {
+        sead::Heap* waveAllocHeap;
         nn::audio::FinalMixType* finalMix;
-        nn::audio::VoiceType voice;
-        nn::audio::WaveBuffer waveBuffer = {};
+        nn::audio::VoiceType voice{};
+        nn::audio::WaveBuffer waveBuffer{};
         WaveHeader* waveData;
 
-        AudioWrap(const char* waveLocation);
+        explicit AudioWrap(const char* waveLocation);
+        ~AudioWrap() {
+            waveAllocHeap->free(waveData);
+        }
     };
 } // namespace bm

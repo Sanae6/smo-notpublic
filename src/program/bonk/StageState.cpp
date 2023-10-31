@@ -27,12 +27,6 @@ namespace bm {
         for (auto mod : mods)
             mod->sceneStart(initInfo);
     }
-    StageState::~StageState() {
-        if (hadMario)
-            for (auto mod : mods)
-                mod->sceneEnd();
-        hadMario = false;
-    }
     void StageState::update(bool control) {
         if (hadMario)
             for (auto mod : mods)
@@ -48,6 +42,12 @@ namespace bm {
         if (hadMario)
             for (auto mod : mods)
                 mod->exePlayActivated();
+    }
+    void StageState::sceneEnd() {
+        if (hadMario)
+            for (auto mod : mods)
+                mod->sceneEnd();
+        hadMario = false;
     }
 
     struct StageStateCreate : public Trampoline<StageStateCreate> {
@@ -70,7 +70,8 @@ namespace bm {
     struct StageScenePlay : public Trampoline<StageScenePlay> {
         static void Callback(StageScene* scene) {
             Orig(scene);
-            if (al::isFirstStep(scene)) stageState(scene).exePlayFirstStep();
+            if (al::isFirstStep(scene))
+                stageState(scene).exePlayFirstStep();
             stageState(scene).update(false);
         }
     };
@@ -86,26 +87,11 @@ namespace bm {
         }
     };
 
-    struct StageSceneDrawMain : public Trampoline<StageSceneDrawMain> {
-        static void Callback(StageScene* scene) {
-            Orig(scene);
-            //            Logger::log("main draw %s\n", typeid(*scene->getNerveKeeper()->getCurrentNerve()).name());
-            //            Logger::log("gain draw %s\n", typeid(StageSceneNrvPlay).name());
-            if (isNerve<StageSceneNrvPlay>(scene))
-                stageState(scene).draw(scene, al::getSceneDrawContext(scene));
-        }
-    };
-
-    struct HakoniwaSequenceDrawMain : public Trampoline<HakoniwaSequenceDrawMain> {
+    struct StageSceneDestruction : public Trampoline<StageSceneDestruction> {
         static void Callback(HakoniwaSequence* sequence) {
+            if (al::isFirstStep(sequence) && isSameType<StageScene>(sequence->getCurrentScene())) {
+            }
             Orig(sequence);
-//            Logger::log("Draw main\n");
-//            if (sequence->mStageScene != nullptr && isSameType<StageState>(sequence->mStageScene) &&
-//                isNerve<StageSceneNrvPlay>(sequence->mStageScene)) {
-//                StageScene* scene = static_cast<StageScene*>(sequence->mStageScene);
-//                Logger::log("draw mnae\n");
-//                stageState(scene).draw(scene, al::getSceneDrawContext(scene));
-//            }
         }
     };
 
@@ -114,8 +100,9 @@ namespace bm {
         StageStateInit::InstallAtSymbol("_ZN8RootTask4calcEv");
         StageScenePlay::InstallAtSymbol("_ZN10StageScene7exePlayEv");
         StageSceneControl::InstallAtSymbol("_ZN10StageScene7controlEv");
+        StageSceneDestruction::InstallAtSymbol("_ZN16HakoniwaSequence10exeDestroyEv");
         //        StageSceneDrawMain::InstallAtSymbol("_ZNK10StageScene8drawMainEv");
-//        HakoniwaSequenceDrawMain::InstallAtSymbol("_ZNK16HakoniwaSequence8drawMainEv");
+        //        HakoniwaSequenceDrawMain::InstallAtSymbol("_ZNK16HakoniwaSequence8drawMainEv");
     }
 
 } // namespace bm

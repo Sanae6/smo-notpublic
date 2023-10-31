@@ -1,5 +1,8 @@
 #pragma once
 
+#include <bonk/Mod.hpp>
 namespace bm {
-    class InvisibleMan {};
+    class InvisibleMan : public Mod {
+        void activate() override;
+    };
 } // namespace bm

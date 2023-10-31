@@ -51,15 +51,14 @@ namespace bm {
         }
     };
 
-    struct StageState : public al::ISceneObj, sead::IDisposer {
+    struct StageState : public al::ISceneObj {
         static ModList mods;
         bool hadMario;
 
-        StageState() : sead::IDisposer() {}
-        ~StageState();
         const char* getSceneObjName() override { return "StageState"; }
-        void initAfterPlacementSceneObj(const al::ActorInitInfo&) override;
+        void sceneEnd();
 
+        void initAfterPlacementSceneObj(const al::ActorInitInfo&) override;
         static bool isSceneWithMario(const al::ActorInitInfo& initInfo);
         void update(bool control);
         void draw(StageScene* scene, agl::DrawContext* drawContext);

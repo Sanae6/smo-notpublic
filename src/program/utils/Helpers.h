@@ -3,7 +3,7 @@
 #include <al/Library/Base/String.h>
 #include <al/Library/Nerve/IUseNerve.h>
 #include <al/Library/Nerve/Nerve.h>
-#include <al/Library/Nerve/Nerve.h>
+#include <al/Library/Nerve/NerveKeeper.h>
 #include <al/Library/Nerve/NerveUtil.h>
 #include <lib.hpp>
 #include <typeinfo>
@@ -20,10 +20,24 @@ template <typename Right>
 bool isNerve(const al::IUseNerve* user) {
     return isSameType<Right>(user->getNerveKeeper()->getCurrentNerve());
 }
+
+template <typename Cast, typename Host>
+Cast unsafeOffset(Host* host, ptrdiff_t offset) {
+    return (Cast)(((uintptr_t)host) + offset);
+}
+template <typename Cast, typename Host>
+Cast unsafeOffset(Host host, ptrdiff_t offset) {
+    return (Cast)(((uintptr_t)host) + offset);
+}
 template <typename Cast, typename Host>
 Cast& unsafeRef(Host* host, ptrdiff_t offset) {
-    return *(Cast*)(((uintptr_t)host) + offset);
+    return *unsafeOffset<Cast*>(host, offset);
 }
+template <typename Cast, typename Host>
+Cast& unsafeRef(Host host, ptrdiff_t offset) {
+    return *unsafeOffset<Cast*>(host, offset);
+}
+
 static inline void setNerveOffset(al::IUseNerve* user, ptrdiff_t offsetMain) {
     al::setNerve(user, reinterpret_cast<const al::Nerve*>(exl::util::GetMainModuleInfo().m_Text.m_Start + offsetMain));
 }
