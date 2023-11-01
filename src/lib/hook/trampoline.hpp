@@ -65,3 +65,7 @@ namespace exl::hook::impl {
     };
 
 }
+
+namespace exl {
+    using exl::hook::impl::TrampolineHook;
+}
