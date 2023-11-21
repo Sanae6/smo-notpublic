@@ -7,7 +7,7 @@ namespace bm {
         bool levelStartedWithHat = false;
         RemoveHat();
         void sceneStart(const al::ActorInitInfo &initInfo) override;
-        void sceneEnd() override;
+        void sceneEnd(bool b) override;
         void activate() override;
         void update() override;
         void control() override;

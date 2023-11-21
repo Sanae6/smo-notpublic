@@ -1,5 +1,6 @@
 #pragma once
 #include <audio.hpp>
+#include <atk.hpp>
 #include <heap/seadHeap.h>
 
 namespace au {
@@ -18,19 +19,20 @@ namespace au {
         u16 blockAlign;
         u16 bitsPerSample; // 16
         IffSignature data;
-        u8 restOfData[];
     };
 
     struct AudioWrap {
-        sead::Heap* waveAllocHeap;
-        nn::audio::FinalMixType* finalMix;
-        nn::audio::VoiceType voice{};
-        nn::audio::WaveBuffer waveBuffer{};
-        WaveHeader* waveData;
+//        nn::audio::SubMixType* subMix;
+//        nn::audio::VoiceType voice{};
+        nn::atk::WaveBuffer waveBuffer{};
+        nn::atk::detail::driver::MultiVoice* voice;
+        u8* waveData;
 
         explicit AudioWrap(const char* waveLocation);
+        void update();
         ~AudioWrap() {
-            waveAllocHeap->free(waveData);
+//            waveAllocHeap->free(waveData);
+
         }
     };
 } // namespace bm

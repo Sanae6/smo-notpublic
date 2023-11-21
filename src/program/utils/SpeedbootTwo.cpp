@@ -8,14 +8,14 @@
 #include <game/HakoniwaSequence/HakoniwaSequence.h>
 #include <lib.hpp>
 #include <logger/Logger.hpp>
-#include <utils/AudioWrap.hpp>
+//#include <utils/AudioWrap.hpp>
 #include <utils/SpeedbootTwo.hpp>
 
 namespace sb {
     struct SpeedbootNerve : public al::Nerve, public al::NerveExecutor {
         HakoniwaSequence* sequence;
         ChangeStageInfo changeStageInfo;
-        au::AudioWrap* soundEffect;
+//        au::AudioWrap* soundEffect;
         SpeedbootNerve(HakoniwaSequence* sequence);
 
         void execute(al::NerveKeeper* keeper) const override { const_cast<SpeedbootNerve*>(this)->updateNerve(); }
@@ -39,10 +39,11 @@ namespace sb {
     void SpeedbootNerve::exeLoad() {
         if (al::isFirstStep(this)) {
             Logger::log("Starting load\n");
-            sead::ScopedCurrentHeapSetter setter(al::getSequenceHeap());
-            soundEffect = new (al::getSequenceHeap()) au::AudioWrap("content:/BonkData/discord.wav");
+//            soundEffect = new au::AudioWrap("content:/BonkData/discord.wav");
             sequence->mInitThread->start();
         }
+
+//        soundEffect->update();
 
         if (sequence->mInitThread->isDone()) {
             Logger::log("Done loading, fading out\n");
@@ -55,10 +56,11 @@ namespace sb {
         }
 
         if (sequence->mWipeHolder->isCloseEnd()) {
+            sead::ScopedCurrentHeapSetter setter(al::getSequenceHeap());
             Logger::log("Faded out, loading\n");
             sequence->mGameDataHolder.mData->changeNextStage(&changeStageInfo, 0);
             al::setNerve(sequence, &HakoniwaSequenceNrvLoadStage::sInstance);
-            operator delete(soundEffect, al::getSequenceHeap());
+//            delete soundEffect;
         }
     }
 

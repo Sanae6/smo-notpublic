@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GameFrameWorkNx.h"
+#include "RootTask.h"
 #include "al/Library/System/DrawSystemInfo.h"
 
 namespace al
@@ -14,6 +15,8 @@ class Application {
     SEAD_SINGLETON_DISPOSER(Application)
 
     public:
+        RootTask* getRootTask() const;
+
         al::SystemKit* mSystemKit; // 0x20
         al::GameFrameworkNx* mFramework; // 0x28
         al::DrawSystemInfo*mDrawInfo; // 0x30

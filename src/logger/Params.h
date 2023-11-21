@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Packets.h"
+#include <logger/Packets.h>
+#include <logger/Logger.hpp>
 #include <heap/seadHeap.h>
 
 class Params {
@@ -34,8 +35,10 @@ public:
         bool value = false;
         Param& p = getOrCreateParam(name, reinterpret_cast<const u8*>(&value), sizeof(bool));
         value = p.data[0] > 0;
-        if (value && clear)
+        if (value && clear) {
+            Logger::log("Cleared param %s\n", name);
             p.data[0] = false;
+        }
         return value;
     }
 };

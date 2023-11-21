@@ -6,6 +6,7 @@ namespace bm {
     class GreenDemonMod : public Mod {
         GreenDemon* oneUp;
         void sceneStart(const al::ActorInitInfo &initInfo) override;
+        void activate() override;
         void marioGainsMovement() override;
     };
 } // namespace bm

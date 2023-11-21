@@ -21,7 +21,7 @@ namespace bm {
         void control() override {
             al::LiveActor::control();
             al::copyPose(this, getMario());
-            al::setScale(this, sead::Vector3f::ones * par::get("CakeScale", 1.0f));
+            *al::getScalePtr(this) = al::getScale(getMario()) * par::get("CakeScale", 1.0f);
         }
     };
     void DetroitBecomeCake::activate() {

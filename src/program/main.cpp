@@ -27,6 +27,7 @@
 #include <hook/trampoline.hpp>
 #include <logger/SocketInterface.h>
 #include <utils/SpeedbootTwo.hpp>
+#include <utils/UsefulPatches.hpp>
 
 #include "rs/util.hpp"
 
@@ -180,17 +181,18 @@ extern "C" void exl_main(void *x0, void *x1) {
     /* Setup hooking enviroment. */
     exl::hook::Initialize();
 
-    handler::installExceptionHandler([](handler::ExceptionInfo& info) {
-        handler::printCrashReport(info);
-        return false;
-    });
+//    handler::installExceptionHandler([](handler::ExceptionInfo& info) {
+//        Logger::log("That shit crashed so hard\n");
+////        handler::printCrashReport(info);
+//        return false;
+//    });
 
     EXL_ASSERT(SocketInterface::instance().init(LOGGER_IP, 3085), "SOCKET SERVER MUST BE GAMING!");
     SocketInterface::instance().waitForConnection();
 
     runCodePatches();
 
-    GameSystemInit::InstallAtOffset(0x535850);
+//    GameSystemInit::InstallAtOffset(0x535850);
 
     // Sead Debugging Overriding
 
@@ -198,17 +200,18 @@ extern "C" void exl_main(void *x0, void *x1) {
 
     // Debug Text Writer Drawing
 
-    DrawDebugMenu::InstallAtOffset(0x50F1D8);
+//    DrawDebugMenu::InstallAtOffset(0x50F1D8);
 
     bm::stageStatePatches();
     sb::speedbootPatches();
+    up::usefulPatchesInit();
 
     // ImGui Hooks
-#if IMGUI_ENABLED
-    nvnImGui::InstallHooks();
-
-    nvnImGui::addDrawFunc(drawDebugWindow);
-#endif
+//#if IMGUI_ENABLED
+//    nvnImGui::InstallHooks();
+//
+//    nvnImGui::addDrawFunc(drawDebugWindow);
+//#endif
 
 }
 

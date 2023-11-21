@@ -6,7 +6,13 @@
 #include <al/Library/Nerve/NerveKeeper.h>
 #include <al/Library/Nerve/NerveUtil.h>
 #include <lib.hpp>
+#include <math/seadVector.h>
 #include <typeinfo>
+
+namespace patch = exl::patch;
+namespace inst = exl::armv8::inst;
+namespace reg = exl::armv8::reg;
+using namespace reg;
 
 template <typename Right, typename Left>
 bool isSameType([[maybe_unused]] const Left* leftVal) {
@@ -37,7 +43,21 @@ template <typename Cast, typename Host>
 Cast& unsafeRef(Host host, ptrdiff_t offset) {
     return *unsafeOffset<Cast*>(host, offset);
 }
+template <typename Return, typename ...Args, typename Func = std::add_pointer<Return(Args...)>::type>
+Func getFunc(const char* name) {
+    uintptr_t ptr;
+    EXL_ASSERT(R_SUCCEEDED(nn::ro::LookupSymbol(&ptr, name)));
+    return (Func)ptr;
+}
 
 static inline void setNerveOffset(al::IUseNerve* user, ptrdiff_t offsetMain) {
     al::setNerve(user, reinterpret_cast<const al::Nerve*>(exl::util::GetMainModuleInfo().m_Text.m_Start + offsetMain));
+}
+
+static inline f32 abs(f32 value) {
+    return value < 0 ? -value : value;
+}
+
+static inline sead::Vector3f abs(const sead::Vector3f& value) {
+    return sead::Vector3f(abs(value.x), abs(value.y), abs(value.z));
 }

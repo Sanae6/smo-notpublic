@@ -10,10 +10,6 @@
 #include <logger/Params.h>
 #include <utils/Helpers.h>
 
-namespace patch = exl::patch;
-namespace inst = exl::armv8::inst;
-namespace reg = exl::armv8::reg;
-using namespace reg;
 template <typename T>
 using Trampoline = exl::hook::impl::TrampolineHook<T>;
 template <typename T>
@@ -37,7 +33,7 @@ namespace bm {
             sceneObjHolder = initInfo.mActorSceneInfo.mSceneObjHolder;
             sceneInfo = initInfo.mActorSceneInfo;
         }
-        virtual void sceneEnd() {
+        virtual void sceneEnd(bool cleanResources) {
             sceneObjHolder = nullptr;
             marioGainedMovement = false;
         }
@@ -48,10 +44,11 @@ namespace bm {
             }
         }
         virtual void activate() { active = true; }
+        virtual void deactivate() { active = false; }
         virtual void show() { visible = true; }
         virtual void hide() { visible = false; }
         virtual void update() {
-            if (pauseTimer >= 0) {
+            if (isPaused()) {
                 pauseTimer--;
                 return;
             }
@@ -78,12 +75,27 @@ namespace bm {
         virtual void renderLayout(StageScene* scene, agl::DrawContext* drawContext) {}
         virtual void control() {}
         virtual void marioGainsMovement() {}
+        bool isPaused() const { return pauseTimer >= 0; }
         void pauseForSeconds(int seconds) { pauseTimer = seconds * 60; }
         void pauseForFrames(int frames) { pauseTimer = frames; }
 
         PlayerActorHakoniwa* getMario() const {
             return static_cast<PlayerActorHakoniwa*>(sceneInfo.mPlayerHolder->getPlayer(0));
         }
+    };
+
+    struct ApplyMod : public Mod {
+        void activate() {
+            Mod::activate();
+            if (inScene())
+                apply();
+        }
+        void sceneStart(const al::ActorInitInfo& initInfo) {
+            Mod::sceneStart(initInfo);
+            if (active)
+                apply();
+        }
+        virtual void apply() = 0;
     };
 
     struct NerveMod : public Mod, public al::NerveExecutor {

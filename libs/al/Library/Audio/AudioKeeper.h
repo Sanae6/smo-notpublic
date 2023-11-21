@@ -28,9 +28,9 @@ public:
     AudioKeeper(al::AudioDirector const*);
     ~AudioKeeper();
 
-    void initSeKeeper(al::AudioDirector const*, char const*, sead::Vector3f const*,
-                      sead::Matrix34f const*, al::ModelKeeper const*, al::CameraDirector*);
-    void initBgmKeeper(al::AudioDirector const*, char const*);
+    void initSeKeeper(const al::AudioDirector*, const char*, const sead::Vector3f*,
+                      const sead::Matrix34f*, const al::ModelKeeper*, al::CameraDirector*);
+    void initBgmKeeper(const al::AudioDirector*, const char*);
     void validate(void);
     void invalidate(void);
     void startClipped(void);

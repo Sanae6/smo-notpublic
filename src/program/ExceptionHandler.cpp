@@ -339,6 +339,7 @@ namespace handler {
         extern void phaseTwoHandler(int registers[9]);
 
         static void phaseOneHandler(ExceptionType exceptionType, KernelExceptionInfo& info) {
+            svcReturnFromException(1);
             if (exceptionType == ExceptionType::InvalidSystemCall && (info.esr & 0xFFFF) == 0xBEEF) {
                 // Caused by phase four, we should just jump to the restore and return
                 for (int i = 0; i < ACNT(info.r); i++) {
@@ -412,13 +413,14 @@ namespace handler {
     void installExceptionHandler(const CatchFunc& handler) {
         handlerFunc = handler;
         {
-            exl::util::RwPages patcher(exl::util::GetRtldModuleInfo().m_Text.m_Start + 0xb0, 0x4);
+            exl::util::RwPages patcher(exl::util::GetRtldModuleInfo().m_Text.m_Start + 0x00, 0x8);
             u32* branchPtr = reinterpret_cast<u32*>(patcher.GetRw());
-            branchPtr[0] = exl::armv8::inst::Branch(0x1c).Value();
-            branchPtr[0] = inst::Movz(reg::X0, 1).Value();
-            branchPtr[1] = 0xD4000501;
+            branchPtr[0] = 0x1000007E;
+            branchPtr[1] = 0xF94003DE;
+            branchPtr[2] = 0xD61F03C0;
         }
-        auto& handlerFunctionOffset = *(uintptr_t*)(exl::util::GetRtldModuleInfo().m_Data.m_Start + 0x1d0);
+        exl::util::RwPages patcher(exl::util::GetRtldModuleInfo().m_Text.m_Start + 0xC, 0x8);
+        auto& handlerFunctionOffset = *(uintptr_t*)(patcher.GetRw());
         handlerFunctionOffset = reinterpret_cast<uintptr_t>(detail::phaseOneHandler);
 
         nn::os::AllocateTlsSlot(&detail::local::catchStackBottom, nullptr);

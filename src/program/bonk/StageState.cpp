@@ -7,9 +7,12 @@
 #include <game/HakoniwaSequence/HakoniwaSequence.h>
 #include <game/Player/PlayerActorHakoniwa.h>
 #include <game/StageScene/StageScene.h>
+#include <game/System/Application.h>
 #include <game/System/GameSystem.h>
+#include <helpers/PlayerHelper.h>
 #include <logger/Logger.hpp>
 #include <logger/SocketInterface.h>
+#include <random/seadGlobalRandom.h>
 #include <utils/Helpers.h>
 
 class RootTask;
@@ -23,38 +26,50 @@ namespace bm {
     void StageState::initAfterPlacementSceneObj(const al::ActorInitInfo& initInfo) {
         if (!isSceneWithMario(initInfo))
             return;
-        hadMario = true;
+        player = static_cast<PlayerActorHakoniwa*>(initInfo.mActorSceneInfo.mPlayerHolder->getPlayer(0));
+        sead::GlobalRandom::instance()->init();
         for (auto mod : mods)
             mod->sceneStart(initInfo);
+        Logger::log("Initialized mods for scene!\n");
     }
     void StageState::update(bool control) {
-        if (hadMario)
+        if (hasMario()) {
+            if (!control && player->mPlayerTrigger->isOn(PlayerTrigger::EActionTrigger::WallDamage)) {
+                Logger::log("Mario bonked!\n");
+            }
+            if (control && par::clicked("KillMario")) {
+                PlayerHelper::killPlayer(player);
+            }
             for (auto mod : mods)
                 if (mod->shouldUpdateOnControl() == control)
                     mod->update();
+        }
     }
     void StageState::draw(StageScene* scene, agl::DrawContext* drawContext) {
-        if (hadMario)
+        if (hasMario())
             for (auto mod : mods)
                 mod->renderToScreen(scene, drawContext);
     }
     void StageState::exePlayFirstStep() {
-        if (hadMario)
+        if (hasMario())
             for (auto mod : mods)
                 mod->exePlayActivated();
     }
-    void StageState::sceneEnd() {
-        if (hadMario)
+    void StageState::sceneEnd(bool cleanResources) {
+        if (hasMario())
             for (auto mod : mods)
-                mod->sceneEnd();
-        hadMario = false;
+                mod->sceneEnd(cleanResources);
+        player = nullptr;
     }
 
     struct StageStateCreate : public Trampoline<StageStateCreate> {
-        static al::SceneObjHolder* Callback() {
-            auto* holder = Orig();
+        static al::SceneObjHolder* Callback(al::Scene* scene, al::SceneObjHolder* holder) {
+            Orig(scene, holder);
 
-            holder->setSceneObj(new (al::getSceneHeap(), 8) StageState(), 0x40);
+            sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
+            auto state = new StageState();
+            if (isSameType<StageScene>(scene)) state->stageScene = static_cast<StageScene*>(scene);
+            holder->setSceneObj(state, 0x40);
             return holder;
         }
     };
@@ -88,19 +103,22 @@ namespace bm {
     };
 
     struct StageSceneDestruction : public Trampoline<StageSceneDestruction> {
-        static void Callback(HakoniwaSequence* sequence) {
-            if (al::isFirstStep(sequence) && isSameType<StageScene>(sequence->getCurrentScene())) {
+        static void Callback(struct HakoniwaSequenceDeleteScene* sequence, al::Scene* scene, bool cleanResources, bool finalizeAudio, int fadeFrames) {
+            if (isSameType<StageScene>(scene)) {
+                Logger::log("Steamed\n");
+                stageState(scene).sceneEnd(cleanResources);
+                Logger::log("Shams\n");
             }
-            Orig(sequence);
+            Orig(sequence, scene, cleanResources, finalizeAudio, fadeFrames);
         }
     };
 
     void stageStatePatches() {
-        StageStateCreate::InstallAtSymbol("_ZN15SceneObjFactory20createSceneObjHolderEv");
+        StageStateCreate::InstallAtSymbol("_ZN2al5Scene18initSceneObjHolderEPNS_14SceneObjHolderE");
         StageStateInit::InstallAtSymbol("_ZN8RootTask4calcEv");
         StageScenePlay::InstallAtSymbol("_ZN10StageScene7exePlayEv");
         StageSceneControl::InstallAtSymbol("_ZN10StageScene7controlEv");
-        StageSceneDestruction::InstallAtSymbol("_ZN16HakoniwaSequence10exeDestroyEv");
+        StageSceneDestruction::InstallAtSymbol("_ZN24HakoniwaStateDeleteScene5startEPN2al5SceneEbbi");
         //        StageSceneDrawMain::InstallAtSymbol("_ZNK10StageScene8drawMainEv");
         //        HakoniwaSequenceDrawMain::InstallAtSymbol("_ZNK16HakoniwaSequence8drawMainEv");
     }

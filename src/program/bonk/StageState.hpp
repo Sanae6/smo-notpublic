@@ -6,63 +6,44 @@
 #include <lib.hpp>
 
 namespace bm {
-    enum class Mods {
-        // Gameplay
-        RemoveHat,
-        PlayerConst,
-        PoseRandomize,
-        GreenDemon,
-        MapPartSwap,
-        CostumeChanger,
-        GunMod,
-        NoOxygen,
-        Hardcore,
-
-        // Visual
-        Subscribe,
-        Popups,
-        ScreamingCJ, // only play this once
-        TransformScreen,
-        LowerTextureQuality,
-        WeddingCakeMario,
-        FirstPersonCamera,
-
-        // Auditory
-        DiscordSfx, // play a sound effect on a 3-minute delay
-        BonkSfx,
-        Twitch,
-
-        End
-    };
-
     struct ModList {
         int modCount;
-        Mod* mods[static_cast<int>(Mods::End)];
+        Mod* mods[25];
 
-        Mod* add(Mod* mod){
-            return mods[modCount++] = mod;
-        }
-        Mod** begin() {
-            return &mods[0];
-        }
+        Mod* add(Mod* mod) { return mods[modCount++] = mod; }
+        Mod** begin() { return &mods[0]; }
 
-        Mod** end() {
-            return &mods[modCount];
-        }
+        Mod** end() { return &mods[modCount]; }
     };
 
     struct StageState : public al::ISceneObj {
         static ModList mods;
-        bool hadMario;
+        PlayerActorHakoniwa* player;
+        StageScene* stageScene;
 
         const char* getSceneObjName() override { return "StageState"; }
-        void sceneEnd();
+        void sceneEnd(bool cleanResources);
 
         void initAfterPlacementSceneObj(const al::ActorInitInfo&) override;
         static bool isSceneWithMario(const al::ActorInitInfo& initInfo);
         void update(bool control);
         void draw(StageScene* scene, agl::DrawContext* drawContext);
         void exePlayFirstStep();
+
+        bool hasMario() const { return player != nullptr; }
+
+        template <typename T>
+        T* findMod() {
+            for (auto mod : mods)
+                if (isSameType<T>(mod))
+                    return static_cast<T*>(mod);
+        }
+
+        template <typename T>
+        void deactivateMod() {
+            auto mod = static_cast<Mod*>(findMod<T>());
+            if (mod) mod->deactivate();
+        }
     };
 
     template <typename T>

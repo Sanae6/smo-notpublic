@@ -64,8 +64,8 @@ namespace bm {
         pauseForSeconds(par::get<u32>("HatShowSecsBase", 10) + al::getRandom(par::get("HatShowSecsExtra", 20)));
         al::setNerve(this, &RemoveHatNrvHide::sInstance);
     }
-    void RemoveHat::sceneEnd() {
-        Mod::sceneEnd();
+    void RemoveHat::sceneEnd(bool cleanResources) {
+        Mod::sceneEnd(cleanResources);
         if (levelStartedWithHat) {
             getGameDataHolder(this)->mDataFile->mIsEnableCap = true;
         }

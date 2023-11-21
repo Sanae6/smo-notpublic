@@ -46,12 +46,11 @@ namespace bm {
                 al::startHitReaction(this, "スマッシュ");
 
                 al::emitRadialBlur(this, al::getTrans(this), par::get("DemonLowerRad", 50000.0f),
-                                   par::get("DemonHigherRad", 100000.0),
-                                   0.2, 0.2, 1.0, 0.0,
-                                   par::get("DemonDuration", 128),
-                                   -1, false);
+                                   par::get("DemonHigherRad", 100000.0), 0.2, 0.2, 1.0, 0.0,
+                                   par::get("DemonDuration", 128), -1, false);
             }
-            al::setActionFrameRate(this, al::calcNerveEaseInOutRate(this, par::get("DemonMoveRampFrameMax", 120)) / 2.0f);
+            al::setActionFrameRate(this,
+                                   al::calcNerveEaseInOutRate(this, par::get("DemonMoveRampFrameMax", 120)) / 2.0f);
 
             if (al::isGreaterEqualStep(this, par::get("DemonLandEndFrame", 120)))
                 al::setNerve(this, &GreenDemonNrvMove::sInstance);
@@ -97,8 +96,12 @@ namespace bm {
         oneUp = new GreenDemon(getMario());
         oneUp->init(initInfo);
     }
-    void GreenDemonMod::marioGainsMovement() {
-        oneUp->appear();
+
+    void GreenDemonMod::marioGainsMovement() { oneUp->appear(); }
+    void GreenDemonMod::activate() {
+        Mod::activate();
+        if (inScene())
+            oneUp->appear();
     }
 
 } // namespace bm

@@ -7,6 +7,8 @@
 #include <al/Library/Layout/LayoutActor.h>
 #include <al/Library/LiveActor/LiveActor.h>
 #include <al/Library/Nerve/NerveSetupUtil.h>
+#include <al/Library/Scene/Scene.h>
+#include <container/seadPtrArray.h>
 #include <gfx/gfx_DescriptorSlot.h>
 #include <gfx/gfx_Device.h>
 
@@ -28,9 +30,8 @@ namespace nn {
         class ResFont : public ResFontBase {
         public:
             ResFont();
-            bool SetResource(gfx::Device* device, void* fontData,
-                             gfx::TMemoryPool<gfx::ApiVariationNvn8>*, ptrdiff_t memoryPoolOffset,
-                             size_t memoryPoolSize);
+            bool SetResource(gfx::Device* device, void* fontData, gfx::TMemoryPool<gfx::ApiVariationNvn8>*,
+                             ptrdiff_t memoryPoolOffset, size_t memoryPoolSize);
         };
         struct BinaryFileHeader {
             u32 signature;
@@ -42,6 +43,9 @@ namespace nn {
             u16 reserved;
         };
     } // namespace font
+    namespace fs {
+        Result CommitSaveData(const char* name);
+    }
 } // namespace nn
 namespace al {
     f32 getRandom();
@@ -49,6 +53,9 @@ namespace al {
     f32 getRandom(f32, f32);
     s32 getRandom(s32);
     s32 getRandom(s32, s32);
+    void getRandomVector(sead::Vector3f*, f32);
+    void snapVecToGrid(sead::Vector3f* output, const sead::Vector3f& position, f32 cubeSize,
+                       const sead::Vector3f& offset);
 
     class OneMeshFixMapParts {};
     class LiveActor;
@@ -60,15 +67,17 @@ namespace al {
 
     void startHitReaction(const al::LiveActor*, const char*);
     void startAction(al::LiveActor*, const char*);
+    void startSe(const al::IUseAudioKeeper* user, const sead::SafeString& name);
+
     void emitRadialBlur(const al::LiveActor*, const sead::Vector3f&, float, float, float, float, float, float, int, int,
                         bool);
+    void validatePostProcessingFilter(const al::Scene* scene);
+    void invalidatePostProcessingFilter(const al::Scene* scene);
 
     class SimpleLayoutAppearWaitEnd : public al::LayoutActor {
     public:
-        SimpleLayoutAppearWaitEnd(char const*, char const*, al::LayoutInitInfo const&, char const*,
-                                  bool);
-        SimpleLayoutAppearWaitEnd(al::LayoutActor*, char const*, char const*, al::LayoutInitInfo const&,
-                                  char const*);
+        SimpleLayoutAppearWaitEnd(char const*, char const*, al::LayoutInitInfo const&, char const*, bool);
+        SimpleLayoutAppearWaitEnd(al::LayoutActor*, char const*, char const*, al::LayoutInitInfo const&, char const*);
 
         void appear() override;
         void end();
@@ -92,7 +101,31 @@ namespace al {
 
         void setText(const char* text);
     };
+
+    class PostProcessingFilter {
+    public:
+        bool isValid;
+        class ShaderHolder* ShaderHolder;
+        class DepthOfFieldDrawer* DepthOfFieldDrawer;
+        class GraphicsParamRequesterImpl* GraphicsParamRequesterImpl;
+        class ViewDepthDrawer* ViewDepthDrawer;
+        class VignettingDrawer* VignettingDrawer;
+        class EdgeDrawer* EdgeDrawer;
+        class CartoonDrawer* CartoonDrawer;
+        class RetroColorDrawer* RetroColorDrawer;
+        class ScreenBlurDrawer* ScreenBlurDrawer;
+        class PencilSketchDrawer* PencilSketchDrawer;
+        class ColorClampDrawer* ColorClampDrawer;
+        sead::PtrArray<struct PostProcessingFilterPreset> filterPresets;
+        s32 currentPreset;
+    };
 } // namespace al
+namespace rs {
+    bool isPlayerInWater(const al::LiveActor*);
+}
+namespace alAudioKeeperFunction {
+    al::AudioKeeper* createAudioKeeper(const al::AudioDirector* director);
+}
 namespace agl {
     class TextureDataInitializerRAW {
     public:
@@ -121,8 +154,10 @@ public:
     enum class EActionTrigger {
         IceWaterDamage = 4,
         OxygenDamage = 7,
+        WallDamage = 10,
     };
     void set(EActionTrigger trigger);
+    bool isOn(EActionTrigger trigger) const;
 };
 
 class PlayerDamageKeeper {
@@ -136,9 +171,9 @@ public:
     void init(const al::ActorInitInfo&) override;
     void attackSensor(al::HitSensor*, al::HitSensor*) override;
     bool receiveMsg(const al::SensorMsg*, al::HitSensor*, al::HitSensor*) override;
-    void shoot(const sead::Vector3<float>&, const sead::Vector3<float>&, int, bool, bool);
-    void shootByPlayer(const sead::Vector3<float>& trans, const sead::Vector3<float>& vel,
-                       const sead::Vector3<float>& dir, const sead::Vector3<float>&, float, int);
+    void shoot(const sead::Vector3f&, const sead::Vector3f&, int, bool, bool);
+    void shootByPlayer(const sead::Vector3f& trans, const sead::Vector3f& vel, const sead::Vector3f& dir,
+                       const sead::Vector3f&, float, int);
 
     void exeMove();
     void exeStart();
