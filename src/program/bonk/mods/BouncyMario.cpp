@@ -1,6 +1,6 @@
 #include <al/Library/LiveActor/ActorMovementFunction.h>
 #include <al/Library/LiveActor/ActorPoseKeeper.h>
-#include <program/bonk/mods/BouncyMario.hpp>
+#include <bonk/mods/BouncyMario.hpp>
 
 namespace bm {
     void BouncyMario::control() {

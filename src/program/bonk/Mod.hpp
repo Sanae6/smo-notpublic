@@ -3,6 +3,7 @@
 #include <al/Library/LiveActor/ActorInitInfo.h>
 #include <al/Library/Nerve/NerveExecutor.h>
 #include <al/Library/Player/PlayerHolder.h>
+#include <basis/seadNew.h>
 #include <bonk/ForwardDecls.hpp>
 #include <game/Player/PlayerActorHakoniwa.h>
 #include <game/StageScene/StageScene.h>
@@ -56,6 +57,8 @@ namespace bm {
                 control();
         }
 
+        virtual void marioBonked() {}
+
         void renderToScene() {
             if (active && visible) {
                 renderScene();
@@ -68,9 +71,11 @@ namespace bm {
             }
         }
 
-    protected:
         bool notInScene() const { return sceneObjHolder == nullptr; }
         bool inScene() const { return sceneObjHolder != nullptr; }
+        bool isActive() const { return active; }
+
+    protected:
         virtual void renderScene() {}
         virtual void renderLayout(StageScene* scene, agl::DrawContext* drawContext) {}
         virtual void control() {}
@@ -78,10 +83,13 @@ namespace bm {
         bool isPaused() const { return pauseTimer >= 0; }
         void pauseForSeconds(int seconds) { pauseTimer = seconds * 60; }
         void pauseForFrames(int frames) { pauseTimer = frames; }
+        void unpause() { pauseTimer = 0; }
 
         PlayerActorHakoniwa* getMario() const {
             return static_cast<PlayerActorHakoniwa*>(sceneInfo.mPlayerHolder->getPlayer(0));
         }
+
+        GameDataHolder* getGameDataHolder() const { return static_cast<GameDataHolder*>(sceneInfo.mGameDataHolder); }
     };
 
     struct ApplyMod : public Mod {

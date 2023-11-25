@@ -2,19 +2,17 @@
 #include <bonk/ModSaveData.hpp>
 #include <fs/fs_files.hpp>
 #include <logger/Logger.hpp>
+#include <logger/Params.h>
 #include <result.h>
 
 namespace bm {
-    static const char* path = "save:/BonkSaveData.bin";
+    static const char* path = "sd:/BonkSaveData.bin";
     ModSaveData& ModSaveData::instance() {
         static ModSaveData saveData = {};
         return saveData;
     }
-    void ModSaveData::setupSave() {
-
-    }
-
     void ModSaveData::load() {
+
         nn::fs::FileHandle handle{};
         nn::Result result = nn::fs::OpenFile(&handle, path, nn::fs::OpenMode_Read);
         if (result.isFailure()) {
@@ -47,6 +45,11 @@ namespace bm {
         }
 
         *this = intermediate;
+        if (par::get("SaveOverrideStep", false)) {
+            int prev = modStep;
+            modStep = par::get("SaveCurrentStep", 0);
+            Logger::log("Overwrote mod step %d from %d\n", modStep, prev);
+        }
 
         Logger::log("Loaded save!\n");
     }
@@ -68,7 +71,7 @@ namespace bm {
         }
 //        nn::fs::SetFileSize(handle, sizeof(ModSaveData));
         nn::fs::CloseFile(handle);
-        nn::fs::CommitSaveData("save");
+//        nn::fs::CommitSaveData("save");
         Logger::log("Saved mod save data!\n");
     }
 } // namespace bm

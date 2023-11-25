@@ -11,11 +11,12 @@ namespace bm {
             *trans = lastTrans;
         }
     };
-    class CameraLock : public NerveMod {
+    struct CameraLock : public NerveMod {
     public:
         DummyCameraTarget target;
 
         void activate() override;
+        void sceneStart(const al::ActorInitInfo &initInfo) override;
 
         void exeLock();
         void exeUnlocked();

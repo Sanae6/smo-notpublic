@@ -5,15 +5,20 @@
 #include <al/Library/LiveActor/LiveActorGroup.h>
 #include <al/Library/Math/MathVectorUtil.h>
 #include <al/Library/Memory/HeapUtil.h>
+#include <basis/seadNew.h>
 #include <bonk/mods/Birdyssey.hpp>
 #include <logger/Logger.hpp>
+#include <thread/seadThread.h>
 
 namespace bm {
-    static constexpr const char* birdTypeSuffixes[] = {
+    static constexpr const char* birdTypes[] = {
         "BirdCap",  "BirdCity", "BirdClash", "BirdCloud", "BirdEagle", "BirdForest", "BirdGull",
         "BirdLake", "BirdLava", "BirdMoon",  "BirdSand",  "BirdSky",   "BirdSnow",   "BirdWaterfall",
     };
-    static constexpr const s32 birdTypeCount = (s32)std::size(birdTypeSuffixes);
+    static constexpr const s32 birdTypeCount = (s32)std::size(birdTypes);
+    static int birdSelections[birdTypeCount] = {-1};
+    static constexpr const s32 maxBirdTypes = (s32)std::size(birdSelections);
+    static const int maxBirds = maxBirdTypes;
     struct AngryBird : public al::LiveActor {
         sead::Vector3f startPos;
         sead::Vector3f targetPos;
@@ -21,7 +26,7 @@ namespace bm {
         PlayerActorHakoniwa* mario;
         AngryBird(s32 suffix, PlayerActorHakoniwa* mario) : al::LiveActor("AngryBird"), suffix(suffix), mario(mario) {}
         void init(const al::ActorInitInfo& initInfo) override {
-            al::initActorWithArchiveName(this, initInfo, birdTypeSuffixes[suffix], nullptr);
+            al::initActorWithArchiveName(this, initInfo, birdTypes[suffix], nullptr);
             makeActorDead();
             al::invalidateClipping(this);
         }
@@ -40,9 +45,9 @@ namespace bm {
         void control() override {
             LiveActor::control();
             if (al::isActionEnd(this)) {
-                al::startAction(this, "Flying");
+                al::startAction(this, "Fly");
             }
-//            Logger::log("what the fuck is going on\n");
+            //            Logger::log("what the fuck is going on\n");
             auto dir = targetPos - al::getTrans(this);
             auto speed = par::get("AngryBirdsSpeed", 3.0f);
             if (dir.length() < speed * 2.0f) {
@@ -55,7 +60,6 @@ namespace bm {
             sead::Quatf quat;
             al::makeQuatUpFront(&quat, sead::Vector3f::ey, dir);
             al::updatePoseQuat(this, quat);
-
         }
 
         void attackSensor(al::HitSensor* target, al::HitSensor* source) override {
@@ -66,23 +70,27 @@ namespace bm {
 
     void Birdyssey::sceneStart(const al::ActorInitInfo& initInfo) {
         Mod::sceneStart(initInfo);
-        Logger::log("Heap name %s\n", al::getCurrentHeap()->getName().cstr());
-        birds = new al::LiveActor*[birdTypeCount];
-        for (int i = 0; i < birdTypeCount; i++) {
-            auto bird = new AngryBird(i, getMario());
+        if (birdSelections[0] == -1) {
+            birdSelections[0] = al::getRandom(birdTypeCount);
+            birdSelections[1] = al::getRandom(birdTypeCount);
+            birdSelections[2] = al::getRandom(birdTypeCount);
+        }
+        birds = allocArray<al::LiveActor*>(maxBirds);
+        for (int i = 0; i < maxBirds; i++) {
+            auto bird = alloc<AngryBird>(birdSelections[al::getRandom(maxBirdTypes)], getMario());
             al::initCreateActorNoPlacementInfo(bird, initInfo);
             birds[i] = bird;
         }
-        Logger::log("Initialized birds\n");
         pauseForFrames(par::get("AngryBirdsCooldown", 60));
     }
     void Birdyssey::control() {
         Mod::control();
-        Logger::log("Scene resources", al::getSceneResourceHeap()->getFreeSize(), );
+        if (par::get("AngryBirdsDisabled", false))
+            return;
 
         al::LiveActor* bird = nullptr;
-        for (int i = 0; i < birdTypeCount; i++) {
-            s32 r = al::getRandom(birdTypeCount);
+        for (int i = 0; i < maxBirds; i++) {
+            s32 r = al::getRandom(maxBirds);
             auto tempBird = birds[r];
             if (tempBird && al::isDead(tempBird)) {
                 bird = tempBird;
@@ -97,11 +105,16 @@ namespace bm {
         pauseForFrames(par::get("AngryBirdsCooldown", 60));
     }
     al::LiveActor* Birdyssey::findDeadBird() {
-        for (int i = 0; i < birdTypeCount; ++i) {
+        for (int i = 0; i < maxBirds; ++i) {
             if (al::isDead(birds[i]))
                 return birds[i];
         }
         return nullptr;
+    }
+    void Birdyssey::sceneEnd(bool cleanResources) {
+        Mod::sceneEnd(cleanResources);
+        if (cleanResources)
+            birdSelections[0] = -1;
     }
 
 } // namespace bm

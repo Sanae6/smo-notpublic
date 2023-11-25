@@ -15,7 +15,9 @@ namespace bm {
         Mod::sceneStart(initInfo);
         levelStartedWithHat = GameDataFunction::isEnableCap(this);
         Logger::log("Started cap: %s\n", BTOC(levelStartedWithHat));
-        al::setNerve(this, &RemoveHatNrvShow::sInstance);
+        if (active)
+            al::setNerve(this, &RemoveHatNrvShow::sInstance);
+        unpause();
     }
     static RemoveHat* hat;
     void useOldBoolean(al::ByamlWriter* writer, const char* name, bool) {
@@ -50,15 +52,13 @@ namespace bm {
             NerveMod::control();
     }
     void RemoveHat::exeHide() {
-        getGameDataHolder(this)->mDataFile->mIsEnableCap = false;
+        getGameDataHolder()->mDataFile->mIsEnableCap = false;
         CapFunction::putOnCapPlayer(getMario()->mHackCap, getMario()->mPlayerAnimator);
         pauseForSeconds(par::get<u32>("HatHideSecs", 5));
-        Logger::log("Hid cap\n");
         al::setNerve(this, &RemoveHatNrvShow::sInstance);
     }
     void RemoveHat::exeShow() {
-        getGameDataHolder(this)->mDataFile->mIsEnableCap = true;
-        Logger::log("Showed cap\n");
+        getGameDataHolder()->mDataFile->mIsEnableCap = true;
         getMario()->mHackCap->hide(false);
         getMario()->mPlayerAnimator->forceCapOn();
         pauseForSeconds(par::get<u32>("HatShowSecsBase", 10) + al::getRandom(par::get("HatShowSecsExtra", 20)));
@@ -67,7 +67,7 @@ namespace bm {
     void RemoveHat::sceneEnd(bool cleanResources) {
         Mod::sceneEnd(cleanResources);
         if (levelStartedWithHat) {
-            getGameDataHolder(this)->mDataFile->mIsEnableCap = true;
+            getGameDataHolder()->mDataFile->mIsEnableCap = true;
         }
     }
 } // namespace bm

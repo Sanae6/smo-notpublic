@@ -4,15 +4,14 @@
 #include <controller/seadControllerBase.h>
 
 namespace bm {
-    class StickDelay : public Mod {
+    struct StickDelay : public Mod {
         static const s32 maxFrames = 20;
         struct Frame {
             sead::BitFlag32 padHold = 0;
             sead::Vector2f leftStick = sead::Vector2f::zero;
             sead::Vector2f rightStick = sead::Vector2f::zero;
         };
-        Frame frames[maxFrames];
-        int currentNewFrame = 0;
+        Frame frames[maxFrames] {};
 
         void activate() override;
         void replace(sead::ControllerBase* c);

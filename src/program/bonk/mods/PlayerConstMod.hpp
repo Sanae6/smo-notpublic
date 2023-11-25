@@ -2,7 +2,7 @@
 
 #include <bonk/Mod.hpp>
 namespace bm {
-    class PlayerConstMod : public Mod {
+    struct PlayerConstMod : public Mod {
         PlayerConst basePlayerConst;
         static bool isFloat(int index);
         void sceneStart(const al::ActorInitInfo &initInfo) override;

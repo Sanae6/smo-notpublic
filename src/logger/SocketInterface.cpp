@@ -94,8 +94,8 @@ void SocketInterface::threadMain() {
         }
 
         connected = true;
-        nn::os::SignalLightEvent(&connectedEvent);
         Logger::log("Connected!\n");
+        nn::os::SignalLightEvent(&connectedEvent);
 
         while (true) {
             if (!read(packet)) {

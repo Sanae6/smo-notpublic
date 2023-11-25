@@ -44,7 +44,9 @@ sead::TextWriter *gTextWriter;
 void drawDebugWindow() {
     HakoniwaSequence *gameSeq = (HakoniwaSequence *) GameSystemFunction::getGameSystem()->mCurSequence;
 
-    ImGui::Begin("Game Debug Window");
+    static bool debugOpen = false;
+    return;
+    ImGui::Begin("Game Debug Window", &debugOpen);
     ImGui::SetWindowSize(ImVec2(500, 400), ImGuiCond_FirstUseEver);
 
     ImGui::Text("Current Sequence Name: %s", gameSeq->getName().cstr());
@@ -149,9 +151,9 @@ HOOK_DEFINE_TRAMPOLINE(GameSystemInit) {
         agl::DrawContext *context = drawInfo->drawContext;
         agl::RenderBuffer *renderBuffer = drawInfo->getRenderBuffer();
 
-        sead::Viewport *viewport = new sead::Viewport(*renderBuffer);
+        sead::Viewport *viewport = alloc<sead::Viewport>(*renderBuffer);
 
-        gTextWriter = new sead::TextWriter(context, viewport);
+        gTextWriter = alloc<sead::TextWriter>(context, viewport);
 
         gTextWriter->setupGraphics(context);
 
@@ -181,14 +183,37 @@ extern "C" void exl_main(void *x0, void *x1) {
     /* Setup hooking enviroment. */
     exl::hook::Initialize();
 
-//    handler::installExceptionHandler([](handler::ExceptionInfo& info) {
-//        Logger::log("That shit crashed so hard\n");
-////        handler::printCrashReport(info);
-//        return false;
-//    });
+    handler::installExceptionHandler([](handler::ExceptionInfo& info) {
+        Logger::log("That shit crashed so hard\n");
+//        handler::printCrashReport(info);
+        return false;
+    });
 
     EXL_ASSERT(SocketInterface::instance().init(LOGGER_IP, 3085), "SOCKET SERVER MUST BE GAMING!");
     SocketInterface::instance().waitForConnection();
+
+    EXL_ASSERT(R_SUCCEEDED(nn::fs::MountSdCardForDebug("sd")), "SD card failed to mount...");
+
+    struct WarnOnMalloc : Trampoline<WarnOnMalloc> {
+        static void* Callback(size_t size) {
+            return Orig(size);
+        }
+    };
+//    for (auto module = nn::ro::detail::g_pAutoLoadList; module != nullptr; module = module->next) {
+//        auto dyn = unsafeRef<Elf64_Dyn*>(module, 0x28);
+//        const char* stringTable = nullptr;
+//        Elf64_Xword soNameOffset = U64_MAX;
+//        for (; dyn->d_tag != DT_NULL; dyn++) {
+//            if (dyn->d_tag == DT_STRTAB) stringTable = reinterpret_cast<const char*>(dyn->d_un.d_ptr);
+//            if (dyn->d_tag == DT_SONAME) soNameOffset = dyn->d_un.d_val;
+//        }
+//
+//        if (stringTable != nullptr && soNameOffset != U64_MAX) {
+//            Logger::log("Module name: %s\n", stringTable + soNameOffset);
+//        }
+//    }
+//    WarnOnMalloc::InstallAtPtr(nn::ro::Module*);
+//    svcBreak(0,0,0);
 
     runCodePatches();
 

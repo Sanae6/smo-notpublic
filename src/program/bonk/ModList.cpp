@@ -1,4 +1,5 @@
 #include <al/Library/Memory/HeapUtil.h>
+#include <bonk/BonkProcedure.hpp>
 #include <bonk/ModSaveData.hpp>
 #include <bonk/StageState.hpp>
 #include <bonk/mods/Birdyssey.hpp>
@@ -11,6 +12,7 @@
 #include <bonk/mods/InputRandomizer.hpp>
 #include <bonk/mods/InvisibleMan.hpp>
 #include <bonk/mods/JumpyMario.hpp>
+#include <bonk/mods/MoonMode.hpp>
 #include <bonk/mods/NoOxygen.hpp>
 #include <bonk/mods/PlayerConstMod.hpp>
 #include <bonk/mods/PoseRandomizer.hpp>
@@ -33,27 +35,41 @@ namespace bm {
         initialized = true;
 
         sead::ScopedCurrentHeapSetter heapSetter(al::getSequenceHeap());
-//        bm::addMod<PoseRandomizer>() /*->activate()*/;
-//        bm::addMod<PlayerConstMod>() /*->activate()*/;
-//        bm::addMod<StickInverter>() /*->activate()*/;
-//        bm::addMod<NoOxygen>() /*->activate()*/;
-//        bm::addMod<GreenDemonMod>() /*->activate()*/;
-//        bm::addMod<DetroitBecomeCake>() /*->activate()*/;
-//        bm::addMod<InvisibleMan>() /*->activate()*/;
-//        bm::addMod<InputRandomizer>() /*->activate()*/;
-//        bm::addMod<StickDelay>() /*->activate()*/;
-//        bm::addMod<RemoveHat>() /*->activate()*/;
-//        bm::addMod<CameraLock>() /*->activate()*/;
-//        bm::addMod<GravityShift>() /*->activate()*/;
-//        bm::addMod<WideMario>() /*->activate()*/;
-//        bm::addMod<TallMario>() /*->activate()*/;
-//        bm::addMod<WorseGravity>() /*->activate()*/;
-//        bm::addMod<BouncyMario>() /*->activate()*/;
-//        bm::addMod<JumpyMario>()/*->activate()*/;
-        bm::addMod<Preprocessor>()->activate();
-        bm::addMod<Birdyssey>()->activate();
+        addModStep<WideMario>();                 // scale mario x/z * 3
+        addModStep<MoonMode>();                  // moon playerconst (moon kingdom gravity)
+        addModStep<GreenDemonMod>();             // beach ball chases mario forever (green demon sm64)
+        addModStep<Preprocessor>();              // post-processing (snapshot mode filters)
+        addModStep<BouncyMario>();               // mario stretches along velocity
+        addModStep<NoOxygen>();                  // oxygen meter always counting down
+        addModStep<InvisibleMan>();              // mario becomes invisible (prerequisite for cake)
+        addModStep<CameraLock>();                // lock camera in place for x seconds with cooldown of y seconds
+        addModStep<RemoveHat>();                 // steal hat for x seconds with cooldown of y seconds
+        addModStep<StickDelay>();                // delay all inputs (not just stick) by x frames
+        modifyStep<Preprocessor>([](auto& mod) { // enables randomized filters (default just fisheye lens)
+            mod.forceSingleFilter = false;
+        });
+        addModStep<GravityShift>();      // give mario a random gravity vector
+        addModStep<DetroitBecomeCake>(); // mario becomes a cake
+        addModStep<JumpyMario>();      // always enable jump code so mario jumps like the ground is always a trampoline
+        addModStep<StickInverter>();   // invert stick inputs
+        addModStep<TallMario>();       // scale mario y * 3
+        addModStep<InputRandomizer>(); // randomly press one button every 360 frames
+        addModStep<WorseGravity>();    // literally just playerconst modifier on all gravity
+        modifyStep<DetroitBecomeCake>([](auto& mod) { // turn mario into a globe
+            mod.isGlobe = true;
+            if (mod.inScene()) {
+                Logger::log("Cake models %p %p\n", mod.cakeModel, mod.globeModel);
+                mod.cakeModel->kill();
+                mod.globeModel->appear();
+            }
+        });
+        addModStep<Birdyssey>(); // birds fly around and damage mario like cuckoos from zelda
+
+        //        addModStep<PlayerConstMod>(); // randomize playerconst
+        //        addModStep<PoseRandomizer>(); // randomize poses (pos, scale, velocity) of all actors
 
         ModSaveData::instance().load();
+        procedureStartup();
         ModSaveData::instance().save();
     }
 } // namespace bm

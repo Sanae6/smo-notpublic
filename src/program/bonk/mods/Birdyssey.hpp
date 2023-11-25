@@ -7,5 +7,6 @@ namespace bm {
         al::LiveActor* findDeadBird();
         void sceneStart(const al::ActorInitInfo &initInfo) override;
         void control() override;
+        void sceneEnd(bool cleanResources) override;
     };
 } // namespace bm

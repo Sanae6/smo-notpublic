@@ -30,3 +30,5 @@
 #include "lib/hook/inline.hpp"
 #include "lib/hook/replace.hpp"
 #include "lib/hook/trampoline.hpp"
+
+#include <basis/seadNew.h>

@@ -32,15 +32,23 @@ namespace bm {
 
         bool hasMario() const { return player != nullptr; }
 
-        template <typename T>
-        T* findMod() {
+        static Mod* findMod(const std::type_info& typeInfo) {
             for (auto mod : mods)
-                if (isSameType<T>(mod))
-                    return static_cast<T*>(mod);
+                if (isSameType(mod, typeInfo))
+                    return mod;
+            EXL_ABORT(0x12345, "Unable to find mod!");
         }
 
         template <typename T>
-        void deactivateMod() {
+        static T* findMod() {
+            for (auto mod : mods)
+                if (isSameType<T>(mod))
+                    return static_cast<T*>(mod);
+            EXL_ABORT(0x12345, "Unable to find mod!");
+        }
+
+        template <typename T>
+        static void deactivateMod() {
             auto mod = static_cast<Mod*>(findMod<T>());
             if (mod) mod->deactivate();
         }
@@ -48,7 +56,7 @@ namespace bm {
 
     template <typename T>
     Mod* addMod() {
-        return StageState::mods.add(new T());
+        return StageState::mods.add(alloc<T>());
     }
     void stageStatePatches();
 

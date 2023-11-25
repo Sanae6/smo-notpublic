@@ -4,7 +4,7 @@
 #include <bonk/Mod.hpp>
 
 namespace bm {
-    class PoseRandomizer : public Mod {
+    struct PoseRandomizer : public Mod {
         al::LiveActorGroup* kit;
         void sceneStart(const al::ActorInitInfo& initInfo) override;
         void control() override;

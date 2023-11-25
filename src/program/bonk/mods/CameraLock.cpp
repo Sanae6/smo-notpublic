@@ -1,3 +1,4 @@
+#include <al/Library/LiveActor/ActorPoseKeeper.h>
 #include <bonk/mods/CameraLock.hpp>
 
 namespace bm {
@@ -10,10 +11,17 @@ namespace bm {
     namespace {
         MAKE_NERVE_BOTH(CameraLock, Lock);
         MAKE_NERVE_BOTH(CameraLock, Unlocked);
-    }
-    void CameraLock::activate() { Mod::activate();
+    } // namespace
+    void CameraLock::activate() {
+        Mod::activate();
         TargetHook::InstallAtSymbol("_ZNK2al18CameraTargetHolder13getViewTargetEi");
         initNerve(&CameraLockNrvLock::sInstance, 0);
+    }
+    void CameraLock::sceneStart(const al::ActorInitInfo& initInfo) {
+        Mod::sceneStart(initInfo);
+        if (active)
+            al::setNerve(this, &CameraLockNrvUnlocked::sInstance);
+        unpause();
     }
     void CameraLock::exeLock() {
         sceneInfo.mCameraDirector->mCameraTargetHolder->getViewTarget(0)->calcTrans(&target.lastTrans);

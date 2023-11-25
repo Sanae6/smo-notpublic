@@ -105,17 +105,17 @@ namespace al {
     class PostProcessingFilter {
     public:
         bool isValid;
-        class ShaderHolder* ShaderHolder;
-        class DepthOfFieldDrawer* DepthOfFieldDrawer;
-        class GraphicsParamRequesterImpl* GraphicsParamRequesterImpl;
-        class ViewDepthDrawer* ViewDepthDrawer;
-        class VignettingDrawer* VignettingDrawer;
-        class EdgeDrawer* EdgeDrawer;
-        class CartoonDrawer* CartoonDrawer;
-        class RetroColorDrawer* RetroColorDrawer;
-        class ScreenBlurDrawer* ScreenBlurDrawer;
-        class PencilSketchDrawer* PencilSketchDrawer;
-        class ColorClampDrawer* ColorClampDrawer;
+        class ShaderHolder* shaderHolder;
+        class DepthOfFieldDrawer* depthOfFieldDrawer;
+        class GraphicsParamRequesterImpl* graphicsParamRequesterImpl;
+        class ViewDepthDrawer* viewDepthDrawer;
+        class VignettingDrawer* vignettingDrawer;
+        class EdgeDrawer* edgeDrawer;
+        class CartoonDrawer* cartoonDrawer;
+        class RetroColorDrawer* retroColorDrawer;
+        class ScreenBlurDrawer* screenBlurDrawer;
+        class PencilSketchDrawer* pencilSketchDrawer;
+        class ColorClampDrawer* colorClampDrawer;
         sead::PtrArray<struct PostProcessingFilterPreset> filterPresets;
         s32 currentPreset;
     };

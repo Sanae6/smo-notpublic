@@ -1,12 +1,10 @@
 #pragma once
 
 #include <bonk/Mod.hpp>
-
 namespace bm {
-    struct StickInverter : public NerveMod {
-        void activate() override;
+    struct MoonMode : ApplyMod {
+        PlayerConst* moonPlayerConst;
         void sceneStart(const al::ActorInitInfo &initInfo) override;
-        void exeEnable();
-        void exeDisable();
+        void apply() override;
     };
 } // namespace bm

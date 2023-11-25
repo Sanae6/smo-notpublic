@@ -24,14 +24,15 @@ namespace bm {
     void PlayerConstMod::randomize() {
         f32* baseCur = &basePlayerConst.mGravity;
         f32* cur = &getMario()->mPlayerConst->mGravity;
-        for (int i = 0; i < playerConstCount; i++, cur++, baseCur++) {
-            if (isFloat(i))
-                *cur *= *baseCur + al::getRandom(0.8f, 1.2f);
+        for (int i = 0; i < par::get("ConstMaxChanges", 15); i++) {
+            int index = al::getRandom(playerConstCount);
+            if (isFloat(index))
+                cur[index] *= baseCur[index] * al::getRandom(0.8f, 1.2f);
         }
-        pauseForSeconds(5);
+        pauseForSeconds(par::get("ConstRandoSecs", 5));
     }
     void PlayerConstMod::control() {
-        randomize();
+//        randomize();
     }
 
 } // namespace bm

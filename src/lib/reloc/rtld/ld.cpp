@@ -2,16 +2,16 @@
 #include "utils.hpp"
 
 Elf_Addr rtld::lookup_global_auto(const char *name) {
-    if (ro::g_pAutoLoadList.back == (ModuleObject *)&ro::g_pAutoLoadList) {
-        return 0;
-    }
-
-    for (ModuleObject *module : ro::g_pAutoLoadList) {
-        Elf_Sym *symbol = module->GetSymbolByName(name);
-        if (symbol && ELF_ST_BIND(symbol->st_info)) {
-            return (Elf_Addr)module->module_base + symbol->st_value;
-        }
-    }
+//    if (ro::g_pAutoLoadList.back == (ModuleObject *)&ro::g_pAutoLoadList) {
+//        return 0;
+//    }
+//
+//    for (ModuleObject *module : ro::g_pAutoLoadList) {
+//        Elf_Sym *symbol = module->GetSymbolByName(name);
+//        if (symbol && ELF_ST_BIND(symbol->st_info)) {
+//            return (Elf_Addr)module->module_base + symbol->st_value;
+//        }
+//    }
     return 0;
 }
 

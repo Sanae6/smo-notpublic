@@ -8,7 +8,6 @@ namespace bm {
         static const int currentVersion = 1;
         u32 magic = fileMagic;
         u32 version = currentVersion;
-        u32 enabledMods = 0;
         u32 modStep = 0;
 
         static ModSaveData& instance();

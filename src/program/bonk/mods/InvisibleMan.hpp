@@ -2,7 +2,7 @@
 
 #include <bonk/Mod.hpp>
 namespace bm {
-    class InvisibleMan : public Mod {
+    struct InvisibleMan : public Mod {
         void activate() override;
     };
 } // namespace bm

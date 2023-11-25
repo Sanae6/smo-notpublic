@@ -1,25 +1,34 @@
 #include <bonk/StageState.hpp>
 #include <bonk/mods/Preprocessor.hpp>
+#include <game/GameData/GameDataFunction.h>
 #include <logger/Logger.hpp>
 
 namespace bm {
-    static constexpr const int unfavorables[] = {6, 7, 8
-                                                 , 17};
     void Preprocessor::apply() {
-        do {
-            //            filter = al::getRandom(1, 18);
-            filter = 7;
-            // filter++;
-            Logger::log("trying filter %d", filter);
-            //        } while (std::find(std::begin(unfavorables), std::end(unfavorables), filter) != std::end(unfavorables));
-        } while (false);
-        Logger::log("Random filter %d\n", filter);
+        updateAlways = true;
+        filter = al::getRandom(1, 18);
+        al::validatePostProcessingFilter(stageState(this).stageScene);
     }
 
     void Preprocessor::control() {
         al::validatePostProcessingFilter(stageState(this).stageScene);
-        if (par::get("PreprocOverride", false))
-            filter = par::get("PreprocFilter", 15);
-        unsafeRef<al::PostProcessingFilter*>(sceneInfo.mGraphicsSystemInfo, 0x2d0)->currentPreset = filter;
+        s32 appliedFilter = filter;
+        if (forceSingleFilter || par::get("PreprocOverride", false))
+            appliedFilter = par::get("PreprocFilter", 7);
+        auto postProc = unsafeRef<al::PostProcessingFilter*>(sceneInfo.mGraphicsSystemInfo, 0x2d0);
+        postProc->currentPreset = appliedFilter;
+
+        // support world based view depth params
+        auto vdd = postProc->viewDepthDrawer;
+        unsafeRef<struct ViewDepthDrawParam*>(vdd, 0x10) = nullptr;
+        if (appliedFilter == 9) {
+            int world = GameDataFunction::getCurrentWorldId(GameDataHolderAccessor(getGameDataHolder()));
+            auto vddParams =
+                unsafeRef<ViewDepthDrawParam**>(stageState(this).stageScene->mControllerGuideSnapshotCtrl, 0x48);
+            auto vddParamsCount = unsafeRef<int>(stageState(this).stageScene->mControllerGuideSnapshotCtrl, 0x50);
+            if (world > -1 && world < vddParamsCount) {
+                unsafeRef<ViewDepthDrawParam*>(vdd, 0x10) = vddParams[world];
+            }
+        }
     }
 } // namespace bm

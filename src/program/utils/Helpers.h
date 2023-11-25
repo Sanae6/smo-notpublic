@@ -5,8 +5,10 @@
 #include <al/Library/Nerve/Nerve.h>
 #include <al/Library/Nerve/NerveKeeper.h>
 #include <al/Library/Nerve/NerveUtil.h>
+#include <al/Library/Memory/HeapUtil.h>
 #include <lib.hpp>
 #include <math/seadVector.h>
+#include <basis/seadNew.h>
 #include <typeinfo>
 
 namespace patch = exl::patch;
@@ -60,4 +62,39 @@ static inline f32 abs(f32 value) {
 
 static inline sead::Vector3f abs(const sead::Vector3f& value) {
     return sead::Vector3f(abs(value.x), abs(value.y), abs(value.z));
+}
+
+//template <typename T>
+//static inline T* alloc(s32 size = 1, s32 alignment = 8){
+//    auto heap = al::getCurrentHeap();
+//    EXL_ASSERT(heap != nullptr, "Invalid heap for alloc!");
+//    return reinterpret_cast<T*>(heap->tryAlloc(sizeof(T) * size, alignment));
+//}
+//
+//template <typename T>
+//static inline T* alloc(sead::Heap* heap, s32 size = 1, s32 alignment = 8){
+//    if (!heap) heap = al::getCurrentHeap();
+//    EXL_ASSERT(heap != nullptr, "Invalid heap for alloc!");
+//    return reinterpret_cast<T*>(heap->tryAlloc(sizeof(T), alignment));
+//}
+
+template <typename T, typename... Args>
+static inline T* alloc(Args... args) {
+    return new (al::getCurrentHeap(), 8) T(args...);
+}
+
+template <typename T>
+static inline T* allocArray(s32 size) {
+    return new (al::getCurrentHeap(), 8) T[size];
+}
+
+template <typename T>
+static inline void free(T* ptr, sead::Heap* heap = nullptr) {
+    if (!heap) heap = al::getCurrentHeap();
+    EXL_ASSERT(heap != nullptr, "Invalid heap for free!");
+    heap->free(ptr);
+}
+
+static inline sead::Heap* curHeap() {
+    return al::getCurrentHeap();
 }

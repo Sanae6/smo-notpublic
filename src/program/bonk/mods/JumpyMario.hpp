@@ -2,8 +2,11 @@
 
 #include <bonk/Mod.hpp>
 namespace bm {
-    struct JumpyMario : ApplyMod {
+    struct JumpyMario : NerveMod {
         JumpyMario();
-        void apply() override;
+        void activate() override;
+        void sceneStart(const al::ActorInitInfo &initInfo) override;
+        void exeEnable();
+        void exeDisable();
     };
 } // namespace bm

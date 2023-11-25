@@ -8,18 +8,19 @@
 #include <game/HakoniwaSequence/HakoniwaSequence.h>
 #include <lib.hpp>
 #include <logger/Logger.hpp>
-//#include <utils/AudioWrap.hpp>
+// #include <utils/AudioWrap.hpp>
+#include "Helpers.h"
+#include <logger/Params.h>
 #include <utils/SpeedbootTwo.hpp>
 
 namespace sb {
     struct SpeedbootNerve : public al::Nerve, public al::NerveExecutor {
         HakoniwaSequence* sequence;
         ChangeStageInfo changeStageInfo;
-//        au::AudioWrap* soundEffect;
         SpeedbootNerve(HakoniwaSequence* sequence);
 
         void execute(al::NerveKeeper* keeper) const override { const_cast<SpeedbootNerve*>(this)->updateNerve(); }
-        void executeOnEnd(al::NerveKeeper* keeper) const override { delete this; }
+        void executeOnEnd(al::NerveKeeper* keeper) const override { free(const_cast<SpeedbootNerve*>(this)); }
 
         void exeLoad();
         void exeFade();
@@ -35,15 +36,13 @@ namespace sb {
           changeStageInfo(sequence->mGameDataHolder, "PeachCastleGate", "PeachWorldHomeStage", false, -1,
                           ChangeStageInfo::UNK) {
         initNerve(&SpeedbootNerveNrvLoad::sInstance, 0);
+        Logger::log("Speedbooting into %s:%s\n", par::get("SpeedyStage", "PeachWorldHomeStage"), par::get("SpeedyChangeId", "PeachWorldHomeStage"));
     }
     void SpeedbootNerve::exeLoad() {
         if (al::isFirstStep(this)) {
             Logger::log("Starting load\n");
-//            soundEffect = new au::AudioWrap("content:/BonkData/discord.wav");
             sequence->mInitThread->start();
         }
-
-//        soundEffect->update();
 
         if (sequence->mInitThread->isDone()) {
             Logger::log("Done loading, fading out\n");
@@ -60,14 +59,14 @@ namespace sb {
             Logger::log("Faded out, loading\n");
             sequence->mGameDataHolder.mData->changeNextStage(&changeStageInfo, 0);
             al::setNerve(sequence, &HakoniwaSequenceNrvLoadStage::sInstance);
-//            delete soundEffect;
         }
     }
 
     struct SetupSpeedbootNerve : exl::hook::impl::TrampolineHook<SetupSpeedbootNerve> {
         static void Callback(HakoniwaSequence* sequence, const al::SequenceInitInfo& initInfo) {
             Orig(sequence, initInfo);
-            sequence->getNerveKeeper()->mNextNerve = new SpeedbootNerve(sequence);
+            if (!par::get("SpeedyEnabled", true)) return;
+            sequence->getNerveKeeper()->mNextNerve = alloc<SpeedbootNerve>(sequence);
             sequence->getNerveKeeper()->mStep = -1;
             Logger::log("Initialized speed booting\n");
         }

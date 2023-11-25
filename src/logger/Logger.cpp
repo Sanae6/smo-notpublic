@@ -13,7 +13,7 @@ static void logBase(SocketInterface& interface, const char* fmt, va_list args) {
     length = nn::util::VSNPrintf(packet->buffer, packet->size, fmt, args);
     packet->buffer[length] = '\0';
 
-    interface.send(packet, 0);
+    interface.send(packet);
 }
 
 void Logger::log(const char *fmt, ...) {

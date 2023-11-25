@@ -32,7 +32,10 @@ namespace bm {
         void appear() override {
             al::LiveActor::appear();
             al::setTrans(this, al::getTrans(mario) + sead::Vector3f::ey * par::get("DemonSpawnY", 160.0f));
+            pause();
         }
+
+        void pause() { al::setNerve(this, &GreenDemonNrvPopUp::sInstance); }
         void exePopUp() {
             if (al::isFirstStep(this))
                 al::startAction(this, "Reaction");
@@ -50,13 +53,13 @@ namespace bm {
                                    par::get("DemonDuration", 128), -1, false);
             }
             al::setActionFrameRate(this,
-                                   al::calcNerveEaseInOutRate(this, par::get("DemonMoveRampFrameMax", 120)) / 2.0f);
+                                   al::calcNerveEaseInOutRate(this, par::get("DemonLandEndFrame", 120)) / 2.0f);
 
             if (al::isGreaterEqualStep(this, par::get("DemonLandEndFrame", 120)))
                 al::setNerve(this, &GreenDemonNrvMove::sInstance);
         }
         void exeMove() {
-            auto rate = al::calcNerveEaseInOutRate(this, par::get("DemonMoveRampFrameMax", 120));
+            auto rate = al::calcNerveEaseInOutRate(this, par::get("DemonLandEndFrame", 120));
             al::setActionFrameRate(this, rate / 2.0f + 0.5f);
 
             al::setTrans(this, al::getTrans(this) + (lastDirection * rate * par::get("DemonSpeed", 4.0f)));
@@ -93,7 +96,7 @@ namespace bm {
     } // namespace
     void GreenDemonMod::sceneStart(const al::ActorInitInfo& initInfo) {
         Mod::sceneStart(initInfo);
-        oneUp = new GreenDemon(getMario());
+        oneUp = alloc<GreenDemon>(getMario());
         oneUp->init(initInfo);
     }
 
@@ -103,5 +106,6 @@ namespace bm {
         if (inScene())
             oneUp->appear();
     }
+    void GreenDemonMod::marioBonked() { oneUp->pause(); }
 
 } // namespace bm

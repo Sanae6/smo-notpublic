@@ -1,7 +1,7 @@
 /**
-* @file ro.h
-* @brief Dynamic module API.
-*/
+ * @file ro.h
+ * @brief Dynamic module API.
+ */
 
 #pragma once
 
@@ -11,18 +11,27 @@
 
 namespace nn {
     namespace ro {
+        namespace detail {
+            class RoModule {
+            public:
+                RoModule* prev;
+                RoModule* next;
+                uintptr_t Lookup(const char* symbol) const;
+            };
+            extern RoModule* g_pAutoLoadList;
+        }
         class Module {
         public:
-            rtld::ModuleObject *ModuleObject;
+            rtld::ModuleObject* ModuleObject;
             u32 State;
-            void *NroPtr;
-            void *BssPtr;
-            void *_x20;
-            void *SourceBuffer;
+            void* NroPtr;
+            void* BssPtr;
+            void* _x20;
+            void* SourceBuffer;
             char Name[256]; /* Created by retype action */
             u8 _x130;
             u8 _x131;
-            bool isLoaded;  // bool
+            bool isLoaded; // bool
         };
 
         struct ModuleId {
@@ -81,7 +90,7 @@ namespace nn {
                 State_Registered,
             };
             State state;
-            NrrHeader *nrrPtr;
+            NrrHeader* nrrPtr;
             u64 _x10;
             u64 _x18;
         };
@@ -93,23 +102,23 @@ namespace nn {
 
         Result Initialize();
 
-        Result LookupSymbol(uintptr_t *pOutAddress, const char *name);
+        Result LookupSymbol(uintptr_t* pOutAddress, const char* name);
 
-        Result LookupModuleSymbol(uintptr_t *pOutAddress, const Module *pModule, const char *name);
+        Result LookupModuleSymbol(uintptr_t* pOutAddress, const Module* pModule, const char* name);
 
-        Result LoadModule(Module *pOutModule, const void *pImage, void *buffer, size_t bufferSize, int flag);
+        Result LoadModule(Module* pOutModule, const void* pImage, void* buffer, size_t bufferSize, int flag);
 
         // Result LoadModule(Module *pOutModule, const void *pImage, void *buffer, size_t bufferSize,int flag, bool
         // isNotReferenced);
-        Result UnloadModule(Module *);
+        Result UnloadModule(Module*);
 
-        Result GetBufferSize(size_t *, const void *);
+        Result GetBufferSize(size_t*, const void*);
 
-        Result RegisterModuleInfo(RegistrationInfo *, void const *);
+        Result RegisterModuleInfo(RegistrationInfo*, void const*);
 
-        Result RegisterModuleInfo(RegistrationInfo *, void const *, uint);
+        Result RegisterModuleInfo(RegistrationInfo*, void const*, uint);
 
-        Result UnregisterModuleInfo(RegistrationInfo *, void const *);
-    };  // namespace ro
+        Result UnregisterModuleInfo(RegistrationInfo*, void const*);
+    }; // namespace ro
 
-};  // namespace nn
+}; // namespace nn

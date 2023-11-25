@@ -6,12 +6,13 @@
 
 namespace bm {
     struct CakeMario : public al::LiveActor {
-        CakeMario() : al::LiveActor("ケーキ") {}
+        const char* model;
+        CakeMario(const char* model) : al::LiveActor("ケーキ"), model(model) {}
         PlayerActorHakoniwa* getMario() const {
             return static_cast<PlayerActorHakoniwa*>(mSceneInfo->mPlayerHolder->getPlayer(0));
         }
         void init(const al::ActorInitInfo &info) override {
-            al::initActorWithArchiveName(this, info, "WeddingCake", nullptr);
+            al::initActorWithArchiveName(this, info, model, nullptr);
 
             al::copyPose(this, getMario());
             al::setScale(this, sead::Vector3f::ones * par::get("CakeScale", 1.0f));
@@ -28,15 +29,17 @@ namespace bm {
         Mod::activate();
 
         if (inScene())
-            cakeModel->appear();
+            getActiveModel()->appear();
     }
     void DetroitBecomeCake::sceneStart(const al::ActorInitInfo& initInfo) {
         Mod::sceneStart(initInfo);
-        cakeModel = new CakeMario();
+        cakeModel = alloc<CakeMario>("WeddingCake");
+        globeModel = alloc<CakeMario>("ShineTowerGlobe");
 
         cakeModel->init(initInfo);
+        globeModel->init(initInfo);
 
         if (active)
-            cakeModel->appear();
+            getActiveModel()->appear();
     }
 } // namespace bm

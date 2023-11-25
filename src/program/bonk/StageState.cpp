@@ -1,6 +1,9 @@
 #include <al/Library/Memory/HeapUtil.h>
+#include <al/Library/Nerve/NerveStateBase.h>
 #include <al/Library/Player/PlayerHolder.h>
 #include <al/Library/Scene/SceneUtil.h>
+#include <basis/seadNew.h>
+#include <bonk/BonkProcedure.hpp>
 #include <bonk/ForwardDecls.hpp>
 #include <bonk/StageState.hpp>
 #include <bonk/mods/PoseRandomizer.hpp>
@@ -36,6 +39,9 @@ namespace bm {
         if (hasMario()) {
             if (!control && player->mPlayerTrigger->isOn(PlayerTrigger::EActionTrigger::WallDamage)) {
                 Logger::log("Mario bonked!\n");
+                if (bonked())
+                    for (auto mod : mods)
+                        mod->marioBonked();
             }
             if (control && par::clicked("KillMario")) {
                 PlayerHelper::killPlayer(player);
@@ -67,8 +73,9 @@ namespace bm {
             Orig(scene, holder);
 
             sead::ScopedCurrentHeapSetter setter(al::getSceneHeap());
-            auto state = new StageState();
-            if (isSameType<StageScene>(scene)) state->stageScene = static_cast<StageScene*>(scene);
+            auto state = alloc<StageState>();
+            if (isSameType<StageScene>(scene))
+                state->stageScene = static_cast<StageScene*>(scene);
             holder->setSceneObj(state, 0x40);
             return holder;
         }
@@ -102,14 +109,17 @@ namespace bm {
         }
     };
 
+    struct HakoniwaSequenceDeleteScene : public al::NerveStateBase {
+        al::Sequence* sequence;
+        al::Scene* scene;
+        al::AsyncFunctorThread functorThread;
+        bool unloadsResources;
+    };
+
     struct StageSceneDestruction : public Trampoline<StageSceneDestruction> {
-        static void Callback(struct HakoniwaSequenceDeleteScene* sequence, al::Scene* scene, bool cleanResources, bool finalizeAudio, int fadeFrames) {
-            if (isSameType<StageScene>(scene)) {
-                Logger::log("Steamed\n");
-                stageState(scene).sceneEnd(cleanResources);
-                Logger::log("Shams\n");
-            }
-            Orig(sequence, scene, cleanResources, finalizeAudio, fadeFrames);
+        static void Callback(StageScene* scene) {
+            stageState(scene).sceneEnd(true);
+            Orig(scene);
         }
     };
 
@@ -118,9 +128,7 @@ namespace bm {
         StageStateInit::InstallAtSymbol("_ZN8RootTask4calcEv");
         StageScenePlay::InstallAtSymbol("_ZN10StageScene7exePlayEv");
         StageSceneControl::InstallAtSymbol("_ZN10StageScene7controlEv");
-        StageSceneDestruction::InstallAtSymbol("_ZN24HakoniwaStateDeleteScene5startEPN2al5SceneEbbi");
-        //        StageSceneDrawMain::InstallAtSymbol("_ZNK10StageScene8drawMainEv");
-        //        HakoniwaSequenceDrawMain::InstallAtSymbol("_ZNK16HakoniwaSequence8drawMainEv");
+        StageSceneDestruction::InstallAtSymbol("_ZN10StageSceneD1Ev");
     }
 
 } // namespace bm
