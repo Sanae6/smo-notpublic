@@ -16,6 +16,11 @@ namespace inst = exl::armv8::inst;
 namespace reg = exl::armv8::reg;
 using namespace reg;
 
+template <typename T>
+using Trampoline = exl::hook::impl::TrampolineHook<T>;
+template <typename T>
+using Replace = exl::hook::impl::ReplaceHook<T>;
+
 template <typename Right, typename Left>
 bool isSameType([[maybe_unused]] const Left* leftVal) {
     return leftVal != nullptr && al::isEqualString(typeid(*leftVal).name(), typeid(Right).name());

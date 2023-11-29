@@ -308,6 +308,7 @@ namespace handler {
 
         void phaseThreeHandler(ExceptionInfo* info) {
             local::CatchAction action = local::tryCallCatch(*info);
+            Logger::log("Caught exception!\n");
             if (action != local::CatchAction::Skip) {
                 info->exceptionState =
                     action == local::CatchAction::Continue ? ExceptionState::Continue : ExceptionState::Exit;
@@ -318,7 +319,7 @@ namespace handler {
                 else
                     printCrashReport(info);
 
-                info->exceptionState = continueRunning ? ExceptionState::Continue : ExceptionState::Exit;
+//                info->exceptionState = continueRunning ? ExceptionState::Continue : ExceptionState::Exit;
             }
             phaseFourHandler(info);
         }
@@ -339,7 +340,6 @@ namespace handler {
         extern void phaseTwoHandler(int registers[9]);
 
         static void phaseOneHandler(ExceptionType exceptionType, KernelExceptionInfo& info) {
-            svcReturnFromException(1);
             if (exceptionType == ExceptionType::InvalidSystemCall && (info.esr & 0xFFFF) == 0xBEEF) {
                 // Caused by phase four, we should just jump to the restore and return
                 for (int i = 0; i < ACNT(info.r); i++) {
@@ -413,13 +413,11 @@ namespace handler {
     void installExceptionHandler(const CatchFunc& handler) {
         handlerFunc = handler;
         {
-            exl::util::RwPages patcher(exl::util::GetRtldModuleInfo().m_Text.m_Start + 0x00, 0x8);
+            exl::util::RwPages patcher(exl::util::GetRtldModuleInfo().m_Text.m_Start + 0x0, 0xC);
             u32* branchPtr = reinterpret_cast<u32*>(patcher.GetRw());
-            branchPtr[0] = 0xD4000501;
-
-//            branchPtr[0] = 0x1000007E;
-//            branchPtr[1] = 0xF94003DE;
-//            branchPtr[2] = 0xD61F03C0;
+            branchPtr[0] = 0x1000007E;
+            branchPtr[1] = 0xF94003DE;
+            branchPtr[2] = 0xD61F03C0;
         }
         exl::util::RwPages patcher(exl::util::GetRtldModuleInfo().m_Text.m_Start + 0xC, 0x8);
         auto& handlerFunctionOffset = *(uintptr_t*)(patcher.GetRw());

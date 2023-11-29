@@ -15,6 +15,7 @@ void virtmemLock(void);
 
 /// Unlocks the virtual memory manager mutex.
 void virtmemUnlock(void);
+void* virtmemFindAlias(size_t size, size_t guard_size);
 
 /**
  * @brief Finds a random slice of free general purpose address space.

@@ -214,6 +214,13 @@ void virtmemUnlock(void) {
     */
 }
 
+void* virtmemFindAlias(size_t size, size_t guard_size) {
+    /*
+    if (!mutexIsLockedByCurrentThread(&g_VirtmemMutex)) return NULL;
+    */
+    return _memregionFindRandom(&g_AliasRegion, size, guard_size);
+}
+
 void* virtmemFindAslr(size_t size, size_t guard_size) {
     /*
     if (!mutexIsLockedByCurrentThread(&g_VirtmemMutex)) return NULL;

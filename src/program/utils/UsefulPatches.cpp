@@ -1,5 +1,5 @@
 #include <al/Library/Memory/HeapUtil.h>
-#include <bonk/Mod.hpp>
+#include <logger/Logger.hpp>
 #include <utils/Helpers.h>
 #include <utils/UsefulPatches.hpp>
 
@@ -11,7 +11,6 @@ namespace al {
     };
 } // namespace al
 namespace up {
-
     struct ResourceHeapTracking : Trampoline<ResourceHeapTracking> {
         static al::Resource* Callback(al::ResourceSystem* resourceSystem, sead::SafeString& string,
                                       al::ResourceSystem::ResourceCategory* category, char* suffix) {

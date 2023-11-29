@@ -21,6 +21,7 @@ class Params {
 public:
     static Params& instance();
     void initialize();
+    bool isInitialized() const { return params != nullptr; }
     void handleApply(ParamApplyPacket* packet);
     void handleApply(ParamDeletePacket* packet);
     void handleApply(TriggerPacket* packet);
@@ -45,15 +46,21 @@ public:
 
 namespace par {
     [[maybe_unused]] static const char* get(const char* name, const char* defValue) {
+        if (!Params::instance().isInitialized())
+            return "";
         return Params::instance().getString(name, defValue);
     }
 
     template <typename T>
     [[maybe_unused]] static T get(const char* name, const T defValue) {
+        if (!Params::instance().isInitialized())
+            return T{};
         return Params::instance().get(name, defValue);
     }
 
     [[maybe_unused]] static bool clicked(const char* name, bool clear = true) {
+        if (!Params::instance().isInitialized())
+            return false;
         return Params::instance().clicked(name, clear);
     }
 }

@@ -26,9 +26,9 @@ Params::Param& Params::getOrCreateParam(const char* name, const u8* value, size_
     return param;
 }
 void Params::initialize() {
-    heap = sead::ExpHeap::create(0x100000, "ParamHeap", sead::HeapMgr::sRootHeaps[0], 8,
-                                 sead::Heap::cHeapDirection_Forward, true);
-    params = new (heap) Param[0x100];
+//    heap = sead::ExpHeap::create(0x100000, "ParamHeap", sead::HeapMgr::sRootHeaps[0], 8,
+//                                 sead::Heap::cHeapDirection_Forward, true);
+//    params = new (heap) Param[0x100];
 }
 void Params::handleApply(ParamApplyPacket* packet) {
     auto& param = getOrCreateParam(packet->name(), packet->value(), packet->valueLen());

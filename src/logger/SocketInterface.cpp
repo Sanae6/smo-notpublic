@@ -43,7 +43,7 @@ bool SocketInterface::init(const char* ip, u16 port) {
         return false;
 
     nn::os::InitializeLightEvent(&connectedEvent, false, nn::os::EventClearMode::Manual);
-    nn::os::SignalLightEvent(&connectedEvent);
+//    nn::os::SignalLightEvent(&connectedEvent);
 
     nn::socket::InetAton(ip, &hostAddress);
     serverAddress.address = hostAddress;
@@ -54,7 +54,7 @@ bool SocketInterface::init(const char* ip, u16 port) {
     nn::os::SetThreadName(&thread, "SocketInterface");
     nn::os::StartThread(&thread);
 
-    nn::os::WaitLightEvent(&connectedEvent);
+//    nn::os::WaitLightEvent(&connectedEvent);
 
     startedUp = true;
 
@@ -117,6 +117,7 @@ void SocketInterface::threadMain() {
 }
 
 void SocketInterface::handlePacket(Packet* packet) {
+    return;
     switch (packet->type) {
     case PacketType::Log:
         break;
