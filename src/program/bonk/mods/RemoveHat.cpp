@@ -70,4 +70,9 @@ namespace bm {
             getGameDataHolder()->mDataFile->mIsEnableCap = true;
         }
     }
+    void RemoveHat::deactivate() { Mod::deactivate();
+        if (levelStartedWithHat) {
+            getGameDataHolder()->mDataFile->mIsEnableCap = true;
+        }
+    }
 } // namespace bm

@@ -1,3 +1,4 @@
+#include <bonk/ModSaveData.hpp>
 #include <bonk/StageState.hpp>
 #include <bonk/mods/Preprocessor.hpp>
 #include <game/GameData/GameDataFunction.h>
@@ -11,6 +12,14 @@ namespace bm {
     }
 
     void Preprocessor::control() {
+        auto& save = ModSaveData::instance();
+        if (save.filtersDisableTimer++ > 18000) {
+            return;
+        }
+        if (save.filtersDisableTimer % 3600) {
+            save.save();
+        }
+
         al::validatePostProcessingFilter(stageState(this).stageScene);
         s32 appliedFilter = filter;
         if (forceSingleFilter || par::get("PreprocOverride", false))
@@ -30,5 +39,8 @@ namespace bm {
                 unsafeRef<ViewDepthDrawParam*>(vdd, 0x10) = vddParams[world];
             }
         }
+    }
+    void Preprocessor::deactivate() { Mod::deactivate();
+        al::invalidatePostProcessingFilter(stageState(this).stageScene);
     }
 } // namespace bm

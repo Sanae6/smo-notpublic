@@ -36,5 +36,9 @@ namespace bm {
         pauseForSeconds(par::get("JumpOffSecs", 10));
         al::setNerve(this, &JumpyMarioNrvEnable::sInstance);
     }
+    void JumpyMario::deactivate() {
+        Mod::deactivate();
+        jumpy = false;
+    }
 
 } // namespace bm

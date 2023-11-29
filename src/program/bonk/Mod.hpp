@@ -5,6 +5,7 @@
 #include <al/Library/Player/PlayerHolder.h>
 #include <basis/seadNew.h>
 #include <bonk/ForwardDecls.hpp>
+#include <bonk/ModSaveData.hpp>
 #include <game/Player/PlayerActorHakoniwa.h>
 #include <game/StageScene/StageScene.h>
 #include <lib.hpp>
@@ -44,8 +45,14 @@ namespace bm {
                 marioGainedMovement = true;
             }
         }
-        virtual void activate() { active = true; }
-        virtual void deactivate() { active = false; }
+        virtual void activate() {
+            active = true;
+            ModSaveData::instance().setModActive(this, true);
+        }
+        virtual void deactivate() {
+            active = false;
+            ModSaveData::instance().setModActive(this, false);
+        }
         virtual void show() { visible = true; }
         virtual void hide() { visible = false; }
         virtual void update() {
@@ -74,6 +81,8 @@ namespace bm {
         bool notInScene() const { return sceneObjHolder == nullptr; }
         bool inScene() const { return sceneObjHolder != nullptr; }
         bool isActive() const { return active; }
+
+        int modId = 0;
 
     protected:
         virtual void renderScene() {}

@@ -233,7 +233,7 @@ extern "C" void exl_main(void *x0, void *x1) {
 
     // ImGui Hooks
 //#if IMGUI_ENABLED
-//    nvnImGui::InstallHooks();
+    nvnImGui::InstallHooks();
 //
 //    nvnImGui::addDrawFunc(drawDebugWindow);
 //#endif

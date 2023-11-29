@@ -15,6 +15,12 @@ namespace bm {
         patcher.BranchInst((void*)&invert);
         initNerve(&StickInverterNrvEnable::sInstance, 0);
     }
+    void StickInverter::deactivate() { Mod::deactivate();
+        patch::CodePatcher patcher(0x861968);
+        patcher.Write(inst::Ret());
+        patcher.Seek(0x8618d4);
+        patcher.Write(inst::Ret());
+    }
     void StickInverter::sceneStart(const al::ActorInitInfo& initInfo) {
         Mod::sceneStart(initInfo);
         if (active)

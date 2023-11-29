@@ -20,5 +20,7 @@ namespace bm {
 
         void exeLock();
         void exeUnlocked();
+
+        void deactivate() override;
     };
 } // namespace bm

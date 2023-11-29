@@ -26,6 +26,8 @@
 #include <bonk/mods/WideMario.hpp>
 #include <bonk/mods/WorseGravity.hpp>
 #include <heap/seadHeapMgr.h>
+#include <imgui.h>
+#include <imgui_nvn.h>
 
 namespace bm {
     static bool initialized = false;
@@ -71,5 +73,9 @@ namespace bm {
         ModSaveData::instance().load();
         procedureStartup();
         ModSaveData::instance().save();
+
+        nvnImGui::addDrawFunc([]() {
+
+        });
     }
 } // namespace bm

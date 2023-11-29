@@ -34,4 +34,8 @@ namespace bm {
         pauseForSeconds(par::get("CamUnlockedSecs", 10));
         al::setNerve(this, &CameraLockNrvLock::sInstance);
     }
+    void CameraLock::deactivate() {
+        Mod::deactivate();
+        cameraTarget = nullptr;
+    }
 } // namespace bm

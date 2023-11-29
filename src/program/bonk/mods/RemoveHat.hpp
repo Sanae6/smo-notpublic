@@ -13,5 +13,6 @@ namespace bm {
         void control() override;
         void exeHide();
         void exeShow();
+        void deactivate() override;
     };
 } // namespace bm

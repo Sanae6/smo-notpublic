@@ -32,35 +32,38 @@ namespace exl::hook::impl {
             return OrigRef()(std::forward<Args>(args)...);
         }
 
-        static ALWAYS_INLINE void InstallAtOffset(ptrdiff_t address) {
-            _HOOK_STATIC_CALLBACK_ASSERT();
-
-            OrigRef() = hook::Hook(util::modules::GetTargetStart() + address, Derived::Callback, true);
-        }
-
-        template<typename R, typename ...A>
-        static ALWAYS_INLINE void InstallAtFuncPtr(util::GenericFuncPtr<R, A...> ptr) {
-            _HOOK_STATIC_CALLBACK_ASSERT();
-            using ArgFuncPtr = decltype(ptr);
-
-            static_assert(std::is_same_v<ArgFuncPtr, CallbackFuncPtr<>>, "Argument pointer type must match callback type!");
-
-            OrigRef() = hook::Hook(ptr, Derived::Callback, true);
-        }
-
-        static ALWAYS_INLINE void InstallAtPtr(uintptr_t ptr) {
-            _HOOK_STATIC_CALLBACK_ASSERT();
-
-            OrigRef() = hook::Hook(ptr, Derived::Callback, true);
-        }
+//        static ALWAYS_INLINE void InstallAtOffset(ptrdiff_t address) {
+//            _HOOK_STATIC_CALLBACK_ASSERT();
+//
+//            OrigRef() = hook::Hook(util::modules::GetTargetStart() + address, Derived::Callback, true);
+//        }
+//
+//        template<typename R, typename ...A>
+//        static ALWAYS_INLINE void InstallAtFuncPtr(util::GenericFuncPtr<R, A...> ptr) {
+//            _HOOK_STATIC_CALLBACK_ASSERT();
+//            using ArgFuncPtr = decltype(ptr);
+//
+//            static_assert(std::is_same_v<ArgFuncPtr, CallbackFuncPtr<>>, "Argument pointer type must match callback type!");
+//
+//            OrigRef() = hook::Hook(ptr, Derived::Callback, true);
+//        }
+//
+//        static ALWAYS_INLINE void InstallAtPtr(uintptr_t ptr) {
+//            _HOOK_STATIC_CALLBACK_ASSERT();
+//
+//            OrigRef() = hook::Hook(ptr, Derived::Callback, true);
+//        }
 
         static ALWAYS_INLINE void InstallAtSymbol(const char *sym) {
+            static bool installed = false;
+            if (installed) return;
             _HOOK_STATIC_CALLBACK_ASSERT();
 
             uintptr_t address = 0;
             R_ABORT_UNLESS(nn::ro::LookupSymbol(&address, sym));
 
             OrigRef() = hook::Hook(address, Derived::Callback, true);
+            installed = true;
         }
     };
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <types.h>
+#include <prim/seadBitFlag.h>
 
 namespace bm {
     struct ModSaveData {
@@ -9,11 +10,14 @@ namespace bm {
         u32 magic = fileMagic;
         u32 version = currentVersion;
         u32 modStep = 0;
+        u32 filtersDisableTimer = 0;
+        sead::BitFlag32 activeMods = 0;
 
         static ModSaveData& instance();
-        static void setupSave();
 
         void load();
         void save();
+
+        void setModActive(class Mod* mod, bool active);
     };
 }

@@ -19,6 +19,7 @@ namespace bm {
         ControllerCalcDelay::InstallAtSymbol("_ZN2al14NpadController9calcImpl_Ev");
     }
     void StickDelay::replace(sead::ControllerBase* c) {
+        if (!active) return;
         std::swap(c->mPadHold, frames[0].padHold);
         std::swap(c->mLeftStick, frames[0].leftStick);
         std::swap(c->mRightStick, frames[0].rightStick);

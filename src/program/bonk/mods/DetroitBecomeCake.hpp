@@ -9,5 +9,6 @@ namespace bm {
         void activate() override;
         void sceneStart(const al::ActorInitInfo &initInfo) override;
         al::LiveActor* getActiveModel() const { return isGlobe ? globeModel : cakeModel; }
+        void deactivate() override;
     };
 } // namespace bm

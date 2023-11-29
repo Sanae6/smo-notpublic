@@ -8,5 +8,6 @@ namespace bm {
         void sceneStart(const al::ActorInitInfo &initInfo) override;
         void exeEnable();
         void exeDisable();
+        void deactivate() override;
     };
 } // namespace bm

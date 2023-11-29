@@ -6,4 +6,11 @@ namespace bm {
         al::setScaleX(getMario(), 3);
         al::setScaleZ(getMario(), 3);
     }
+    void WideMario::deactivate() {
+        Mod::deactivate();
+        if (inScene()) {
+            al::setScaleX(getMario(), 1);
+            al::setScaleZ(getMario(), 1);
+        }
+    }
 } // namespace bm

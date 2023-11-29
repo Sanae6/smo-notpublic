@@ -6,6 +6,7 @@
 #include <bonk/BonkProcedure.hpp>
 #include <bonk/ForwardDecls.hpp>
 #include <bonk/StageState.hpp>
+#include <bonk/ModSaveData.hpp>
 #include <bonk/mods/PoseRandomizer.hpp>
 #include <game/HakoniwaSequence/HakoniwaSequence.h>
 #include <game/Player/PlayerActorHakoniwa.h>
@@ -21,6 +22,7 @@
 class RootTask;
 namespace bm {
     ModList StageState::mods = {};
+    int modIdCounter = 0;
     bool StageState::isSceneWithMario(const al::ActorInitInfo& initInfo) {
         al::PlayerHolder* playerHolder = initInfo.mActorSceneInfo.mPlayerHolder;
         return playerHolder->getPlayerNum() > 0 && isSameType<PlayerActorHakoniwa>(playerHolder->tryGetPlayer(0));
@@ -34,6 +36,7 @@ namespace bm {
         for (auto mod : mods)
             mod->sceneStart(initInfo);
         Logger::log("Initialized mods for scene!\n");
+        ModSaveData::instance().save();
     }
     void StageState::update(bool control) {
         if (hasMario()) {

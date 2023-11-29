@@ -4,9 +4,11 @@
 #include <game/Player/PlayerFunction.h>
 
 namespace bm {
+    static bool enabled = false;
     struct NoOxygenChecker : Trampoline<NoOxygenChecker> {
         static void Callback(PlayerActorHakoniwa* player) {
             Orig(player);
+            if (!enabled) return;
 
             if (player->mPlayerOxygen->isTriggerDamage() && !PlayerFunction::isPlayerDeadStatus(player)) {
                 al::startHitReaction(player, "酸素不足ダメージ");
@@ -16,13 +18,9 @@ namespace bm {
         }
     };
 
-    static bool invertOxygen(bool in) { return in; }
     void NoOxygen::activate() {
         Mod::activate();
-        //        patch::CodePatcher patcher(0x485674); // return in PlayerStateSwim::isReduceOxygen
-        //        patcher.BranchInst((void*)&invertOxygen);
-        //        patcher.Seek(0x46a408); // return in PlayerStateDamageSwim::isReduceOxygen
-        //        patcher.BranchInst((void*)&invertOxygen);
+        enabled = true;
 
         patch::CodePatcher patcher(0);
 
@@ -36,5 +34,19 @@ namespace bm {
         patcher.Seek(0x425dc4); // handle our own damage for oxygen (unlabeled function)
         patcher.Write(inst::Movz(X0, 0));
         NoOxygenChecker::InstallAtSymbol("_ZN19PlayerActorHakoniwa8movementEv");
+    }
+    void NoOxygen::deactivate() {
+        Mod::deactivate();
+        enabled = false;
+
+        patch::CodePatcher patcher(0);
+
+        patcher.Seek(0x41f634);         // isPlayerOxygen && checks in movement
+        patcher.Write<u32>(0x37000080); // tbz w0, #0, #0x10
+        patcher.Seek(0x41f640);
+        patcher.Write<u32>(0x360012E0); // tbz w0, #0, #0x258
+
+        patcher.Seek(0x425dc4); // handle our own damage for oxygen (unlabeled function)
+        patcher.Write<u32>(0x9400E3D0);
     }
 } // namespace bm

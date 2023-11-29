@@ -52,8 +52,7 @@ namespace bm {
                                    par::get("DemonHigherRad", 100000.0), 0.2, 0.2, 1.0, 0.0,
                                    par::get("DemonDuration", 128), -1, false);
             }
-            al::setActionFrameRate(this,
-                                   al::calcNerveEaseInOutRate(this, par::get("DemonLandEndFrame", 120)) / 2.0f);
+            al::setActionFrameRate(this, al::calcNerveEaseInOutRate(this, par::get("DemonLandEndFrame", 120)) / 2.0f);
 
             if (al::isGreaterEqualStep(this, par::get("DemonLandEndFrame", 120)))
                 al::setNerve(this, &GreenDemonNrvMove::sInstance);
@@ -71,21 +70,29 @@ namespace bm {
             sead::Vector3f marioPos = al::getTrans(mario) + sead::Vector3f(0, 100, 0);
             sead::Vector3f dir = marioPos - al::getTrans(this);
 
-            sead::Quatf quat;
+            sead::Quatf currentQuat, dirQuat, slerpedQuat;
+            al::calcQuat(&currentQuat, this);
             sead::Vector3f up;
             sead::Vector3CalcCommon<float>::cross(up, al::getTrans(this), marioPos);
+
             dir.normalize();
             up.normalize();
+            al::makeQuatUpFront(&dirQuat, up, dir);
 
-            al::makeQuatUpFront(&quat, up, dir);
-            al::updatePoseQuat(this, quat);
+            al::slerpQuat(&slerpedQuat, currentQuat, dirQuat, par::get("DemonSlerp", 0.75));
+
+            al::updatePoseQuat(this, slerpedQuat);
+            slerpedQuat.normalize();
+            dir = sead::Vector3f(slerpedQuat.x, slerpedQuat.y, slerpedQuat.z);
+            dir.normalize();
             lastDirection = dir;
         }
 
         bool receiveMsg(const al::SensorMsg* message, al::HitSensor* source, al::HitSensor* target) override {
             if (!al::isMsgItemGetAll(message) || !al::isNerve(this, &GreenDemonNrvMove::sInstance))
                 return false;
-            PlayerHelper::killPlayer(this);
+            if (!par::get("DemonDisableKills", false))
+                PlayerHelper::killPlayer(this);
             return true;
         }
     };
@@ -107,5 +114,10 @@ namespace bm {
             oneUp->appear();
     }
     void GreenDemonMod::marioBonked() { oneUp->pause(); }
+    void GreenDemonMod::deactivate() {
+        Mod::deactivate();
+        if (inScene())
+            oneUp->kill();
+    }
 
 } // namespace bm

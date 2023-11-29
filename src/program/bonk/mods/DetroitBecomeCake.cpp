@@ -11,7 +11,7 @@ namespace bm {
         PlayerActorHakoniwa* getMario() const {
             return static_cast<PlayerActorHakoniwa*>(mSceneInfo->mPlayerHolder->getPlayer(0));
         }
-        void init(const al::ActorInitInfo &info) override {
+        void init(const al::ActorInitInfo& info) override {
             al::initActorWithArchiveName(this, info, model, nullptr);
 
             al::copyPose(this, getMario());
@@ -41,5 +41,10 @@ namespace bm {
 
         if (active)
             getActiveModel()->appear();
+    }
+    void DetroitBecomeCake::deactivate() {
+        Mod::deactivate();
+        if (inScene())
+            getActiveModel()->kill();
     }
 } // namespace bm

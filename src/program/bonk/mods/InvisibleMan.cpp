@@ -14,4 +14,9 @@ namespace bm {
         patch::CodePatcher patcher(0x45e1f4); // disable model on load
         patcher.BranchLinkInst((void*)&farAway);
     }
+
+    void InvisibleMan::deactivate() {
+        patch::CodePatcher patcher(0x45e1f4); // disable model on load
+        patcher.BranchLinkInst((void*)&al::copyPose);
+    }
 } // namespace bm

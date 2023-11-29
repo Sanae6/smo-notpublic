@@ -9,5 +9,6 @@ namespace bm {
         void activate() override;
         void marioGainsMovement() override;
         void marioBonked() override;
+        void deactivate() override;
     };
 } // namespace bm

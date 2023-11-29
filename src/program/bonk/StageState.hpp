@@ -18,6 +18,7 @@ namespace bm {
 
     struct StageState : public al::ISceneObj {
         static ModList mods;
+        static int modIdCounter;
         PlayerActorHakoniwa* player;
         StageScene* stageScene;
 
@@ -56,7 +57,9 @@ namespace bm {
 
     template <typename T>
     Mod* addMod() {
-        return StageState::mods.add(alloc<T>());
+        T* mod = alloc<T>();
+        mod->modId = StageState::modIdCounter++;
+        return StageState::mods.add(mod);
     }
     void stageStatePatches();
 
