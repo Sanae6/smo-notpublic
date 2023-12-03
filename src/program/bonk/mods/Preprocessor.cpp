@@ -13,10 +13,10 @@ namespace bm {
 
     void Preprocessor::control() {
         auto& save = ModSaveData::instance();
-        if (save.filtersDisableTimer++ > 18000) {
+        if (save.filtersDisableTimer++ > 14400) {
             return;
         }
-        if (save.filtersDisableTimer % 3600) {
+        if (save.filtersDisableTimer % 3600 == 0) {
             save.save();
         }
 

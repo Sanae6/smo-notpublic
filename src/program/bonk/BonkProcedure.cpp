@@ -1,7 +1,10 @@
+#include <bonk/BonkMenu.hpp>
 #include <bonk/BonkProcedure.hpp>
 #include <bonk/ModSaveData.hpp>
 #include <bonk/StageState.hpp>
 #include <heap/seadHeapMgr.h>
+#include <imgui.h>
+#include <imgui_nvn.h>
 
 namespace bm {
     s32 bonkStepCount = 0;
@@ -27,22 +30,39 @@ namespace bm {
             }
         }
     }
+    Step* lastBonk = nullptr;
     bool bonked() {
         auto& save = ModSaveData::instance();
+
         if (bonkSteps[save.modStep].type == Step::Type::None) {
             Logger::log("Reached maximum steps, no more to execute!\n");
             return false;
         }
-        Logger::log("Executing bonk step %d\n", save.modStep);
-        executeStep(bonkSteps[save.modStep++]);
+        if (save.isModDisabled(save.modStep)) {
+            Logger::log("Disabled bonk step %d, skipping...\n", save.modStep);
+            save.modStep++;
+        }else {
+            Logger::log("Executing bonk step %d\n", save.modStep);
+            BonkMenu::instance->appear(bonkSteps[save.modStep].text);
+            executeStep(bonkSteps[save.modStep++]);
+        }
         save.save();
         return true;
     }
     void procedureStartup() {
-        if (par::get("SaveDisableStartup", false)) return;
+        if (par::get("SaveDisableStartup", false))
+            return;
+
         auto save = ModSaveData::instance();
-        for (int i = 0; i < save.modStep; ++i)
-            executeStep(bonkSteps[i]);
+        for (u32 i = 0; i < save.modStep; ++i) {
+            if (!save.isModDisabled(i))
+                executeStep(bonkSteps[i]);
+        }
         Logger::log("Loaded with %d bonk steps\n", save.modStep);
+        BonkMenu::instance = new BonkMenu;
+
+        nvnImGui::addDrawFunc([]() {
+            BonkMenu::instance->control();
+        });
     }
 } // namespace bm

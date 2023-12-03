@@ -18,6 +18,8 @@ public:
     al::NerveKeeper* getNerveKeeper() const override;
     void initNerve(const al::Nerve* nerve, s32 stateCount);
     void updateNerve();
+
+    bool initialized() const { return mNerveKeeper != nullptr; }
 };
 
 }  // namespace al

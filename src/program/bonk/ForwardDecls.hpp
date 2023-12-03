@@ -74,6 +74,8 @@ namespace al {
     void validatePostProcessingFilter(const al::Scene* scene);
     void invalidatePostProcessingFilter(const al::Scene* scene);
 
+    void lerpVec(sead::Vector3<float>*, sead::Vector3<float> const&, sead::Vector3<float> const&, f32);
+
     class SimpleLayoutAppearWaitEnd : public al::LayoutActor {
     public:
         SimpleLayoutAppearWaitEnd(char const*, char const*, al::LayoutInitInfo const&, char const*, bool);

@@ -18,6 +18,8 @@ namespace bm {
     struct GreenDemon : public al::LiveActor {
         PlayerActorHakoniwa* mario;
         sead::Vector3f lastDirection;
+        bool lerpDisabled = false;
+        int lerpDisableTimer = 0;
         GreenDemon(PlayerActorHakoniwa* mario) : al::LiveActor("GreenDemon"), mario(mario) {}
 
         void init(const al::ActorInitInfo& info) override {
@@ -67,32 +69,43 @@ namespace bm {
         void control() override {
             if (PlayerFunction::isPlayerDeadStatus(this))
                 return;
+            if (al::calcDistance(this, mario) < par::get("DemonNoLerpRange", 1000.0f)) {
+                if (lerpDisableTimer < 0)
+                    lerpDisabled = true;
+                else
+                    lerpDisableTimer--;
+            } else {
+                lerpDisabled = false;
+                lerpDisableTimer = 600;
+            }
+
             sead::Vector3f marioPos = al::getTrans(mario) + sead::Vector3f(0, 100, 0);
             sead::Vector3f dir = marioPos - al::getTrans(this);
 
-            sead::Quatf currentQuat, dirQuat, slerpedQuat;
-            al::calcQuat(&currentQuat, this);
+            if (lerpDisabled)
+                lastDirection = dir;
+            else
+                al::lerpVec(&lastDirection, dir, lastDirection, par::get("DemonSlerp", 1.0f));
+
             sead::Vector3f up;
             sead::Vector3CalcCommon<float>::cross(up, al::getTrans(this), marioPos);
 
-            dir.normalize();
+            if (lastDirection.length() > 1)
+                lastDirection.normalize();
             up.normalize();
-            al::makeQuatUpFront(&dirQuat, up, dir);
+            sead::Quatf dirQuat;
+            al::makeQuatUpFront(&dirQuat, up, lastDirection);
 
-            al::slerpQuat(&slerpedQuat, currentQuat, dirQuat, par::get("DemonSlerp", 0.75));
-
-            al::updatePoseQuat(this, slerpedQuat);
-            slerpedQuat.normalize();
-            dir = sead::Vector3f(slerpedQuat.x, slerpedQuat.y, slerpedQuat.z);
-            dir.normalize();
-            lastDirection = dir;
+            al::updatePoseQuat(this, dirQuat);
         }
 
         bool receiveMsg(const al::SensorMsg* message, al::HitSensor* source, al::HitSensor* target) override {
             if (!al::isMsgItemGetAll(message) || !al::isNerve(this, &GreenDemonNrvMove::sInstance))
                 return false;
-            if (!par::get("DemonDisableKills", false))
-                PlayerHelper::killPlayer(this);
+            if (!par::get("DemonDisableKills", false)) {
+                al::sendMsgEnemyAttack(source, target);
+            }
+            //                PlayerHelper::killPlayer(this);
             return true;
         }
     };

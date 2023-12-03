@@ -4,10 +4,13 @@
 namespace bm {
     void MoonMode::sceneStart(const al::ActorInitInfo& initInfo) {
         moonPlayerConst = PlayerFunction::createMarioConst("Moon");
-        original = alloc<PlayerConst>();
-        *original = *getMario()->mPlayerConst;
         ApplyMod::sceneStart(initInfo);
+        original = *getMario()->mPlayerConst;
     }
     void MoonMode::apply() { *getMario()->mPlayerConst = *moonPlayerConst; }
-    void MoonMode::deactivate() { Mod::deactivate(); if (inScene()) *getMario()->mPlayerConst = *original; }
+    void MoonMode::deactivate() {
+        Mod::deactivate();
+        if (inScene())
+            *getMario()->mPlayerConst = original;
+    }
 } // namespace bm

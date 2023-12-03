@@ -77,7 +77,7 @@ void InputHelper::updatePadState() {
     prevTouchState = curTouchState;
     nn::hid::GetTouchScreenState(&curTouchState);
 
-    if (isHoldZL() && isPressZR()) {
+    if (isHoldZL() && isPressPadDown()) {
         toggleInput = !toggleInput;
     }
 }

@@ -12,10 +12,13 @@ namespace bm {
         MAKE_NERVE_BOTH(CameraLock, Lock);
         MAKE_NERVE_BOTH(CameraLock, Unlocked);
     } // namespace
+    CameraLock::CameraLock() : NerveMod() {
+        initNerve(&CameraLockNrvLock::sInstance, 0);
+        TargetHook::InstallAtSymbol("_ZNK2al18CameraTargetHolder13getViewTargetEi");
+    }
     void CameraLock::activate() {
         Mod::activate();
-        TargetHook::InstallAtSymbol("_ZNK2al18CameraTargetHolder13getViewTargetEi");
-        initNerve(&CameraLockNrvLock::sInstance, 0);
+
     }
     void CameraLock::sceneStart(const al::ActorInitInfo& initInfo) {
         Mod::sceneStart(initInfo);

@@ -2,16 +2,16 @@ cmake_minimum_required(VERSION 3.21)
 project(subsdk CXX C ASM)
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    add_compile_options (-fdiagnostics-color=always)
+    add_compile_options(-fdiagnostics-color=always)
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    add_compile_options (-fcolor-diagnostics)
+    add_compile_options(-fcolor-diagnostics)
 endif ()
 
 find_program(CCACHE_FOUND ccache)
-if(CCACHE_FOUND)
+if (CCACHE_FOUND)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache) # Less useful to do it for linking, see edit2
-endif(CCACHE_FOUND)
+endif (CCACHE_FOUND)
 
 ## Error if not using switch toolchain file
 if (NOT SWITCH)
@@ -52,8 +52,8 @@ include_directories(${PROJECT_SOURCE_DIR}/src/program)
 
 include_directories(${PROJECT_SOURCE_DIR}/imgui)
 
-file(GLOB_RECURSE SOURCES_ASM ${PROJECT_SOURCE_DIR}/src/*.s ${PROJECT_SOURCE_DIR}/libs/*.s  ${PROJECT_SOURCE_DIR}/libs/*.s)
-file(GLOB_RECURSE SOURCES_H ${PROJECT_SOURCE_DIR}/src/*.h ${PROJECT_SOURCE_DIR}/src/*.hpp   ${PROJECT_SOURCE_DIR}/libs/*.h ${PROJECT_SOURCE_DIR}/libs/*.hpp)
+file(GLOB_RECURSE SOURCES_ASM ${PROJECT_SOURCE_DIR}/src/*.s ${PROJECT_SOURCE_DIR}/libs/*.s ${PROJECT_SOURCE_DIR}/libs/*.s)
+file(GLOB_RECURSE SOURCES_H ${PROJECT_SOURCE_DIR}/src/*.h ${PROJECT_SOURCE_DIR}/src/*.hpp ${PROJECT_SOURCE_DIR}/libs/*.h ${PROJECT_SOURCE_DIR}/libs/*.hpp)
 file(GLOB_RECURSE SOURCES_CXX ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_DIR}/src/*.c ${PROJECT_SOURCE_DIR}/libs/*.cpp ${PROJECT_SOURCE_DIR}/libs/*.c)
 file(GLOB IMGUI_SOURCES ${PROJECT_SOURCE_DIR}/imgui/*.cpp)
 file(GLOB_RECURSE LOCAL_LIBRARIES ${PROJECT_SOURCE_DIR}/libs/*.a)
@@ -90,9 +90,9 @@ add_custom_target(subsdk9_meta DEPENDS create_npdm subsdk9_nso)
 if (FTP_IP)
     ## Upload to target switch
     if (FTP_USERNAME AND FTP_PASSWORD) # login using a username and password
-        add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND ncftpput -u ${FTP_USERNAME} -p ${FTP_PASSWORD} -P 5000 ${FTP_IP} /atmosphere/contents/${TITLE_ID}/exefs ${CMAKE_BINARY_DIR}/main.npdm ${CMAKE_BINARY_DIR}/subsdk9)
+        add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND curl -T ${CMAKE_BINARY_DIR}/subsdk9 ftp://${FTP_USERNAME}:${FTP_PASSWORD}@${FTP_IP}:5000/atmosphere/contents/${TITLE_ID}/exefs/)
     else ()
-        add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND ncftpput -u crafty -p boss -P 5000 ${FTP_IP} /atmosphere/contents/${TITLE_ID}/exefs ${CMAKE_BINARY_DIR}/main.npdm ${CMAKE_BINARY_DIR}/subsdk9)
+        add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND curl -T ${CMAKE_BINARY_DIR}/subsdk9 ftp://anon:anon@${FTP_IP}:5000/atmosphere/contents/${TITLE_ID}/exefs/)
     endif ()
 endif ()
 

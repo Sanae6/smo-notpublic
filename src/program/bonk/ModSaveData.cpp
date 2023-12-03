@@ -1,6 +1,6 @@
 #include <bonk/ForwardDecls.hpp>
-#include <bonk/ModSaveData.hpp>
 #include <bonk/Mod.hpp>
+#include <bonk/ModSaveData.hpp>
 #include <fs/fs_files.hpp>
 #include <logger/Logger.hpp>
 #include <logger/Params.h>
@@ -27,7 +27,7 @@ namespace bm {
             return;
         }
         ModSaveData intermediate;
-        result = nn::fs::ReadFile(handle, 0, &intermediate, sizeof(ModSaveData));
+        result = nn::fs::ReadFile(handle, 0, &intermediate, std::min(sizeof(ModSaveData), (size_t)fileSize));
         nn::fs::CloseFile(handle);
         if (result.isFailure()) {
             Logger::log("Mod save data could not be read. (0x%x)\n", result.value);
@@ -70,8 +70,9 @@ namespace bm {
         nn::fs::CloseFile(handle);
         Logger::log("Saved mod save data!\n");
     }
-    void ModSaveData::setModActive(Mod* mod, bool active) {
-        activeMods.change(mod->modId, active);
+    void ModSaveData::setModDisabled(s32 mod, bool disabled) {
+        inactiveMods.changeBit(mod, disabled);
         save();
     }
+    bool ModSaveData::isModDisabled(s32 mod) const { return inactiveMods.isOnBit(mod); }
 } // namespace bm

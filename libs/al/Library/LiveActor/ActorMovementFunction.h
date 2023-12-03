@@ -147,7 +147,7 @@ bool isNearHV(const al::LiveActor* actor, const sead::Vector3f&, f32, f32, f32);
 void calcHeight(const al::LiveActor* actor, const sead::Vector3f&);
 bool isFar(const al::LiveActor* actor, const al::LiveActor* target, f32);
 bool isFar(const al::LiveActor* actor, const sead::Vector3f&, f32);
-void calcDistance(const al::LiveActor* actor, const al::LiveActor* target);
+f32 calcDistance(const al::LiveActor* actor, const al::LiveActor* target);
 void calcDistance(const al::LiveActor* actor, const sead::Vector3f&);
 void calcDistanceV(const al::LiveActor* actor, const al::LiveActor* target);
 void calcDistanceH(const al::LiveActor* actor, const al::LiveActor* target);

@@ -8,7 +8,7 @@ namespace bm {
         MAKE_NERVE_BOTH(GravityShift, Lerp);
         MAKE_NERVE_BOTH(GravityShift, End);
     } // namespace
-    GravityShift::GravityShift() { initNerve(&GravityShiftNrvPick::sInstance, 0); }
+    GravityShift::GravityShift() : NerveMod() { initNerve(&GravityShiftNrvPick::sInstance, 0); }
     void GravityShift::exePick() {
         start = al::getGravity(getMario());
         end.x = al::getRandom(-1.0f, 1.0f) * par::get("GravityConeRange", 1.0f);

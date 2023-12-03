@@ -1,14 +1,14 @@
 #include "imgui_nvn.h"
+#include "helpers/InputHelper.h"
 #include "imgui_backend/imgui_impl_nvn.hpp"
 #include "init.h"
 #include "lib.hpp"
 #include "logger/Logger.hpp"
-#include "helpers/InputHelper.h"
 #include "nvn_CppFuncPtrImpl.h"
 
-nvn::Device *nvnDevice;
-nvn::Queue *nvnQueue;
-nvn::CommandBuffer *nvnCmdBuf;
+nvn::Device* nvnDevice;
+nvn::Queue* nvnQueue;
+nvn::CommandBuffer* nvnCmdBuf;
 
 nvn::DeviceGetProcAddressFunc tempGetProcAddressFuncPtr;
 
@@ -27,12 +27,12 @@ namespace nvnImGui {
 
 #define IMGUI_USEEXAMPLE_DRAW false
 
-void setCrop(nvn::Window *window, int x, int y, int w, int h) {
+void setCrop(nvn::Window* window, int x, int y, int w, int h) {
     tempSetCropFunc(window, x, y, w, h);
 
     if (hasInitImGui) {
 
-        ImVec2 &dispSize = ImGui::GetIO().DisplaySize;
+        ImVec2& dispSize = ImGui::GetIO().DisplaySize;
         ImVec2 windowSize = ImVec2(w - x, h - y);
 
         if (dispSize.x != windowSize.x && dispSize.y != windowSize.y) {
@@ -43,12 +43,11 @@ void setCrop(nvn::Window *window, int x, int y, int w, int h) {
             dispSize = windowSize;
             ImguiNvnBackend::updateProjection(windowSize);
             ImguiNvnBackend::updateScale(isDockedMode);
-
         }
     }
 }
 
-void presentTexture(nvn::Queue *queue, nvn::Window *window, int texIndex) {
+void presentTexture(nvn::Queue* queue, nvn::Window* window, int texIndex) {
 
     if (hasInitImGui)
         nvnImGui::procDraw();
@@ -56,20 +55,20 @@ void presentTexture(nvn::Queue *queue, nvn::Window *window, int texIndex) {
     tempPresentTexFunc(queue, window, texIndex);
 }
 
-NVNboolean deviceInit(nvn::Device *device, const nvn::DeviceBuilder *builder) {
+NVNboolean deviceInit(nvn::Device* device, const nvn::DeviceBuilder* builder) {
     NVNboolean result = tempDeviceInitFuncPtr(device, builder);
     nvnDevice = device;
     nvn::nvnLoadCPPProcs(nvnDevice, tempGetProcAddressFuncPtr);
     return result;
 }
 
-NVNboolean queueInit(nvn::Queue *queue, const nvn::QueueBuilder *builder) {
+NVNboolean queueInit(nvn::Queue* queue, const nvn::QueueBuilder* builder) {
     NVNboolean result = tempQueueInitFuncPtr(queue, builder);
     nvnQueue = queue;
     return result;
 }
 
-NVNboolean cmdBufInit(nvn::CommandBuffer *buffer, nvn::Device *device) {
+NVNboolean cmdBufInit(nvn::CommandBuffer* buffer, nvn::Device* device) {
     NVNboolean result = tempBufferInitFuncPtr(buffer, device);
     nvnCmdBuf = buffer;
 
@@ -80,28 +79,28 @@ NVNboolean cmdBufInit(nvn::CommandBuffer *buffer, nvn::Device *device) {
     return result;
 }
 
-nvn::GenericFuncPtrFunc getProc(nvn::Device *device, const char *procName) {
+nvn::GenericFuncPtrFunc getProc(nvn::Device* device, const char* procName) {
 
     nvn::GenericFuncPtrFunc ptr = tempGetProcAddressFuncPtr(nvnDevice, procName);
 
     if (strcmp(procName, "nvnQueueInitialize") == 0) {
-        tempQueueInitFuncPtr = (nvn::QueueInitializeFunc) ptr;
-        return (nvn::GenericFuncPtrFunc) &queueInit;
+        tempQueueInitFuncPtr = (nvn::QueueInitializeFunc)ptr;
+        return (nvn::GenericFuncPtrFunc)&queueInit;
     } else if (strcmp(procName, "nvnCommandBufferInitialize") == 0) {
-        tempBufferInitFuncPtr = (nvn::CommandBufferInitializeFunc) ptr;
-        return (nvn::GenericFuncPtrFunc) &cmdBufInit;
+        tempBufferInitFuncPtr = (nvn::CommandBufferInitializeFunc)ptr;
+        return (nvn::GenericFuncPtrFunc)&cmdBufInit;
     } else if (strcmp(procName, "nvnWindowSetCrop") == 0) {
-        tempSetCropFunc = (nvn::WindowSetCropFunc) ptr;
-        return (nvn::GenericFuncPtrFunc) &setCrop;
+        tempSetCropFunc = (nvn::WindowSetCropFunc)ptr;
+        return (nvn::GenericFuncPtrFunc)&setCrop;
     } else if (strcmp(procName, "nvnQueuePresentTexture") == 0) {
-        tempPresentTexFunc = (nvn::QueuePresentTextureFunc) ptr;
-        return (nvn::GenericFuncPtrFunc) &presentTexture;
+        tempPresentTexFunc = (nvn::QueuePresentTextureFunc)ptr;
+        return (nvn::GenericFuncPtrFunc)&presentTexture;
     }
 
     return ptr;
 }
 
-void disableButtons(nn::hid::NpadBaseState *state) {
+void disableButtons(nn::hid::NpadBaseState* state) {
     if (!InputHelper::isReadInputs() && InputHelper::isInputToggled()) {
         // clear out the data within the state (except for the sampling number and attributes)
         state->mButtons = nn::hid::NpadButtonSet();
@@ -110,63 +109,68 @@ void disableButtons(nn::hid::NpadBaseState *state) {
     }
 }
 
-HOOK_DEFINE_TRAMPOLINE(DisableFullKeyState) {
-    static int Callback(int *unkInt, nn::hid::NpadFullKeyState *state, int count, uint const &port) {
-        int result = Orig(unkInt, state, count, port);
-        disableButtons(state);
-        return result;
-    }
-};
+HOOK_DEFINE_TRAMPOLINE(DisableFullKeyState){
+    static int Callback(int* unkInt, nn::hid::NpadFullKeyState* state, int count,
+                        uint const& port){int result = Orig(unkInt, state, count, port);
+disableButtons(state);
+return result;
+}
+}
+;
 
-HOOK_DEFINE_TRAMPOLINE(DisableHandheldState) {
-    static int Callback(int *unkInt, nn::hid::NpadHandheldState *state, int count, uint const &port) {
-        int result = Orig(unkInt, state, count, port);
-        disableButtons(state);
-        return result;
-    }
-};
+HOOK_DEFINE_TRAMPOLINE(DisableHandheldState){
+    static int Callback(int* unkInt, nn::hid::NpadHandheldState* state, int count,
+                        uint const& port){int result = Orig(unkInt, state, count, port);
+disableButtons(state);
+return result;
+}
+}
+;
 
-HOOK_DEFINE_TRAMPOLINE(DisableJoyDualState) {
-    static int Callback(int *unkInt, nn::hid::NpadJoyDualState *state, int count, uint const &port) {
-        int result = Orig(unkInt, state, count, port);
-        disableButtons(state);
-        return result;
-    }
-};
+HOOK_DEFINE_TRAMPOLINE(DisableJoyDualState){
+    static int Callback(int* unkInt, nn::hid::NpadJoyDualState* state, int count,
+                        uint const& port){int result = Orig(unkInt, state, count, port);
+disableButtons(state);
+return result;
+}
+}
+;
 
-HOOK_DEFINE_TRAMPOLINE(DisableJoyLeftState) {
-    static int Callback(int *unkInt, nn::hid::NpadJoyLeftState *state, int count, uint const &port) {
-        int result = Orig(unkInt, state, count, port);
-        disableButtons(state);
-        return result;
-    }
-};
+HOOK_DEFINE_TRAMPOLINE(DisableJoyLeftState){
+    static int Callback(int* unkInt, nn::hid::NpadJoyLeftState* state, int count,
+                        uint const& port){int result = Orig(unkInt, state, count, port);
+disableButtons(state);
+return result;
+}
+}
+;
 
-HOOK_DEFINE_TRAMPOLINE(DisableJoyRightState) {
-    static int Callback(int *unkInt, nn::hid::NpadJoyRightState *state, int count, uint const &port) {
-        int result = Orig(unkInt, state, count, port);
-        disableButtons(state);
-        return result;
-    }
-};
+HOOK_DEFINE_TRAMPOLINE(DisableJoyRightState){
+    static int Callback(int* unkInt, nn::hid::NpadJoyRightState* state, int count,
+                        uint const& port){int result = Orig(unkInt, state, count, port);
+disableButtons(state);
+return result;
+}
+}
+;
 
-HOOK_DEFINE_TRAMPOLINE(NvnBootstrapHook) {
-    static void *Callback(const char *funcName) {
+HOOK_DEFINE_TRAMPOLINE(NvnBootstrapHook){static void * Callback(const char* funcName){
 
-        void *result = Orig(funcName);
+                                                           void* result = Orig(funcName);
 
-        if (strcmp(funcName, "nvnDeviceInitialize") == 0) {
-            tempDeviceInitFuncPtr = (nvn::DeviceInitializeFunc) result;
-            return (void *) &deviceInit;
-        }
-        if (strcmp(funcName, "nvnDeviceGetProcAddress") == 0) {
-            tempGetProcAddressFuncPtr = (nvn::DeviceGetProcAddressFunc) result;
-            return (void *) &getProc;
-        }
+if (strcmp(funcName, "nvnDeviceInitialize") == 0) {
+    tempDeviceInitFuncPtr = (nvn::DeviceInitializeFunc)result;
+    return (void*)&deviceInit;
+}
+if (strcmp(funcName, "nvnDeviceGetProcAddress") == 0) {
+    tempGetProcAddressFuncPtr = (nvn::DeviceGetProcAddressFunc)result;
+    return (void*)&getProc;
+}
 
-        return result;
-    }
-};
+return result;
+}
+}
+;
 
 void nvnImGui::addDrawFunc(ProcDrawFunc func) {
 
@@ -180,7 +184,7 @@ void nvnImGui::procDraw() {
     ImguiNvnBackend::newFrame();
     ImGui::NewFrame();
 
-    for (auto drawFunc: drawQueue) {
+    for (auto drawFunc : drawQueue) {
         drawFunc();
     }
 
@@ -204,27 +208,21 @@ bool nvnImGui::InitImGui() {
 
         IMGUI_CHECKVERSION();
 
-        ImGuiMemAllocFunc allocFunc = [](size_t size, void *user_data) {
+        ImGuiMemAllocFunc allocFunc = [](size_t size, void* user_data) {
             return nn::init::GetAllocator()->Allocate(size);
         };
 
-        ImGuiMemFreeFunc freeFunc = [](void *ptr, void *user_data) {
-            nn::init::GetAllocator()->Free(ptr);
-        };
+        ImGuiMemFreeFunc freeFunc = [](void* ptr, void* user_data) { nn::init::GetAllocator()->Free(ptr); };
 
         ImGui::SetAllocatorFunctions(allocFunc, freeFunc, nullptr);
 
         ImGui::CreateContext();
-        ImGuiIO &io = ImGui::GetIO();
-        (void) io;
+        ImGuiIO& io = ImGui::GetIO();
+        (void)io;
 
         ImGui::StyleColorsDark();
 
-        ImguiNvnBackend::NvnBackendInitInfo initInfo = {
-                .device = nvnDevice,
-                .queue = nvnQueue,
-                .cmdBuf = nvnCmdBuf
-        };
+        ImguiNvnBackend::NvnBackendInitInfo initInfo = {.device = nvnDevice, .queue = nvnQueue, .cmdBuf = nvnCmdBuf};
 
         ImguiNvnBackend::InitBackend(initInfo);
 
@@ -232,17 +230,15 @@ bool nvnImGui::InitImGui() {
 
         InputHelper::setPort(0); // set input helpers default port to zero
 
-
 #if IMGUI_USEEXAMPLE_DRAW
-        IMGUINVN_DRAWFUNC(
-                ImGui::ShowDemoWindow();
-            //    ImGui::ShowStyleSelector("Style Selector");
-            //        ImGui::ShowMetricsWindow();
-            //        ImGui::ShowDebugLogWindow();
-            //        ImGui::ShowStackToolWindow();
-            //        ImGui::ShowAboutWindow();
-            //        ImGui::ShowFontSelector("Font Selector");
-            //        ImGui::ShowUserGuide();
+        IMGUINVN_DRAWFUNC(ImGui::ShowDemoWindow();
+                          //    ImGui::ShowStyleSelector("Style Selector");
+                          //        ImGui::ShowMetricsWindow();
+                          //        ImGui::ShowDebugLogWindow();
+                          //        ImGui::ShowStackToolWindow();
+                          //        ImGui::ShowAboutWindow();
+                          //        ImGui::ShowFontSelector("Font Selector");
+                          //        ImGui::ShowUserGuide();
         )
 #endif
 

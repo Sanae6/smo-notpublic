@@ -47,11 +47,10 @@ namespace bm {
         }
         virtual void activate() {
             active = true;
-            ModSaveData::instance().setModActive(this, true);
+            unpause();
         }
         virtual void deactivate() {
             active = false;
-            ModSaveData::instance().setModActive(this, false);
         }
         virtual void show() { visible = true; }
         virtual void hide() { visible = false; }

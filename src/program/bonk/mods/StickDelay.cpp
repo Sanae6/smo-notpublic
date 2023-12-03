@@ -24,11 +24,11 @@ namespace bm {
         std::swap(c->mLeftStick, frames[0].leftStick);
         std::swap(c->mRightStick, frames[0].rightStick);
         s32 offsetMax = std::min((s32)par::get<u32>("StickDelayOffset", 3u), maxFrames - 1);
-        for (int i = offsetMax - 1; i > 0; i--) {
-            std::swap(frames[i - 1], frames[i]);
-        }
         c->mPadHold = frames[offsetMax - 1].padHold;
         c->mLeftStick = frames[offsetMax - 1].leftStick;
         c->mRightStick = frames[offsetMax - 1].rightStick;
+        for (int i = offsetMax - 1; i > 0; i--) {
+            std::swap(frames[i - 1], frames[i]);
+        }
     }
 } // namespace bm

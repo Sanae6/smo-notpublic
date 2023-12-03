@@ -5,8 +5,8 @@
 #include <basis/seadNew.h>
 #include <bonk/BonkProcedure.hpp>
 #include <bonk/ForwardDecls.hpp>
-#include <bonk/StageState.hpp>
 #include <bonk/ModSaveData.hpp>
+#include <bonk/StageState.hpp>
 #include <bonk/mods/PoseRandomizer.hpp>
 #include <game/HakoniwaSequence/HakoniwaSequence.h>
 #include <game/Player/PlayerActorHakoniwa.h>
@@ -22,7 +22,7 @@
 class RootTask;
 namespace bm {
     ModList StageState::mods = {};
-    int modIdCounter = 0;
+    int StageState::modIdCounter = 0;
     bool StageState::isSceneWithMario(const al::ActorInitInfo& initInfo) {
         al::PlayerHolder* playerHolder = initInfo.mActorSceneInfo.mPlayerHolder;
         return playerHolder->getPlayerNum() > 0 && isSameType<PlayerActorHakoniwa>(playerHolder->tryGetPlayer(0));
@@ -48,6 +48,10 @@ namespace bm {
             }
             if (control && par::clicked("KillMario")) {
                 PlayerHelper::killPlayer(player);
+            }
+
+            if (par::clicked("ResetPost")) {
+                ModSaveData::instance().filtersDisableTimer = 0;
             }
             for (auto mod : mods)
                 if (mod->shouldUpdateOnControl() == control)

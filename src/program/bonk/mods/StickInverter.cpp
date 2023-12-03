@@ -7,13 +7,15 @@ namespace bm {
         MAKE_NERVE_BOTH(StickInverter, Enable);
         MAKE_NERVE_BOTH(StickInverter, Disable);
     } // namespace
+    StickInverter::StickInverter() : NerveMod() {
+        initNerve(&StickInverterNrvEnable::sInstance, 0);
+    }
     void StickInverter::activate() {
         Mod::activate();
         patch::CodePatcher patcher(0x861968);
         patcher.BranchInst((void*)&invert);
         patcher.Seek(0x8618d4);
         patcher.BranchInst((void*)&invert);
-        initNerve(&StickInverterNrvEnable::sInstance, 0);
     }
     void StickInverter::deactivate() { Mod::deactivate();
         patch::CodePatcher patcher(0x861968);

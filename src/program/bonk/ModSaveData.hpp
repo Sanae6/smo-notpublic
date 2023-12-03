@@ -11,13 +11,14 @@ namespace bm {
         u32 version = currentVersion;
         u32 modStep = 0;
         u32 filtersDisableTimer = 0;
-        sead::BitFlag32 activeMods = 0;
+        sead::BitFlag32 inactiveMods = 0;
 
         static ModSaveData& instance();
 
         void load();
         void save();
 
-        void setModActive(class Mod* mod, bool active);
+        void setModDisabled(s32 mod, bool disabled);
+        bool isModDisabled(s32 mod) const;
     };
 }

@@ -15,9 +15,6 @@ namespace bm {
     } // namespace
     JumpyMario::JumpyMario() {
         JumpCodeAlwaysActive::InstallAtSymbol("_ZN2rs19isCollisionCodeJumpEPK19IUsePlayerCollision");
-    }
-    void JumpyMario::activate() {
-        Mod::activate();
         initNerve(&JumpyMarioNrvEnable::sInstance, 0);
     }
     void JumpyMario::sceneStart(const al::ActorInitInfo& initInfo) {
