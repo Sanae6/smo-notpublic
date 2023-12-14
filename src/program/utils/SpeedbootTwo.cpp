@@ -33,10 +33,10 @@ namespace sb {
 
     SpeedbootNerve::SpeedbootNerve(HakoniwaSequence* sequence)
         : al::NerveExecutor("Speedboot"), sequence(sequence),
-          changeStageInfo(sequence->mGameDataHolder, "PeachCastleGate", "PeachWorldHomeStage", false, -1,
+          changeStageInfo(sequence->mGameDataHolder, "shop_coin", "CityWorldHomeStage", false, -1,
                           ChangeStageInfo::UNK) {
         initNerve(&SpeedbootNerveNrvLoad::sInstance, 0);
-        Logger::log("Speedbooting into %s:%s\n", par::get("SpeedyStage", "PeachWorldHomeStage"), par::get("SpeedyChangeId", "PeachWorldHomeStage"));
+        Logger::log("Speedbooting into %s:%s\n", par::get("SpeedyStage", "DonsukeExStage"), par::get("SpeedyChangeId", "DonsukeExStage"));
     }
     void SpeedbootNerve::exeLoad() {
         if (al::isFirstStep(this)) {

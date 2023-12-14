@@ -419,3 +419,24 @@ function(add_kip_target target)
     add_custom_target(${target_we}_kip ALL SOURCES ${CMAKE_CURRENT_BINARY_DIR}/${target_we}.kip)
     set_target_properties(${target} PROPERTIES LINK_FLAGS "-specs=${LIBNX}/switch.specs")
 endfunction()
+
+function(upload_nso target location)
+    get_filename_component(target_we ${target} NAME_WE)
+    if ((NOT DEFINED FTP_USERNAME) AND (NOT DEFINED FTP_PASSWORD))
+        set(FTP_USERNAME anon)
+        set(FTP_PASSWORD anon)
+    endif ()
+
+    if (${FTP_HOST})
+        message(FATAL_ERROR "FTP_HOST not set. Can't send ${target_file} over FTP!")
+    endif ()
+
+    if (NOT DEFINED FTP_PORT)
+        set(FTP_PORT 5000)
+    endif ()
+
+    add_custom_target(${target_we}_ftp ALL
+            COMMAND ${CMAKE_COMMAND} -DFTP_HOST=${FTP_IP} -DFTP_PORT=${FTP_PORT} -DFTP_USERNAME=${FTP_USERNAME} -DFTP_PASSWORD=${FTP_PASSWORD} -DFTP_PATH=${location} -DFILE_TO_UPLOAD=${CMAKE_CURRENT_BINARY_DIR}/${target_we} -P ${PROJECT_SOURCE_DIR}/cmake/upload.cmake
+            DEPENDS ${target_we}_nso
+    )
+endfunction()

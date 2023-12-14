@@ -89,11 +89,12 @@ set_target_properties(subsdk9 PROPERTIES LINK_FLAGS "-specs ${CMAKE_BINARY_DIR}/
 add_custom_target(subsdk9_meta DEPENDS create_npdm subsdk9_nso)
 if (FTP_IP)
     ## Upload to target switch
-    if (FTP_USERNAME AND FTP_PASSWORD) # login using a username and password
-        add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND curl -T ${CMAKE_BINARY_DIR}/subsdk9 ftp://${FTP_USERNAME}:${FTP_PASSWORD}@${FTP_IP}:5000/atmosphere/contents/${TITLE_ID}/exefs/)
-    else ()
-        add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND curl -T ${CMAKE_BINARY_DIR}/subsdk9 ftp://anon:anon@${FTP_IP}:5000/atmosphere/contents/${TITLE_ID}/exefs/)
-    endif ()
+#    if (FTP_USERNAME AND FTP_PASSWORD) # login using a username and password
+#        add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND curl -T ${CMAKE_BINARY_DIR}/subsdk9 ftp://${FTP_USERNAME}:${FTP_PASSWORD}@${FTP_IP}:5000/atmosphere/contents/${TITLE_ID}/exefs/)
+#    else ()
+#        add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND curl -T ${CMAKE_BINARY_DIR}/subsdk9 ftp://anon:anon@${FTP_IP}:5000/atmosphere/contents/${TITLE_ID}/exefs/)
+#    endif ()
+    upload_nso(subsdk9 /atmosphere/contents/${TITLE_ID}/exefs/subsdk9)
 endif ()
 
 if (RYU_PATH)

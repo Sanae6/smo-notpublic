@@ -1,5 +1,5 @@
 #include <al/Library/Memory/HeapUtil.h>
-#include <bonk/Mod.hpp>
+#include <logger/Logger.hpp>
 #include <utils/Helpers.h>
 #include <utils/UsefulPatches.hpp>
 

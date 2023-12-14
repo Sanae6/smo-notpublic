@@ -9,6 +9,7 @@
 #include <al/Library/Nerve/NerveSetupUtil.h>
 #include <al/Library/Scene/Scene.h>
 #include <container/seadPtrArray.h>
+#include <container/seadTList.h>
 #include <gfx/gfx_DescriptorSlot.h>
 #include <gfx/gfx_Device.h>
 
@@ -48,6 +49,9 @@ namespace nn {
     }
 } // namespace nn
 namespace al {
+    template <class T>
+    al::LiveActor* createActorFunction(const char* name);
+
     f32 getRandom();
     f32 getRandom(f32);
     f32 getRandom(f32, f32);
@@ -120,6 +124,132 @@ namespace al {
         class ColorClampDrawer* colorClampDrawer;
         sead::PtrArray<struct PostProcessingFilterPreset> filterPresets;
         s32 currentPreset;
+    };
+
+    SEAD_ENUM(YamlParamType, Invalid, Bool, F32, S32, U32, V2f, V2s32, V3f, V4f, Q4f, C4f, StringRef, String32,
+              String64, String128, String256, String512, String1024, String2048, String4096);
+
+    class ParameterBase {
+        virtual const char* getParamTypeStr() const = 0;
+        virtual YamlParamType getParamType() const = 0;
+        virtual void* ptr() const = 0;
+        virtual void* ptr() = 0;
+        virtual void afterGetParam();
+        virtual u32 size() = 0;
+        virtual bool isEqual(const al::ParameterBase&);
+        virtual bool copy(const al::ParameterBase&);
+        virtual bool copyLerp(const al::ParameterBase&, f32 t);
+    };
+
+    template <typename T>
+    class Parameter : ParameterBase {
+    private:
+        T value;
+
+    public:
+        YamlParamType getParamType() const override;
+        const char* getParamTypeStr() const override;
+        void* ptr() const override;
+        void* ptr() override;
+        u32 size() override;
+
+        T& ref() { return value; }
+    };
+
+    class ParameterF32 : public Parameter<f32> {
+    public:
+        YamlParamType getParamType() const override;
+        const char* getParamTypeStr() const override;
+    };
+
+    class ParameterS32 : public Parameter<s32> {
+    public:
+        YamlParamType getParamType() const override;
+        const char* getParamTypeStr() const override;
+    };
+
+    class ParameterBool : public Parameter<bool> {
+    public:
+        YamlParamType getParamType() const override;
+        const char* getParamTypeStr() const override;
+    };
+
+    class ParameterStringRef : public Parameter<const char*> {
+        YamlParamType getParamType() const override;
+        const char* getParamTypeStr() const override;
+    };
+
+    class ParameterV3f : public Parameter<sead::Vector3f> {
+
+        YamlParamType getParamType() const override;
+        const char* getParamTypeStr() const override;
+    };
+
+    class ParameterC4f : public Parameter<sead::Color4f> {
+        YamlParamType getParamType() const override;
+        const char* getParamTypeStr() const override;
+    };
+
+    class ParameterObj;
+    class MtxConnector;
+
+    class PrePassLightBase : public al::NerveExecutor,
+                             public sead::TListNode<al::PrePassLightBase*>,
+                             public IUseCollision {
+    private:
+        al::GraphicsSystemInfo* graphicsSystemInfo;
+        al::CollisionDirector* collisionDirector;
+        al::ParameterObj* parameterObj;
+        al::ParameterStringRef* name;
+        al::ParameterV3f* offset;
+        al::ParameterV3f* rotateOffset;
+        al::ParameterC4f* color;
+        al::ParameterBool* isEnableSpecular;
+        al::ParameterS32* killFrame;
+        al::ParameterS32* appearFrame;
+        al::ParameterBool* isIndirectIllumination;
+        al::ParameterF32* randomCeil;
+        al::MtxConnector* mtxConnector;
+        bool overrideUserColor;
+        sead::Color4f userColor;
+        bool killedByUser;
+        sead::Color4f currentColor;
+        sead::Color4f targetColor;
+        s32 appearTargetFrame;
+        s32 killTargetFrame;
+        sead::Random* random;
+
+    public:
+        void requestAppearByUser(s32 appearTime = -1);
+    };
+    template <typename T>
+    class PrePassLight : public PrePassLightBase {
+    private:
+        T param;
+    };
+    struct LppSpotParam {
+        ParameterF32* degree;
+        ParameterF32* length;
+        ParameterF32* angleDamp;
+        ParameterF32* specularExpansion;
+        ParameterBool* isEnableCollisionCheck;
+        ParameterF32* afterCollisionCheckOffset;
+        ParameterF32* lengthChangeRate;
+        ParameterS32* useShadow;
+        ParameterF32* pcf; // percentage-closer filtering
+    };
+    class LppSpot : public PrePassLight<LppSpotParam> {};
+    template <typename T>
+    class PrePassLightPlacementBase : public al::LiveActor {
+    private:
+        T* prePassLight;
+        sead::Matrix34f matrix;
+        sead::Vector3f someVec;
+        f32 someFloat;
+    };
+    class LppSpot;
+    class PrePassSpotLight : public PrePassLightPlacementBase<LppSpot> {
+        PrePassSpotLight();
     };
 } // namespace al
 namespace rs {

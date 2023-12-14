@@ -256,7 +256,7 @@ void calcAnimFrontGravityPos(al::LiveActor* actor, const sead::Vector3f&);
 const sead::Vector3f& getGravity(const al::LiveActor* actor);
 const sead::Vector3f& getTrans(const al::LiveActor* actor);
 const sead::Vector3f& getScale(const al::LiveActor* actor);
-void copyPose(al::LiveActor* actor, const al::LiveActor* target);
+void copyPose(al::LiveActor* actor, const al::LiveActor* source);
 void updatePoseTrans(al::LiveActor* actor, const sead::Vector3f&);
 void updatePoseRotate(al::LiveActor* actor, const sead::Vector3f&);
 void updatePoseQuat(al::LiveActor* actor, const sead::Quatf&);

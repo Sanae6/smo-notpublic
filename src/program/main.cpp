@@ -18,7 +18,6 @@
 #include <al/Library/File/FileLoader.h>
 #include <al/Library/File/FileUtil.h>
 
-#include <bonk/StageState.hpp>
 #include <game/GameData/GameDataFunction.h>
 #include <game/HakoniwaSequence/HakoniwaSequence.h>
 #include <game/StageScene/StageScene.h>
@@ -26,6 +25,8 @@
 #include <game/System/GameSystem.h>
 #include <hook/trampoline.hpp>
 #include <logger/SocketInterface.h>
+#include <spook/SpookState.hpp>
+#include <utils/Helpers.h>
 #include <utils/SpeedbootTwo.hpp>
 #include <utils/UsefulPatches.hpp>
 
@@ -227,7 +228,7 @@ extern "C" void exl_main(void *x0, void *x1) {
 
 //    DrawDebugMenu::InstallAtOffset(0x50F1D8);
 
-    bm::stageStatePatches();
+    sp::spookyInit();
     sb::speedbootPatches();
     up::usefulPatchesInit();
 
