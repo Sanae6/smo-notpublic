@@ -47,8 +47,8 @@ private:
     ParameterBool* mIsIgnoreHideModel;
     ParameterArray* mLightParameters;
     ParameterArray* mUserColorParameters;
-    sead::PtrArray<PrePassLightBase*> mLights;
-    sead::PtrArray<UserColor*> mUserColors;
+    sead::PtrArray<PrePassLightBase> mLights;
+    sead::PtrArray<UserColor> mUserColors;
     LiveActor* mLiveActor;
     bool mIsIgnorePrePassLightYaml;
 };

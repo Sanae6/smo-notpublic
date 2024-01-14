@@ -54,7 +54,7 @@ public:
 
     virtual bool isDamageStopDemo(void) const;
 
-    virtual PlayerPuppet *getPlayerPuppet(void);
+    virtual class IUsePlayerPuppet *getPlayerPuppet(void);
     virtual PlayerInfo *getPlayerInfo(void) const;
 
     virtual bool checkDeathArea(void);

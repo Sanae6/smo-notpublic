@@ -8,7 +8,8 @@
 
 Params Params::sInstance = {};
 Params& Params::instance() { return sInstance; }
-Params::Param& Params::getOrCreateParam(const char* name, const u8* value, size_t size) {
+Params::Param& Params::
+    getOrCreateParam(const char* name, const u8* value, size_t size) {
     EXL_ASSERT(params != nullptr, "Params is not yet initialized, wait until after the game starts!");
     for (int i = 0; i < length; i++)
         if (al::isEqualString(params[i].name, name))

@@ -12,6 +12,7 @@
 #include <container/seadTList.h>
 #include <gfx/gfx_DescriptorSlot.h>
 #include <gfx/gfx_Device.h>
+#include <gfx/seadCamera.h>
 
 namespace eui {
     bool RegisterSlotForTexture(nn::gfx::DescriptorSlot*, nn::gfx::TTextureView<nn::gfx::ApiVariationNvn8> const&,
@@ -72,13 +73,18 @@ namespace al {
     void startHitReaction(const al::LiveActor*, const char*);
     void startAction(al::LiveActor*, const char*);
     void startSe(const al::IUseAudioKeeper* user, const sead::SafeString& name);
+    al::CameraTicket* initSubjectiveCameraNoSave(al::IUseCamera const*, char const*);
+    bool isActiveCamera(al::CameraTicket const*);
+    void startCamera(al::IUseCamera const*, al::CameraTicket*, int);
+    void endCamera(al::IUseCamera const*, al::CameraTicket*, int, bool);
+    void calcCameraLookDir(sead::Vector3f*, al::IUseCamera const*, int);
 
     void emitRadialBlur(const al::LiveActor*, const sead::Vector3f&, float, float, float, float, float, float, int, int,
                         bool);
     void validatePostProcessingFilter(const al::Scene* scene);
     void invalidatePostProcessingFilter(const al::Scene* scene);
 
-    void lerpVec(sead::Vector3<float>*, sead::Vector3<float> const&, sead::Vector3<float> const&, f32);
+    void lerpVec(sead::Vector3f*, sead::Vector3f const&, sead::Vector3f const&, f32);
 
     class SimpleLayoutAppearWaitEnd : public al::LayoutActor {
     public:
@@ -130,6 +136,12 @@ namespace al {
               String64, String128, String256, String512, String1024, String2048, String4096);
 
     class ParameterBase {
+    private:
+        al::ParameterBase* nextParam;
+        sead::FixedSafeString<64> name;
+        u32 nameHash;
+
+    public:
         virtual const char* getParamTypeStr() const = 0;
         virtual YamlParamType getParamType() const = 0;
         virtual void* ptr() const = 0;
@@ -191,7 +203,21 @@ namespace al {
     };
 
     class ParameterObj;
-    class MtxConnector;
+    class MtxConnector {
+    public:
+        sead::Matrix34f baseMtx;
+        sead::Matrix34f* targetMtx;
+        sead::Quatf baseQuat;
+        sead::Vector3f baseTrans;
+
+        virtual bool isConnecting() const;
+        virtual void clear();
+        void init(sead::Matrix34f const*);
+        void init(sead::Matrix34f const*, sead::Matrix34f const&);
+        void setBaseQuatTrans(sead::Quatf const&, sead::Vector3f const&);
+        void calcConnectInfo(sead::Vector3f*, sead::Quatf*, sead::Vector3f*, sead::Vector3f const&,
+                             sead::Vector3f const&) const;
+    };
 
     class PrePassLightBase : public al::NerveExecutor,
                              public sead::TListNode<al::PrePassLightBase*>,
@@ -251,6 +277,13 @@ namespace al {
     class PrePassSpotLight : public PrePassLightPlacementBase<LppSpot> {
         PrePassSpotLight();
     };
+    void setPrePassLightOffset(const al::LiveActor*, const char* lightName, const sead::Vector3f&);
+    void requestPrePassLightColor(const al::LiveActor*, const char* lightName, const sead::Color4f& color);
+    void requestPrePassLightColor(const al::LiveActor*, const char* lightName, float multiplier);
+    void requestPrePassLightColor(const al::LiveActor*, const char* lightName, const char* colorName, float multiplier);
+
+    void attachMtxConnectorToMtxPtr(al::MtxConnector*, const sead::Matrix34f*);
+    sead::LookAtCamera* getLookAtCamera(const al::IUseCamera*, s32 index);
 } // namespace al
 namespace rs {
     bool isPlayerInWater(const al::LiveActor*);

@@ -191,7 +191,7 @@ extern "C" void exl_main(void *x0, void *x1) {
     });
 
     EXL_ASSERT(SocketInterface::instance().init(LOGGER_IP, 3085), "SOCKET SERVER MUST BE GAMING!");
-    SocketInterface::instance().waitForConnection();
+//    SocketInterface::instance().waitForConnection();
 
     EXL_ASSERT(R_SUCCEEDED(nn::fs::MountSdCardForDebug("sd")), "SD card failed to mount...");
 

@@ -3,13 +3,18 @@
 #include <al/Library/Scene/ISceneObj.h>
 #include <game/Player/PlayerActorHakoniwa.h>
 #include <game/StageScene/StageScene.h>
+#include <spook/FirstPersonState.hpp>
 #include <utils/ForwardDecls.hpp>
 
 namespace sp {
     struct SpookState : al::ISceneObj {
         PlayerActorHakoniwa* player = nullptr;
         StageScene* scene = nullptr;
-        al::PrePassSpotLight* flashlight = nullptr;
+        al::PostProcessingFilter* postProcessingFilter;
+        al::LppSpot* flashlight = nullptr;
+        al::LiveActor* follower = nullptr;
+        FirstPersonState* firstPerson;
+        sead::Matrix34f noRotateMtx;
         void initAfterPlacementSceneObj(const al::ActorInitInfo&) override;
         void update();
     };

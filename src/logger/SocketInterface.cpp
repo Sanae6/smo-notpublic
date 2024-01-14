@@ -1,6 +1,8 @@
 #include "SocketInterface.h"
 #include "Logger.hpp"
 #include "Params.h"
+#include <imgui.h>
+#include <imgui_nvn.h>
 #include <lib.hpp>
 #include <nifm.h>
 #include <socket.hpp>
@@ -19,7 +21,7 @@ struct SocketInterfaceInitialization : exl::hook::impl::TrampolineHook<SocketInt
         Params::instance().initialize();
         auto& interface = SocketInterface::instance();
         interface.signalInit();
-//        interface.waitForConnection();
+        interface.waitForConnection();
     }
 };
 
@@ -43,7 +45,7 @@ bool SocketInterface::init(const char* ip, u16 port) {
         return false;
 
     nn::os::InitializeLightEvent(&connectedEvent, false, nn::os::EventClearMode::Manual);
-    nn::os::SignalLightEvent(&connectedEvent);
+//    nn::os::SignalLightEvent(&connectedEvent);
 
     nn::socket::InetAton(ip, &hostAddress);
     serverAddress.address = hostAddress;
@@ -54,9 +56,16 @@ bool SocketInterface::init(const char* ip, u16 port) {
     nn::os::SetThreadName(&thread, "SocketInterface");
     nn::os::StartThread(&thread);
 
-    nn::os::WaitLightEvent(&connectedEvent);
+//    nn::os::WaitLightEvent(&connectedEvent);
 
     startedUp = true;
+
+    nvnImGui::addDrawFunc([]() {
+        ImGui::Begin("Socket");
+        bool enabled = SocketInterface::instance().isConnected();
+        ImGui::Checkbox("Connected", &enabled);
+        ImGui::End();
+    });
 
     return true;
 }
@@ -81,7 +90,7 @@ bool SocketInterface::read(void* data, u64 length) const {
     return true;
 }
 void SocketInterface::threadMain() {
-    nn::os::SignalLightEvent(&connectedEvent);
+//    nn::os::SignalLightEvent(&connectedEvent);
     void* data = packetBuffer;
     Packet* packet = static_cast<Packet*>(data);
 
@@ -110,9 +119,10 @@ void SocketInterface::threadMain() {
 
             handlePacket(packet);
         }
+
         connected = false;
         nn::os::ClearLightEvent(&connectedEvent);
-        svcSleepThread(5000000000);
+//        svcSleepThread(5000000000);
     }
 }
 
