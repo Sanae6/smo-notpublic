@@ -86,7 +86,7 @@ set_target_properties(subsdk9 PROPERTIES CONFIG_JSON "${CMAKE_CURRENT_BINARY_DIR
 __generate_npdm(subsdk9)
 set_target_properties(subsdk9 PROPERTIES LINK_FLAGS "-specs ${CMAKE_BINARY_DIR}/subsdk9.specs -g3 ${ARCH} -nostartfiles")
 
-add_custom_target(subsdk9_meta DEPENDS create_npdm subsdk9_nso)
+
 if (FTP_IP)
     ## Upload to target switch
 #    if (FTP_USERNAME AND FTP_PASSWORD) # login using a username and password
@@ -95,7 +95,10 @@ if (FTP_IP)
 #        add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND curl -T ${CMAKE_BINARY_DIR}/subsdk9 ftp://anon:anon@${FTP_IP}:5000/atmosphere/contents/${TITLE_ID}/exefs/)
 #    endif ()
     upload_nso(subsdk9 /atmosphere/contents/${TITLE_ID}/exefs/subsdk9)
-endif ()
+    add_custom_target(subsdk9_meta DEPENDS create_npdm subsdk9_nso subsdk9_ftp)
+else()
+    add_custom_target(subsdk9_meta DEPENDS create_npdm subsdk9_nso)
+endif()
 
 if (RYU_PATH)
     add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND mkdir -p ${RYU_PATH}/mods/contents/${TITLE_ID}/mods/exefs/)

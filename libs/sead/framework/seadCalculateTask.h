@@ -7,7 +7,7 @@ namespace sead
 {
 class CalculateTask : public TaskBase
 {
-    SEAD_RTTI_OVERRIDE(CalculateTask, TaskBase)
+    SEAD_RTTI_OVERRIDE_EXTERN(CalculateTask, TaskBase)
 public:
     explicit CalculateTask(const TaskConstructArg& arg);
     CalculateTask(const TaskConstructArg& arg, const char* name);

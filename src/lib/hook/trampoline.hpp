@@ -32,12 +32,12 @@ namespace exl::hook::impl {
             return OrigRef()(std::forward<Args>(args)...);
         }
 
-//        static ALWAYS_INLINE void InstallAtOffset(ptrdiff_t address) {
-//            _HOOK_STATIC_CALLBACK_ASSERT();
-//
-//            OrigRef() = hook::Hook(util::modules::GetTargetStart() + address, Derived::Callback, true);
-//        }
-//
+       static ALWAYS_INLINE void InstallAtOffset(ptrdiff_t address) {
+           _HOOK_STATIC_CALLBACK_ASSERT();
+
+           OrigRef() = hook::Hook(util::modules::GetTargetStart() + address, Derived::Callback, true);
+       }
+
 //        template<typename R, typename ...A>
 //        static ALWAYS_INLINE void InstallAtFuncPtr(util::GenericFuncPtr<R, A...> ptr) {
 //            _HOOK_STATIC_CALLBACK_ASSERT();

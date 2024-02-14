@@ -6,7 +6,7 @@ namespace sead
 {
 class NinSaveFileDevice : public NinFileDeviceBase
 {
-    SEAD_RTTI_OVERRIDE(NinSaveFileDevice, NinFileDeviceBase)
+    SEAD_RTTI_OVERRIDE_EXTERN(NinSaveFileDevice, NinFileDeviceBase)
 
 public:
     explicit NinSaveFileDevice(const SafeString& mount);

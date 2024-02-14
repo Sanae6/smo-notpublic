@@ -11,7 +11,7 @@ namespace sead
 {
 class TextureCafeGX2 : public Texture
 {
-    SEAD_RTTI_OVERRIDE(TextureCafeGX2, Texture)
+    SEAD_RTTI_OVERRIDE_EXTERN(TextureCafeGX2, Texture)
 
 public:
     TextureCafeGX2() {}

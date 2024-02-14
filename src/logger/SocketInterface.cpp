@@ -60,13 +60,6 @@ bool SocketInterface::init(const char* ip, u16 port) {
 
     startedUp = true;
 
-    nvnImGui::addDrawFunc([]() {
-        ImGui::Begin("Socket");
-        bool enabled = SocketInterface::instance().isConnected();
-        ImGui::Checkbox("Connected", &enabled);
-        ImGui::End();
-    });
-
     return true;
 }
 void SocketInterface::send(const Packet* packet, s32 flags) const {

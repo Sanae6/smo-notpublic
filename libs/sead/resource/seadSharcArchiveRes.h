@@ -12,7 +12,7 @@ namespace sead
 {
 class SharcArchiveRes : public ArchiveRes
 {
-    SEAD_RTTI_OVERRIDE(SharcArchiveRes, ArchiveRes)
+    SEAD_RTTI_OVERRIDE_EXTERN(SharcArchiveRes, ArchiveRes)
 
 public:
     struct ArchiveBlockHeader

@@ -12,7 +12,7 @@ namespace sead
 {
 class CafeFSAFileDevice : public FileDevice
 {
-    SEAD_RTTI_OVERRIDE(CafeFSAFileDevice, FileDevice)
+    SEAD_RTTI_OVERRIDE_EXTERN(CafeFSAFileDevice, FileDevice)
 
 public:
     CafeFSAFileDevice(const SafeString& name, const SafeString& devicePath);
@@ -53,7 +53,7 @@ public:
 
 class CafeContentFileDevice : public CafeFSAFileDevice
 {
-    SEAD_RTTI_OVERRIDE(CafeContentFileDevice, CafeFSAFileDevice)
+    SEAD_RTTI_OVERRIDE_EXTERN(CafeContentFileDevice, CafeFSAFileDevice)
 
 public:
     CafeContentFileDevice();

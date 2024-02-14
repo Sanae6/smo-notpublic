@@ -8,7 +8,7 @@ namespace sead
 {
 class ExpHeap : public Heap
 {
-    SEAD_RTTI_OVERRIDE(ExpHeap, Heap)
+    SEAD_RTTI_OVERRIDE_EXTERN(ExpHeap, Heap)
 public:
     enum class AllocMode
     {

@@ -23,7 +23,7 @@ public:
 
 class DirectResource : public Resource
 {
-    SEAD_RTTI_OVERRIDE(DirectResource, Resource)
+    SEAD_RTTI_OVERRIDE_EXTERN(DirectResource, Resource)
 
 public:
     DirectResource();
@@ -69,7 +69,7 @@ protected:
 
 class DirectResourceFactoryBase : public ResourceFactory
 {
-    SEAD_RTTI_OVERRIDE(DirectResourceFactoryBase, ResourceFactory)
+    SEAD_RTTI_OVERRIDE_EXTERN(DirectResourceFactoryBase, ResourceFactory)
 public:
     DirectResourceFactoryBase() : ResourceFactory() {}
 
@@ -85,7 +85,7 @@ public:
 template <typename T>
 class DirectResourceFactory : public DirectResourceFactoryBase
 {
-    SEAD_RTTI_OVERRIDE(DirectResourceFactory<T>, DirectResourceFactoryBase)
+    SEAD_RTTI_OVERRIDE_EXTERN(DirectResourceFactory<T>, DirectResourceFactoryBase)
 public:
     DirectResourceFactory() : DirectResourceFactoryBase() {}
 

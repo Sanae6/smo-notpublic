@@ -6,7 +6,7 @@ namespace sead
 {
 class FrameHeap : public Heap
 {
-    SEAD_RTTI_OVERRIDE(FrameHeap, Heap)
+    SEAD_RTTI_OVERRIDE_EXTERN(FrameHeap, Heap)
 public:
     struct State
     {

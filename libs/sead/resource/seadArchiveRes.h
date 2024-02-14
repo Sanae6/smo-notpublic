@@ -13,7 +13,7 @@ namespace sead
 {
 class ArchiveRes : public DirectResource
 {
-    SEAD_RTTI_OVERRIDE(ArchiveRes, DirectResource)
+    SEAD_RTTI_OVERRIDE_EXTERN(ArchiveRes, DirectResource)
 
 public:
     struct FileInfo

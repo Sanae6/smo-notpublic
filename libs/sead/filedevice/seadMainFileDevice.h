@@ -10,7 +10,7 @@ namespace sead
 {
 class MainFileDevice : public FileDevice
 {
-    SEAD_RTTI_OVERRIDE(MainFileDevice, FileDevice)
+    SEAD_RTTI_OVERRIDE_EXTERN(MainFileDevice, FileDevice)
 
 public:
     explicit MainFileDevice(Heap* heap);

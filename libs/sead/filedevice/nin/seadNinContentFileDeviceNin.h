@@ -6,7 +6,7 @@ namespace sead
 {
 class NinContentFileDevice : public NinFileDeviceBase
 {
-    SEAD_RTTI_OVERRIDE(NinContentFileDevice, NinFileDeviceBase)
+    SEAD_RTTI_OVERRIDE_EXTERN(NinContentFileDevice, NinFileDeviceBase)
 
 public:
     NinContentFileDevice();

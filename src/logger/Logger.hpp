@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdarg>
+#include <lib/diag/abort.hpp>
 
 namespace Logger {
     void log(const char *fmt, ...);

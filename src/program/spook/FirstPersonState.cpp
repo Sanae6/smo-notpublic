@@ -10,7 +10,7 @@
 #include <spook/SpookState.hpp>
 
 namespace sp {
-    sp::FirstPersonState::FirstPersonState(SpookState* state, const al::ActorInitInfo& initInfo) {
+    FirstPersonState::FirstPersonState(SpookState* state, const al::ActorInitInfo& initInfo) {
         spookState = state;
         subjectiveCameraTicket = al::initSubjectiveCameraNoSave(state->player, "Subjective");
     }
@@ -24,9 +24,8 @@ namespace sp {
 
         if (!al::isActiveCamera(subjectiveCameraTicket))
             al::startCamera(player, subjectiveCameraTicket, -1);
-        if (al::isActiveCamera(subjectiveCameraTicket) && par::get("EnableFirstPerson", true))
-
-                    al::endCamera(player, subjectiveCameraTicket, -1, false);
+        if (al::isActiveCamera(subjectiveCameraTicket) && !par::get("EnableFirstPerson", true))
+            al::endCamera(player, subjectiveCameraTicket, -1, false);
 
         auto s = al::getLeftStick(al::getMainControllerPort());
         if (!par::get("DisableFrontFacing", false) && al::isNearZero(s, 0.001) && rs::isPlayerOnGround(player)) {

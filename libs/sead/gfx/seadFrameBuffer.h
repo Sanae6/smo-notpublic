@@ -50,7 +50,7 @@ private:
 
 class FrameBuffer : public LogicalFrameBuffer
 {
-    SEAD_RTTI_OVERRIDE(FrameBuffer, LogicalFrameBuffer)
+    SEAD_RTTI_OVERRIDE_EXTERN(FrameBuffer, LogicalFrameBuffer)
 public:
     FrameBuffer(const Vector2f& virtual_size, const BoundBox2f& physical_area)
         : LogicalFrameBuffer(virtual_size, physical_area)

@@ -9,7 +9,7 @@ namespace sead
 {
 class NinFileDeviceBase : public FileDevice
 {
-    SEAD_RTTI_OVERRIDE(NinFileDeviceBase, FileDevice)
+    SEAD_RTTI_OVERRIDE_EXTERN(NinFileDeviceBase, FileDevice)
 
 public:
     NinFileDeviceBase(const SafeString& name, const SafeString& mount_point);

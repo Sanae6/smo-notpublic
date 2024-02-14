@@ -8,7 +8,7 @@ class ArchiveRes;
 
 class ArchiveFileDevice : public FileDevice
 {
-    SEAD_RTTI_OVERRIDE(ArchiveFileDevice, FileDevice)
+    SEAD_RTTI_OVERRIDE_EXTERN(ArchiveFileDevice, FileDevice)
 public:
     explicit ArchiveFileDevice(ArchiveRes* archive_res);
     ~ArchiveFileDevice() override = default;

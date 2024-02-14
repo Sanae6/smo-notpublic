@@ -10,7 +10,7 @@ namespace sead
 class InfLoopChecker : public CalculateTask
 {
     SEAD_TASK_SINGLETON(InfLoopChecker)
-    SEAD_RTTI_OVERRIDE(InfLoopChecker, CalculateTask)
+    SEAD_RTTI_OVERRIDE_EXTERN(InfLoopChecker, CalculateTask)
 
 public:
     struct InfLoopParam

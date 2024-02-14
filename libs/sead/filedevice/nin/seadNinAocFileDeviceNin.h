@@ -6,7 +6,7 @@ namespace sead
 {
 class NinAocFileDevice : public NinFileDeviceBase
 {
-    SEAD_RTTI_OVERRIDE(NinAocFileDevice, NinFileDeviceBase)
+    SEAD_RTTI_OVERRIDE_EXTERN(NinAocFileDevice, NinFileDeviceBase)
 
 public:
     explicit NinAocFileDevice(const SafeString& mount);

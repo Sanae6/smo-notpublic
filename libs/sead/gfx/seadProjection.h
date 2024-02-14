@@ -42,7 +42,7 @@ namespace sead {
     };
 
     class PerspectiveProjection : public Projection {
-        SEAD_RTTI_OVERRIDE(PerspectiveProjection, Projection)
+        SEAD_RTTI_OVERRIDE_EXTERN(PerspectiveProjection, Projection)
     public:
         PerspectiveProjection();
         PerspectiveProjection(float near, float far, float fovy_rad, float aspect);
@@ -79,7 +79,7 @@ namespace sead {
     };
 
     class OrthoProjection : public Projection {
-        SEAD_RTTI_OVERRIDE(OrthoProjection, Projection);
+        SEAD_RTTI_OVERRIDE_EXTERN(OrthoProjection, Projection);
 
     public:
         OrthoProjection();

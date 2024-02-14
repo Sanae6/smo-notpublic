@@ -22,7 +22,7 @@ public:
 
 class LookAtCamera : public Camera
 {
-    SEAD_RTTI_OVERRIDE(LookAtCamera, Camera)
+    SEAD_RTTI_OVERRIDE_EXTERN(LookAtCamera, Camera)
 public:
     LookAtCamera(const Vector3f& pos, const Vector3f& at, const Vector3f& up);
 

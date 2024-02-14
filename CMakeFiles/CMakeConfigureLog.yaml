@@ -1,0 +1,55 @@
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/home/sanae/.local/lib/python3.10/site-packages/cmake/data/share/cmake-3.27/Modules/CMakeDetermineSystem.cmake:206 (message)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      The target system is: Generic - DKA-NX-14 - aarch64
+      The host system is: Linux - 5.15.133.1-microsoft-standard-WSL2 - x86_64
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/home/sanae/.local/lib/python3.10/site-packages/cmake/data/share/cmake-3.27/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/home/sanae/.local/lib/python3.10/site-packages/cmake/data/share/cmake-3.27/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/home/sanae/.local/lib/python3.10/site-packages/cmake/data/share/cmake-3.27/Modules/CMakeDetermineCXXCompiler.cmake:126 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+      Compiler: /opt/devkitpro/devkitA64/bin/aarch64-none-elf-g++ 
+      Build flags: -g;-Wall;-Werror=return-type;-O3;-ffunction-sections;-fdata-sections;-march=armv8-a+crc+crypto;-mtune=cortex-a57;-mtp=soft;-fpic;-fvisibility=hidden;-fno-threadsafe-statics;-Wno-invalid-offsetof;-Wno-volatile;-fno-exceptions;-fno-asynchronous-unwind-tables;-fno-unwind-tables
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
+      
+      The CXX compiler identification is GNU, found in:
+        /home/sanae/smo-notpublic/CMakeFiles/3.27.4/CompilerIdCXX/a.out
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "/home/sanae/.local/lib/python3.10/site-packages/cmake/data/share/cmake-3.27/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "/home/sanae/.local/lib/python3.10/site-packages/cmake/data/share/cmake-3.27/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "/home/sanae/.local/lib/python3.10/site-packages/cmake/data/share/cmake-3.27/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:2 (project)"
+    message: |
+      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+      Compiler: /opt/devkitpro/devkitA64/bin/aarch64-none-elf-gcc 
+      Build flags: -g;-Wall;-Werror=return-type;-O3;-ffunction-sections;-fdata-sections;-march=armv8-a+crc+crypto;-mtune=cortex-a57;-mtp=soft;-fpic;-fvisibility=hidden
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
+      
+      The C compiler identification is GNU, found in:
+        /home/sanae/smo-notpublic/CMakeFiles/3.27.4/CompilerIdC/a.out
+      

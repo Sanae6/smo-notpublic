@@ -62,7 +62,7 @@ namespace sead {
     };
 
     class Controller : public ControllerBase {
-    SEAD_RTTI_OVERRIDE(Controller, ControllerBase)
+    SEAD_RTTI_OVERRIDE_EXTERN(Controller, ControllerBase)
 
     public:
         Controller(ControllerMgr *);
