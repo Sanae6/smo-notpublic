@@ -1,3 +1,6 @@
 [submodule "imgui"]
 	path = imgui
 	url = https://github.com/ocornut/imgui.git
+[submodule "cobalt"]
+	path = cobalt
+	url = git@github.com:Sanae6/cobalt.git
