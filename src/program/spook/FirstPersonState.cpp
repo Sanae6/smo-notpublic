@@ -43,4 +43,11 @@ namespace sp {
             puppet->setPose(finalRot);
         }
     }
+
+    void FirstPersonState::disable() {
+        auto* player = spookState->player;
+        auto* puppet = player->getPlayerPuppet();
+        puppet->show();
+        al::endCamera(player, subjectiveCameraTicket, -1, false);
+    }
 } // namespace sm

@@ -67,7 +67,7 @@ private:
     al::SeDataBase* mSeDatabase;
     void* field_70;
     f32 mVolume;
-    al::SeKeeper* topLevelSeKeeper;
+    al::SeKeeper* mTopLevelSeKeeper;
     const char** mSystemPauses;
     s32 mSystemPauseCount;
     bool* mUnderThreeChannels;

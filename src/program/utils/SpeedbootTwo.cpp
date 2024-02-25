@@ -33,7 +33,8 @@ namespace sb {
 
     SpeedbootNerve::SpeedbootNerve(HakoniwaSequence* sequence)
         : al::NerveExecutor("Speedboot"), sequence(sequence),
-          changeStageInfo(sequence->mGameDataHolder, "main_exit", "DonsukeExStage", false, -1,
+        // DonsukeExStage:main_exit
+          changeStageInfo(sequence->mGameDataHolder, "", "CapWorldHomeStage", false, -1,
                           ChangeStageInfo::UNK) {
         initNerve(&SpeedbootNerveNrvLoad::sInstance, 0);
         Logger::log("Speedbooting into %s:%s\n", par::get("SpeedyStage", "DonsukeExStage"), par::get("SpeedyChangeId", "DonsukeExStage"));

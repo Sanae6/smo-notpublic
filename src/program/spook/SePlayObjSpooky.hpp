@@ -9,6 +9,7 @@ namespace sp {
     SePlayObjSpooky(PlayerActorHakoniwa* player) : al::LiveActor("SePlayObjSpooky"), player(player) {}
 
     void init(const al::ActorInitInfo &info) override;
+    void control() override;
 
     void playSound(const char* sound);
   };

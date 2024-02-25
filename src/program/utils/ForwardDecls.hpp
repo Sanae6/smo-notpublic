@@ -292,9 +292,13 @@ private:
 public:
     void requestPlaySe(const char*, float, const char*, const al::SePlayParamList*, const al::MeInfo*, bool,
                        const char*, const sead::Vector3f*);
+    bool checkIsPlayingSe(const char* name, const char* unk) const;
   };
 
   void startSe(const al::IUseAudioKeeper*, const sead::SafeString&);
+  void stopAllBgm(const al::IUseAudioKeeper*, s32);
+  class AreaObjGroup;
+  al::AreaObjGroup* tryFindAreaObjGroup(const al::IUseAreaObj*, const char*);
 } // namespace al
 namespace rs {
   bool isPlayerInWater(const al::LiveActor*);
@@ -369,3 +373,16 @@ class TankBullet : public al::LiveActor {
 namespace alSeFunction {
   void startSeFromUpperLayerSeKeeper(const al::IUseAudioKeeper* keeper, const char* name);
 }
+class MapMini : public al::LayoutActor {
+  public:
+  MapMini(al::LayoutInitInfo const&, al::PlayerHolder const*);
+  void appearSlideIn(void);
+  void end(void);
+  void calcNearHintTrans(void);
+
+  bool isEnd(void) const;
+
+  void exeAppear(void);
+  void exeWait(void);
+  void exeEnd(void);
+};

@@ -9,5 +9,6 @@ namespace sp {
         FirstPersonState(SpookState* state, const al::ActorInitInfo& initInfo);
 
         void playerMovement() const;
+        void disable();
     };
 } // namespace sm

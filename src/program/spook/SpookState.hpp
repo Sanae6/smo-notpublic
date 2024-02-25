@@ -25,6 +25,9 @@ namespace sp {
         void update();
         void startSpook();
         void stopSpook();
+
+        void updateAreaSpooky();
+        void toggleArea();
     };
 
     [[maybe_unused]] static SpookState& spookyState(al::IUseSceneObjHolder* sceneObjHolder) {
