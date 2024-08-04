@@ -14,6 +14,7 @@
 #include <gfx/gfx_DescriptorSlot.h>
 #include <gfx/gfx_Device.h>
 #include <gfx/seadCamera.h>
+#include <gfx/seadProjection.h>
 
 namespace eui {
   bool RegisterSlotForTexture(nn::gfx::DescriptorSlot*, nn::gfx::TTextureView<nn::gfx::ApiVariationNvn8> const&, void*);
@@ -285,6 +286,7 @@ private:
 
   void attachMtxConnectorToMtxPtr(al::MtxConnector*, const sead::Matrix34f*);
   sead::LookAtCamera* getLookAtCamera(const al::IUseCamera*, s32 index);
+  sead::Projection* getProjectionSead(al::IUseCamera const*, int);
 
   class SePlayParamList;
   struct MeInfo;
@@ -299,10 +301,20 @@ public:
   void stopAllBgm(const al::IUseAudioKeeper*, s32);
   class AreaObjGroup;
   al::AreaObjGroup* tryFindAreaObjGroup(const al::IUseAreaObj*, const char*);
+  u8* loadFile(sead::SafeString const&, s32 alignment);
+
+  void setCameraTarget(al::IUseCamera*, al::CameraTargetBase*);
+  void resetCameraTarget(al::IUseCamera*, al::CameraTargetBase*);
+
+  bool isOnGround(const al::LiveActor* actor, u32);
 } // namespace al
 namespace rs {
+  bool isActiveDemo(const al::LiveActor* actor);
+  bool isPlayer2D(const al::LiveActor* actor);
   bool isPlayerInWater(const al::LiveActor*);
-}
+  IUsePlayerHack* startHack(al::HitSensor*, al::HitSensor*, al::LiveActor* actor = nullptr);
+  CapTargetInfo* createCapTargetInfo(al::LiveActor*, const char*);
+} // namespace rs
 namespace alAudioKeeperFunction {
   al::AudioKeeper* createAudioKeeper(const al::AudioDirector* director);
 }
@@ -385,4 +397,63 @@ class MapMini : public al::LayoutActor {
   void exeAppear(void);
   void exeWait(void);
   void exeEnd(void);
+};
+
+namespace al {
+  class HitSensor;
+
+  class HitSensorKeeper {
+public:
+    HitSensorKeeper(s32);
+
+    HitSensor* getSensor(const char*) const;
+    HitSensor* getSensor(s32) const;
+    s32 getSensorNum() const;
+
+public:
+    s32 mSensorCount;
+    HitSensor** mSensors;
+  };
+} // namespace al
+
+class HackerJudgeNormalFall;
+class HackerJudgeStartRun;
+class CapTargetInfo;
+class AnagramAlphabet;
+class IUsePlayerHack;
+class CapTargetParts;
+class PlayerHackStartShaderCtrl;
+
+class AnagramAlphabetCharacter : public al::LiveActor {
+  public:
+  AnagramAlphabetCharacter(const char*);
+
+  void init(const al::ActorInitInfo&);
+  void attackSensor(al::HitSensor*, al::HitSensor*);
+  bool receiveMsg(const al::SensorMsg*, al::HitSensor*, al::HitSensor*);
+  void setComplete();
+  void killCapTarget();
+
+  void exeWait();
+  void exeWaitHack();
+  void exeWaitHackStart();
+  void exeHackStart();
+  void exeHackWait();
+  void exeHackMove();
+  void exeHackFall();
+  void exeHackEnd();
+  void exeHackGoal();
+  void exeSet();
+  void exeComplete();
+
+  private:
+  CapTargetInfo* mCapTargetInfo;
+  sead::Matrix34f* unkMtx;
+  AnagramAlphabet* mParent;
+  IUsePlayerHack* mHackerParent;
+  CapTargetParts* mCapTargetParts;
+  HackerJudgeNormalFall* mHackerJudgeNormalFall;
+  HackerJudgeStartRun* mHackerJudgeStartRun;
+  PlayerHackStartShaderCtrl* mPlayerHackStartShaderCtrl;
+  s32 mSwingTimer;
 };

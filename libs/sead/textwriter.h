@@ -1,3 +1,5 @@
+#include <gfx/seadTextWriter.h>
+#if false
 /**
  * @file viewport.h
  * @brief Basic Viewport class.
@@ -57,3 +59,4 @@ namespace sead
             sead::DrawContext *mDrawContext;
     };
 };
+#endif

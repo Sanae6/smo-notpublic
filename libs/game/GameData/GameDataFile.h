@@ -174,7 +174,7 @@ public:
     void addCoin(int);
     void addPlayerJumpCount(void);
     void addPlayerThrowCapCount(void);
-    void readFromStream(sead::ReadStream *,uchar *);
+    bool readFromStream(sead::ReadStream *,uchar *);
     void tryReadByamlDataFromStream(sead::ReadStream *,uchar *,int);
     void writeToStream(sead::WriteStream *,sead::Heap *);
     void tryWriteByByaml(sead::WriteStream *,sead::Heap *);

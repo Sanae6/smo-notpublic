@@ -1,15 +1,16 @@
 #pragma once
 
+#include <al/Library/HostIO/HioNode.h>
 #include <al/Library/Rail/IUseRail.h>
 
 namespace al {
 class RailRider;
 
-class RailKeeper {
+class RailKeeper : public al::HioNode, public al::IUseRail {
 private:
-    al::RailRider* mRailRider;
+    al::RailRider* mRailRider{};
 
 public:
-    virtual al::RailRider* getRailRider() const;
+    al::RailRider* getRailRider() const override { return mRailRider; }
 };
 };  // namespace al

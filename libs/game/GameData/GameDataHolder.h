@@ -139,6 +139,7 @@ public:
 
     void readFromSaveDataBufferCommonFileOnlyLanguage();
     void readFromSaveDataBuffer(const char* bufferName);
+    void writeToSaveDataBuffer(const char* name);
 
     void changeNextStage(ChangeStageInfo const*, int);
 

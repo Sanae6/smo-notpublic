@@ -13,7 +13,7 @@ bool isExistArchive(const sead::SafeString& fileName, const char* ext);
 u32 getFileSize(const sead::SafeString& fileName);
 u32 calcFileAlignment(const sead::SafeString& fileName);
 u32 calcBufferSizeAlignment(const sead::SafeString& fileName);
-u8* loadFile(const sead::SafeString& fileName);
+u8* loadFile(const sead::SafeString& fileName, s32 alignment);
 void tryLoadFileToBuffer(const sead::SafeString& fileName, u8*, u32, s32);
 sead::ArchiveRes* loadArchive(const sead::SafeString& fileName);
 void loadArchiveWithExt(const sead::SafeString& fileName, char const* ext);

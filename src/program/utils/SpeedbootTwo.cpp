@@ -34,10 +34,11 @@ namespace sb {
     SpeedbootNerve::SpeedbootNerve(HakoniwaSequence* sequence)
         : al::NerveExecutor("Speedboot"), sequence(sequence),
         // DonsukeExStage:main_exit
-          changeStageInfo(sequence->mGameDataHolder, "", "CapWorldHomeStage", false, -1,
+          changeStageInfo(sequence->mGameDataHolder, "main_exit", "DonsukeExStage", false, -1,
                           ChangeStageInfo::UNK) {
         initNerve(&SpeedbootNerveNrvLoad::sInstance, 0);
-        Logger::log("Speedbooting into %s:%s\n", par::get("SpeedyStage", "DonsukeExStage"), par::get("SpeedyChangeId", "DonsukeExStage"));
+//        Logger::log("Speedbooting into %s:%s\n", par::get("SpeedyStage", "DonsukeExStage"), par::get("SpeedyChangeId", "DonsukeExStage"));
+        Logger::log("Speedbooting into %s:%s\n", changeStageInfo.changeStageName.cstr(), changeStageInfo.changeStageId.cstr());
     }
     void SpeedbootNerve::exeLoad() {
         if (al::isFirstStep(this)) {
@@ -66,7 +67,7 @@ namespace sb {
     struct SetupSpeedbootNerve : exl::hook::impl::TrampolineHook<SetupSpeedbootNerve> {
         static void Callback(HakoniwaSequence* sequence, const al::SequenceInitInfo& initInfo) {
             Orig(sequence, initInfo);
-            if (!par::get("SpeedyEnabled", true)) return;
+            if (!par::get("SpeedyEnabled", false)) return;
             sequence->getNerveKeeper()->mNextNerve = alloc<SpeedbootNerve>(sequence);
             sequence->getNerveKeeper()->mStep = -1;
             Logger::log("Initialized speed booting\n");

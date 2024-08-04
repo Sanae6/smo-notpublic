@@ -315,8 +315,8 @@ namespace handler {
                 bool continueRunning = false;
                 if (handlerFunc)
                     continueRunning = handlerFunc(*info);
-                else
-                    printCrashReport(info);
+//                else
+//                    printCrashReport(info);
 
                 info->exceptionState = continueRunning ? ExceptionState::Continue : ExceptionState::Exit;
             }

@@ -32,7 +32,7 @@ public:
     void setMode(Modes mode);
     void setUserFormat(StreamFormat* format);
 
-protected:
+private:
     StreamFormat* mFormat;
     StreamSrc* mSrc;
     Endian::Types mEndian;

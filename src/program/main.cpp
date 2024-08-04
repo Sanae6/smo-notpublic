@@ -25,7 +25,7 @@
 #include <game/System/GameSystem.h>
 #include <hook/trampoline.hpp>
 #include <logger/SocketInterface.h>
-#include <spook/SpookState.hpp>
+#include <capture/CaptureState.hpp>
 #include <utils/Helpers.h>
 #include <utils/SpeedbootTwo.hpp>
 #include <utils/UsefulPatches.hpp>
@@ -162,6 +162,9 @@ HOOK_DEFINE_TRAMPOLINE(GameSystemInit) {
 
         Orig(thisPtr);
 
+        sead::ScopedCurrentHeapSetter setter(al::getSequenceHeap());
+        cs::CaptureState::createInstance(nullptr);
+        cs::CaptureState::init();
     }
 };
 
@@ -170,14 +173,18 @@ HOOK_DEFINE_TRAMPOLINE(DrawDebugMenu) {
 
         Orig(thisPtr);
 
-        gTextWriter->beginDraw();
+        if (par::get("DebugDisplay", false)) {
 
-        gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, 10.f));
-        gTextWriter->printf("FPS: %d\n", static_cast<int>(round(Application::instance()->mFramework->calcFps())));
+          gTextWriter->beginDraw();
 
-        gTextWriter->endDraw();
+          gTextWriter->setCursorFromTopLeft(sead::Vector2f(10.f, 200.f));
+          gTextWriter->printf("FPS: %d\n", static_cast<int>(round(Application::instance()->mFramework->calcFps())));
 
-    }
+          cs::CaptureState::instance()->draw(gTextWriter);
+
+          gTextWriter->endDraw();
+        }
+}
 };
 
 extern "C" void exl_main(void *x0, void *x1) {
@@ -190,7 +197,8 @@ extern "C" void exl_main(void *x0, void *x1) {
         return false;
     });
 
-    EXL_ASSERT(SocketInterface::instance().init(LOGGER_IP, 3085), "SOCKET SERVER MUST BE GAMING!");
+    EXL_ASSERT(SocketInterface::instance().init(LOGGER_IP, 3086), "SOCKET SERVER MUST BE GAMING!");
+//    EXL_ASSERT(SocketInterface::instance().init(LOGGER_IP, 3085), "SOCKET SERVER MUST BE GAMING!");
 //    SocketInterface::instance().waitForConnection();
 
     EXL_ASSERT(R_SUCCEEDED(nn::fs::MountSdCardForDebug("sd")), "SD card failed to mount...");
@@ -218,7 +226,7 @@ extern "C" void exl_main(void *x0, void *x1) {
 
     runCodePatches();
 
-//    GameSystemInit::InstallAtOffset(0x535850);
+    GameSystemInit::InstallAtOffset(0x535850);
 
     // Sead Debugging Overriding
 
@@ -226,9 +234,9 @@ extern "C" void exl_main(void *x0, void *x1) {
 
     // Debug Text Writer Drawing
 
-//    DrawDebugMenu::InstallAtOffset(0x50F1D8);
+    DrawDebugMenu::InstallAtOffset(0x50F1D8);
 
-    sp::spookyInit();
+//    sp::spookyInit();
     sb::speedbootPatches();
     up::usefulPatchesInit();
 
