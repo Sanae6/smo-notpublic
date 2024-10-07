@@ -16,7 +16,8 @@
 
 .global __module_start
 __module_start:
-    b entrypoint
+    // b entrypoint
+    .word 0
     .word __nx_mod0 - __module_start
 
     .align 4
@@ -25,7 +26,7 @@ __module_start:
 entrypoint:
    // Arguments on NSO entry:
     //   x0=zero                  | x1=main thread handle
-    // Arguments on NRO entry (homebrew ABI):
+    // Arguments on NRO entry (homebrew ABI):it
     //   x0=ptr to env context    | x1=UINT64_MAX (-1 aka 0xFFFFFFFFFFFFFFFF)
     // Arguments on user-mode exception entry:
     //   x0=excpt type (non-zero) | x1=ptr to excpt context

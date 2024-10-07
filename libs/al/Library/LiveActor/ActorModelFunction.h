@@ -137,7 +137,7 @@ void trySetOcclusionQueryBox(al::LiveActor* actor, float);
 void trySetOcclusionQueryBox(al::LiveActor* actor, const sead::BoundBox3f&);
 void trySetOcclusionQueryCenter(al::LiveActor* actor, const sead::Vector3f*);
 void getModelName(const al::LiveActor* actor);
-void isModelName(const al::LiveActor* actor, const char*);
+bool isModelName(const al::LiveActor* actor, const char*);
 void calcModelBoundingSphereRadius(const al::LiveActor* actor);
 void getBoundingSphereCenterAndRadius(sead::Vector3f*, float*, const al::LiveActor* actor);
 void calcModelBoundingBox(sead::BoundBox3f*, const al::LiveActor* actor);

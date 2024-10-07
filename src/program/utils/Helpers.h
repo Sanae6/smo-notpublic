@@ -40,11 +40,11 @@ bool isNerve(const al::IUseNerve* user) {
 
 template <typename Cast, typename Host>
 Cast unsafeOffset(Host* host, ptrdiff_t offset) {
-  return (Cast)(((uintptr_t)host) + offset);
+  return (Cast)(reinterpret_cast<uintptr_t>(host) + offset);
 }
 template <typename Cast, typename Host>
 Cast unsafeOffset(Host host, ptrdiff_t offset) {
-  return (Cast)(((uintptr_t)host) + offset);
+  return (Cast)(reinterpret_cast<uintptr_t>(host) + offset);
 }
 template <typename Cast, typename Host>
 Cast& unsafeRef(Host* host, ptrdiff_t offset) {
@@ -54,7 +54,16 @@ template <typename Cast, typename Host>
 Cast& unsafeRef(Host host, ptrdiff_t offset) {
   return *unsafeOffset<Cast*>(host, offset);
 }
-template <typename Return, typename... Args, typename Func = std::add_pointer<Return(Args...)>::type>
+template <typename Cast, typename Host>
+Cast unsafeDeref(Host* host, ptrdiff_t offset) {
+  return unsafeRef<Cast>(host, offset);
+}
+template <typename Cast, typename Host>
+Cast unsafeDeref(Host host, ptrdiff_t offset) {
+  return unsafeRef<Cast>(host, offset);
+}
+
+template <typename Return, typename... Args, typename Func = std::add_pointer_t<Return(Args...)>>
 Func getFunc(const char* name) {
   uintptr_t ptr;
   EXL_ASSERT(R_SUCCEEDED(nn::ro::LookupSymbol(&ptr, name)));
@@ -91,3 +100,18 @@ static inline void free(T* ptr, sead::Heap* heap = nullptr) {
   EXL_ASSERT(heap != nullptr, "Invalid heap for free!");
   heap->free(ptr);
 }
+
+namespace ph {
+  inline void writeReturn(patch::CodePatcher& patcher) { patcher.WriteInst(inst::Ret()); }
+  inline void writeBooleanAndReturn(patch::CodePatcher& patcher, bool value) {
+    patcher.WriteInst(inst::Movz(reg::W0, value));
+    patcher.WriteInst(inst::Ret());
+  }
+  inline void pretendBoolean(patch::CodePatcher& patcher, bool value) { patcher.WriteInst(inst::Movz(reg::W0, value)); }
+
+  inline void pretendBoolean(patch::CodePatcher& patcher, reg::Register reg, bool value) {
+    patcher.WriteInst(inst::Movz(reg, value));
+  }
+
+  inline void nop(patch::CodePatcher patcher) { patcher.WriteInst(inst::Nop()); }
+} // namespace ph

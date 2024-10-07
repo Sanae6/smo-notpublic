@@ -13,20 +13,30 @@
 #include <al/Library/Controller/JoyPadUtil.h>
 #include <al/Library/Light/ActorPrepassLightKeeper.h>
 #include <al/Library/LiveActor/ActorPoseKeeper.h>
+#include <al/Library/LiveActor/ActorSensorFunction.h>
+#include <al/Library/LiveActor/LiveActorGroup.h>
+#include <al/Library/LiveActor/LiveActorKit.h>
 #include <al/Library/Math/MathUtil.h>
 #include <al/Library/Math/MathVectorUtil.h>
 #include <al/Library/Player/PlayerHolder.h>
 #include <al/Library/Resource/ResourceHolder.h>
 #include <cstddef>
+#include <game/GameData/GameDataFunction.h>
 #include <game/Player/CapFunction.h>
 #include <gfx/seadCamera.h>
 #include <heap/seadHeapMgr.h>
+#include <helpers/PlayerHelper.h>
 #include <logger/Params.h>
 #include <spook/SpookState.hpp>
 #include <utils/ForwardDecls.hpp>
 #include <utils/Helpers.h>
 
 namespace sp {
+  namespace {
+    MAKE_NERVE_IMPL(SpookState, Normal);
+    MAKE_NERVE_IMPL(SpookState, Flicker);
+    MAKE_NERVE_IMPL(SpookState, Climb);
+  } // namespace
   sead::LookAtCamera* camera = nullptr;
   void SpookState::initAfterPlacementSceneObj(const al::ActorInitInfo& initInfo) {
     if (!isSameType<StageScene>(scene))
@@ -51,7 +61,22 @@ namespace sp {
     scene->mGameDataHolder.mData->mDataFile->mIsEnableCap = true;
     player->mHackCap->hide(false);
     player->mPlayerAnimator->forceCapOn();
+
+    // staticManager = alloc<StaticManager>(initInfo);
   }
+
+  const struct Preset {
+    const char* name;
+    f32 red;
+    f32 green;
+    f32 blue;
+    f32 degree;
+    f32 length;
+  } presets[3] = {
+      {.name = "PresetStandard", .red = 10000, .green = 10000, .blue = 10000, .degree = 90, .length = 3000},
+      {.name = "PresetDim", .red = 7500, .green = 7500, .blue = 7500, .degree = 45, .length = 1000},
+      {.name = "PresetRed", .red = 10000, .green = 250, .blue = 250, .degree = 90, .length = 3000},
+  };
   //   int curSound = 0;
   const char* sounds[] = {
       "LunaticPrincess",    "CreepyBreathing",    "RustyDoor",      "ScaryNoise1",      "ScaryNoise2",
@@ -64,6 +89,9 @@ namespace sp {
       player->mHackCap->hide(false);
       player->mPlayerAnimator->forceCapOn();
     }
+
+    // staticManager->update();
+
     if (!isNerve<StageSceneNrvPlay>(scene))
       return;
 
@@ -90,10 +118,18 @@ namespace sp {
 
     camera = al::getLookAtCamera(player, 0);
 
-    flashlight->currentColor = flashlight->targetColor = flashlight->color->value =
-        sead::Color4f(par::get("ColorR", 10000.0f), par::get("ColorG", 8000.0f), par::get("ColorB", 9000.0f), 1.0f);
-    flashlight->param.degree->value = par::get("Degree", 50.0f);
-    flashlight->param.length->value = par::get("Length", 1000.0f);
+    if (par::get("BypassPresets", false)) {
+      flashlight->currentColor = flashlight->targetColor = flashlight->color->value =
+          sead::Color4f(par::get("ColorR", 10000.0f), par::get("ColorG", 8000.0f), par::get("ColorB", 9000.0f), 1.0f);
+      flashlight->param.degree->value = par::get("Degree", 50.0f);
+      flashlight->param.length->value = par::get("Length", 1000.0f);
+    } else {
+      auto& preset = presets[activePreset];
+      flashlight->currentColor = flashlight->targetColor = flashlight->color->value =
+          sead::Color4f(preset.red, preset.green, preset.blue, 1.0f);
+      flashlight->param.degree->value = preset.degree;
+      flashlight->param.length->value = preset.length;
+    }
     flashlight->randomCeil->value = par::get("RandomCeil", 0.0f);
     flashlight->param.angleDamp->value = par::get("AngleDamp", 1.0f);
     flashlight->param.specularExpansion->value = par::get("SpecExpansion", 0.0f);
@@ -115,13 +151,65 @@ namespace sp {
         flashlight->requestKillByUser(0);
     }
 
-    for (size_t i = 0; i < ACNT(sounds); i++) {
+    for (size_t i = 0; i < std::size(sounds); i++) {
       if (par::clicked(sounds[i])) {
         Logger::log("Playing sound from server %s\n", sounds[i]);
         alSeFunction::startSeFromUpperLayerSeKeeper(player, sounds[i]);
       }
     }
+
+    for (s32 i = 0; i < std::size(presets); i++) {
+      if (par::clicked(presets[i].name)) {
+        if (flashlight->killedByUser) {
+          activePreset = i;
+        } else {
+          nextPreset = i;
+          al::setNerve(this, &SpookStateNrvFlicker::sInstance);
+        }
+      }
+    }
+
+    if (par::clicked("Flicker")) {
+      al::setNerve(this, &SpookStateNrvFlicker::sInstance);
+    }
+
+    updateNerve();
   }
+
+  void SpookState::exeFlicker() {
+    if (al::isIntervalStep(this, 4, 0) && al::getRandom(5) < 2) {
+      if (flashlight->killedByUser)
+        flashlight->requestAppearByUser(0);
+      else
+        flashlight->requestKillByUser(0);
+    }
+
+    if (al::isGreaterEqualStep(this, 60)) {
+      flashlight->requestKillByUser(0);
+      al::setNerve(this, &SpookStateNrvClimb::sInstance);
+    }
+  }
+
+  void SpookState::exeClimb() {
+    constexpr s32 end = 120;
+    if (al::isFirstStep(this)) {
+      flashlight->requestAppearByUser(0);
+    }
+    auto t = static_cast<f32>(al::getNerveStep(this)) / static_cast<f32>(end);
+    auto& preset = presets[activePreset];
+    auto& newPreset = presets[nextPreset];
+    flashlight->currentColor = flashlight->targetColor = flashlight->color->value =
+        sead::Color4f(al::lerpValue(preset.red, newPreset.red, t), al::lerpValue(preset.green, newPreset.green, t),
+                      al::lerpValue(preset.blue, newPreset.blue, t), 1.0f);
+    flashlight->param.degree->value = al::lerpValue(preset.degree, newPreset.degree, t);
+    flashlight->param.length->value = al::lerpValue(0, newPreset.length, t);
+    if (al::isGreaterEqualStep(this, end)) {
+      activePreset = nextPreset;
+      Logger::log("updated preset! %d\n", activePreset);
+      al::setNerve(this, &SpookStateNrvNormal::sInstance);
+    }
+  }
+
   void SpookState::startSpook() {
     Logger::log("Starting spook\n");
     isSpookActive = true;
@@ -137,10 +225,13 @@ namespace sp {
     patcher.WriteInst(inst::Ret());
     patcher.Seek("_ZNK11PlayerInput16isTriggerRollingEb", 0x14);
     patcher.WriteInst(inst::Movz(reg::W8, 1));
-    scene->mGameDataHolder.mData->mDataFile->mIsEnableCap = false;
+    patcher.Seek(0x4f02b0);
+    ph::writeBooleanAndReturn(patcher, false);
+    // scene->mGameDataHolder.mData->mDataFile->mIsEnableCap = false;
     CapFunction::putOnCapPlayer(player->mHackCap, player->mPlayerAnimator);
     flashlight->requestAppearByUser(0);
     scene->mStageSceneLayout->end();
+    al::setNerve(this, &SpookStateNrvNormal::sInstance);
   }
   void SpookState::stopSpook() {
     Logger::log("Stopping spook\n");
@@ -157,7 +248,8 @@ namespace sp {
     patcher.Write(0xA9017BFD);
     patcher.Seek("_ZNK11PlayerInput16isTriggerRollingEb", 0x14);
     patcher.Write(0x39426268);
-    scene->mGameDataHolder.mData->mDataFile->mIsEnableCap = true;
+    // scene->mGameDataHolder.mData->mDataFile->mIsEnableCap = true;
+    GameDataFunction::disableCapByPlacement(player);
     player->mHackCap->hide(false);
     player->mPlayerAnimator->forceCapOn();
     firstPerson->disable();
@@ -239,6 +331,18 @@ namespace sp {
     StageScenePlay::InstallAtSymbol("_ZN10StageScene7controlEv");
     CheckAddonLoadStates::InstallAtOffset(0x808cc0);
 
+    struct PlayerReceiveMsg : Trampoline<PlayerReceiveMsg> {
+      static bool Callback(al::LiveActor* actor, al::HitSensor* left, al::HitSensor* right) {
+        if (spookyState(actor).isSpookActive && isSameType<PuppetActor>(al::getSensorHost(left)) &&
+            isSameType<PuppetActor>(al::getSensorHost(right))) {
+          Logger::log("Spook received PuppetActor\n");
+          PlayerHelper::killPlayer(actor);
+          return true;
+        }
+        return Orig(actor, left, right);
+      }
+    };
+    PlayerReceiveMsg::InstallAtSymbol("_ZN19PlayerActorHakoniwa10receiveMsgEPKN2al9SensorMsgEPNS0_9HitSensorES5_");
     patch::CodePatcher patcher(0xa93450);
     patcher.Write(inst::Movz(W0, 1));
     patcher.Seek(0xa582c8);
@@ -259,4 +363,6 @@ namespace sp {
 
     AreaConvertName::InstallAtSymbol("_ZNK2al7FactoryIPFPNS_7AreaObjEPKcEE11convertNameES4_");
   }
+
+  // void spookyCreate() { StaticManager::init(); }
 } // namespace sp

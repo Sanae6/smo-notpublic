@@ -3,118 +3,118 @@
 #define IMGUI_USER_CONFIG "imgui_backend/nvn_imgui_config.h"
 
 #include "ImguiShaderCompiler.h"
+#include "MemoryBuffer.h"
 #include "imgui.h"
 #include "nvn_Cpp.h"
 #include "nvn_CppMethods.h"
 #include "types.h"
-#include "MemoryBuffer.h"
 
 #include "os/os_tick.hpp"
 
-#ifdef __cplusplus
+// #ifdef __cplusplus
 
 namespace ImguiNvnBackend {
 
-    typedef float Matrix44f[4][4];
+  typedef float Matrix44f[4][4];
 
-    static constexpr int MaxTexDescriptors = 256 + 100;
-    static constexpr int MaxSampDescriptors = 256 + 100;
+  static constexpr int MaxTexDescriptors = 256 + 100;
+  static constexpr int MaxSampDescriptors = 256 + 100;
 
-    struct NvnBackendInitInfo {
-        nvn::Device *device;
-        nvn::Queue *queue;
-        nvn::CommandBuffer *cmdBuf;
-    };
+  struct NvnBackendInitInfo {
+    nvn::Device* device;
+    nvn::Queue* queue;
+    nvn::CommandBuffer* cmdBuf;
+  };
 
-    struct NvnBackendData {
+  struct NvnBackendData {
 
-        // general data
+    // general data
 
-        nvn::Device *device;
-        nvn::Queue *queue;
-        nvn::CommandBuffer *cmdBuf;
+    nvn::Device* device;
+    nvn::Queue* queue;
+    nvn::CommandBuffer* cmdBuf;
 
-        // builders
+    // builders
 
-        nvn::BufferBuilder bufferBuilder;
-        nvn::MemoryPoolBuilder memPoolBuilder;
-        nvn::TextureBuilder texBuilder;
-        nvn::SamplerBuilder samplerBuilder;
+    nvn::BufferBuilder bufferBuilder;
+    nvn::MemoryPoolBuilder memPoolBuilder;
+    nvn::TextureBuilder texBuilder;
+    nvn::SamplerBuilder samplerBuilder;
 
-        // shader data
+    // shader data
 
-        nvn::Program shaderProgram;
+    nvn::Program shaderProgram;
 
-        MemoryBuffer *shaderMemory;
-        MemoryBuffer *uniformMemory;
+    MemoryBuffer* shaderMemory;
+    MemoryBuffer* uniformMemory;
 
-        nvn::ShaderData shaderDatas[2]; // 0 - Vert 1 - Frag
+    nvn::ShaderData shaderDatas[2]; // 0 - Vert 1 - Frag
 
-        nvn::VertexStreamState streamState;
-        nvn::VertexAttribState attribStates[3];
+    nvn::VertexStreamState streamState;
+    nvn::VertexAttribState attribStates[3];
 
-        // font data
+    // font data
 
-        nvn::TexturePool texPool;
-        nvn::SamplerPool samplerPool;
+    nvn::TexturePool texPool;
+    nvn::SamplerPool samplerPool;
 
-        nvn::MemoryPool sampTexMemPool;
+    nvn::MemoryPool sampTexMemPool;
 
-        nvn::MemoryPool fontMemPool;
+    nvn::MemoryPool fontMemPool;
 
-        int samplerId;
-        nvn::Sampler fontSampler;
-        int textureId;
-        nvn::Texture fontTexture;
+    int samplerId;
+    nvn::Sampler fontSampler;
+    int textureId;
+    nvn::Texture fontTexture;
 
-        nvn::TextureHandle fontTexHandle;
+    nvn::TextureHandle fontTexHandle;
 
-        // render data
+    // render data
 
-        MemoryBuffer *vtxBuffer;
-        MemoryBuffer *idxBuffer;
+    MemoryBuffer* vtxBuffer;
+    MemoryBuffer* idxBuffer;
 
-        // misc data
+    // misc data
 
-        nn::TimeSpanType lastTick;
-        bool isInitialized;
+    nn::TimeSpanType lastTick;
+    bool isInitialized;
 
-        Matrix44f mProjMatrix = {};
+    Matrix44f mProjMatrix = {};
 
-        CompiledData imguiShaderBinary;
+    CompiledData imguiShaderBinary;
 
-        // test shader data
+    // test shader data
 
-        bool isUseTestShader = false;
-        nvn::Program testShader;
-        nvn::ShaderData testShaderDatas[2]; // 0 - Vert 1 - Frag
-        MemoryBuffer *testShaderBuffer;
-        CompiledData testShaderBinary;
-    };
+    bool isUseTestShader = false;
+    nvn::Program testShader;
+    nvn::ShaderData testShaderDatas[2]; // 0 - Vert 1 - Frag
+    MemoryBuffer* testShaderBuffer;
+    CompiledData testShaderBinary;
+  };
 
-    bool createShaders();
+  bool createShaders();
 
-    bool setupShaders(u8 *shaderBinary, ulong binarySize);
+  bool setupShaders(u8* shaderBinary, ulong binarySize);
 
-    bool setupFont();
+  bool setupFont();
 
-    void InitBackend(const NvnBackendInitInfo &initInfo);
+  void InitBackend(const NvnBackendInitInfo& initInfo);
 
-    void ShutdownBackend();
+  void ShutdownBackend();
 
-    void updateInput();
+  void updateInput();
 
-    void updateProjection(ImVec2 dispSize);
+  void updateProjection(ImVec2 dispSize);
 
-    void updateScale(bool isDocked);
+  void updateScale(bool isDocked);
 
-    void newFrame();
+  void newFrame();
 
-    void setRenderStates();
+  void setRenderStates();
 
-    void renderDrawData(ImDrawData *drawData);
+  void renderDrawData(ImDrawData* drawData);
 
-    NvnBackendData *getBackendData();
+  NvnBackendData* getBackendData();
 }; // namespace ImguiNvnBackend
 
-#endif
+// #endif

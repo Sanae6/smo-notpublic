@@ -4,8 +4,10 @@
 #include <agl/TextureData.h>
 #include <agl/gpu.h>
 #include <agl/util.h>
+#include <agl/utl.h>
 #include <al/Library/Camera/CameraTargetBase.h>
 #include <al/Library/Layout/LayoutActor.h>
+#include <al/Library/LiveActor/ActorModelFunction.h>
 #include <al/Library/LiveActor/LiveActor.h>
 #include <al/Library/Nerve/NerveSetupUtil.h>
 #include <al/Library/Scene/Scene.h>
@@ -15,6 +17,9 @@
 #include <gfx/gfx_Device.h>
 #include <gfx/seadCamera.h>
 #include <gfx/seadProjection.h>
+
+class CapTargetInfo;
+class IUsePlayerHack;
 
 namespace eui {
   bool RegisterSlotForTexture(nn::gfx::DescriptorSlot*, nn::gfx::TTextureView<nn::gfx::ApiVariationNvn8> const&, void*);
@@ -48,6 +53,9 @@ namespace nn {
   } // namespace font
   namespace fs {
     Result CommitSaveData(const char* name);
+  }
+  namespace ui2d {
+    class TextureInfo;
   }
 } // namespace nn
 namespace al {
@@ -307,6 +315,52 @@ public:
   void resetCameraTarget(al::IUseCamera*, al::CameraTargetBase*);
 
   bool isOnGround(const al::LiveActor* actor, u32);
+
+  bool isCollidedGround(const al::LiveActor* actor);
+
+  void initLayoutActor(al::LayoutActor*, const al::LayoutInitInfo&, const char*, const char*);
+
+  nn::ui2d::TextureInfo* createTextureInfo();
+  nn::ui2d::TextureInfo* createTextureInfo(const agl::TextureData&);
+  void setPaneTexture(al::IUseLayout*, const char*, const nn::ui2d::TextureInfo*);
+  void updateTextureInfo(nn::ui2d::TextureInfo*, agl::TextureData const&);
+
+  void startAction(al::IUseLayoutAction*, char const*, char const*);
+
+  struct TextureUnit {
+    agl::TextureData* textureData;
+    agl::TextureSampler* textureSampler;
+    u8 _unused[0x18];
+    sead::FixedSafeString<64> name;
+  };
+  struct NoiseTexture {
+    TextureUnit* data;
+    agl::UniformBlock* uniformBlock;
+    f32 floats[7];
+  };
+  struct NoiseTextureKeeper {
+    u8 _partsGraphics[0x28];
+    NoiseTexture* black2d;
+    NoiseTexture* black3d;
+    void* curlShaderProgram;
+    NoiseTexture* curl2d;
+    NoiseTexture* curl3d;
+    void* simpleShaderProgram;
+    NoiseTexture* simple;
+
+    NoiseTextureKeeper();
+
+    void declareUsingSimpleNoiseTexture();
+  };
+
+  agl::TextureData& getBlack2DTexture();
+
+  struct FullScreenQuadModel {
+    u8 implementation[0x220];
+    FullScreenQuadModel();
+    ~FullScreenQuadModel();
+    void drawQuad(agl::DrawContext*) const;
+  };
 } // namespace al
 namespace rs {
   bool isActiveDemo(const al::LiveActor* actor);
@@ -456,4 +510,23 @@ class AnagramAlphabetCharacter : public al::LiveActor {
   HackerJudgeStartRun* mHackerJudgeStartRun;
   PlayerHackStartShaderCtrl* mPlayerHackStartShaderCtrl;
   s32 mSwingTimer;
+};
+
+class TalkNpc : private al::LiveActor {};
+struct PlayerStartObj : private al::LiveActor {
+  struct IUsePlayerPuppet* puppet;
+  bool isDemoObj;
+  bool wasMissInPrevStage;
+  sead::FixedSafeString<128> startId;
+};
+namespace alCameraFunction {
+  al::CameraTicket* initCamera(al::CameraPoser*, al::IUseCamera const*, al::ActorInitInfo const&, char const*, int);
+}
+
+struct PuppetActor : al::LiveActor {};
+struct MoviePlayer : al::ISceneObj {
+  MoviePlayer();
+  agl::TextureData& getTexture() const;
+  void play(const char* path);
+  void update();
 };

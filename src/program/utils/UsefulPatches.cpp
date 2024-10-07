@@ -61,8 +61,11 @@ public:
     patcher.WriteInst(inst::Movz(W0, 1));
     patcher.Seek(0x1B3F0C);
     patcher.WriteInst(inst::Nop());
-    //        ResourceHeapTracking::InstallAtSymbol(
-    //            "_ZN2al14ResourceSystem14createResourceERKN4sead14SafeStringBaseIcEEPNS0_16ResourceCategoryEPKc");
+    // ResourceHeapTracking::InstallAtSymbol(
+    // "_ZN2al14ResourceSystem14createResourceERKN4sead14SafeStringBaseIcEEPNS0_16ResourceCategoryEPKc");
     SetupFolderArchiveFactory::InstallAtSymbol("_ZN2al9SystemKit20createResourceSystemEPKciib");
+
+    exl::util::RwPages startPage(exl::util::modules::GetSelfStart(), 0x4);
+    reinterpret_cast<u32*>(startPage.GetRw())[0] = 0;
   }
 } // namespace up

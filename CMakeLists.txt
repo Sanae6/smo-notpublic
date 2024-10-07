@@ -31,7 +31,7 @@ add_compile_definitions(private=public)
 ## Title Id
 set(TITLE_ID 0100000000010000)
 set(CONFIG_TITLE_ID 0x${TITLE_ID})
-add_compile_definitions(EXL_PROGRAM_ID=${CONFIG_TITLE_ID} NNSDK=1 IMGUI_USER_CONFIG="imgui_backend/nvn_imgui_config.h")
+add_compile_definitions(EXL_PROGRAM_ID=${CONFIG_TITLE_ID} NNSDK=1 IMGUI_USER_CONFIG="imgui_backend/nvn_imgui_config.h" SEAD_DEBUG=1)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/module/subsdk9.json.template ${CMAKE_CURRENT_BINARY_DIR}/subsdk9.json)
 
 ## Project sources
@@ -71,6 +71,7 @@ target_link_libraries(subsdk9 ${LOCAL_LIBRARIES})
 
 # generate header file for imgui shader binary
 target_embed_binaries(subsdk9 "${PROJECT_SOURCE_DIR}/romfs/ShaderData/imgui.bin")
+target_embed_binaries(subsdk9 "${PROJECT_SOURCE_DIR}/romfs/ShaderData/static.bin")
 
 ## Prepare subsdk ld
 set(SUBSDK_LD_PATH ${CMAKE_CURRENT_SOURCE_DIR}/module/subsdk9.ld)
@@ -89,16 +90,16 @@ set_target_properties(subsdk9 PROPERTIES LINK_FLAGS "-specs ${CMAKE_BINARY_DIR}/
 
 if (FTP_IP)
     ## Upload to target switch
-#    if (FTP_USERNAME AND FTP_PASSWORD) # login using a username and password
-#        add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND curl -T ${CMAKE_BINARY_DIR}/subsdk9 ftp://${FTP_USERNAME}:${FTP_PASSWORD}@${FTP_IP}:5000/atmosphere/contents/${TITLE_ID}/exefs/)
-#    else ()
-#        add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND curl -T ${CMAKE_BINARY_DIR}/subsdk9 ftp://anon:anon@${FTP_IP}:5000/atmosphere/contents/${TITLE_ID}/exefs/)
-#    endif ()
+    #    if (FTP_USERNAME AND FTP_PASSWORD) # login using a username and password
+    #        add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND curl -T ${CMAKE_BINARY_DIR}/subsdk9 ftp://${FTP_USERNAME}:${FTP_PASSWORD}@${FTP_IP}:5000/atmosphere/contents/${TITLE_ID}/exefs/)
+    #    else ()
+    #        add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND curl -T ${CMAKE_BINARY_DIR}/subsdk9 ftp://anon:anon@${FTP_IP}:5000/atmosphere/contents/${TITLE_ID}/exefs/)
+    #    endif ()
     upload_nso(subsdk9 /atmosphere/contents/${TITLE_ID}/exefs/subsdk9)
     add_custom_target(subsdk9_meta DEPENDS create_npdm subsdk9_nso subsdk9_ftp)
-else()
+else ()
     add_custom_target(subsdk9_meta DEPENDS create_npdm subsdk9_nso)
-endif()
+endif ()
 
 if (RYU_PATH)
     add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND mkdir -p ${RYU_PATH}/mods/contents/${TITLE_ID}/mods/exefs/)
