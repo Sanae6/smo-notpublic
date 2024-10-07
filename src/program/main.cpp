@@ -136,6 +136,8 @@ struct ReplaceSeadPrint : public ::exl::hook::impl::ReplaceHook<ReplaceSeadPrint
 
 struct GameSystemInit : public ::exl::hook::impl::TrampolineHook<GameSystemInit> {
   static void Callback(GameSystem* thisPtr) {
+    alloc<sp::StaticManager>();
+    sp::StaticManager::init();
 
     sead::Heap* curHeap = sead::HeapMgr::instance()->getCurrentHeap();
 
@@ -182,8 +184,6 @@ struct DrawDebugMenu : public ::exl::hook::impl::TrampolineHook<DrawDebugMenu> {
       gTextWriter->printf("FPS: %d\n", static_cast<int>(round(Application::instance()->mFramework->calcFps())));
 
       // cs::CaptureState::instance()->draw(gTextWriter);
-
-      // sp::StaticManager::draw();
 
       gTextWriter->endDraw();
     }

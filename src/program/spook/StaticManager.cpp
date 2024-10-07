@@ -1,10 +1,13 @@
 #include "StaticManager.hpp"
 
 #include "static_bin.h"
+#include <account.h>
 #include <agl/TextureSampler.h>
 #include <agl/utl.h>
 #include <al/Library/Controller/JoyPadUtil.h>
 #include <al/Library/LiveActor/ActorModelFunction.h>
+#include <al/Library/LiveActor/ActorMovementFunction.h>
+#include <al/Library/Math/MathLengthUtil.hpp>
 #include <game/System/Application.h>
 #include <imgui.h>
 #include <imgui_backend/imgui_impl_nvn.hpp>
@@ -12,121 +15,268 @@
 #include <imgui_nvn.h>
 #include <init.h>
 #include <logger/Logger.hpp>
+#include <logger/Params.h>
 #include <nvn/nvn_Cpp.h>
 #include <utils/Helpers.h>
 
+#define UBOSIZE 0x1000
+
+// smoo headers decl
+
+struct PuppetInfo {
+  // General Puppet Info
+  char puppetName[0x10] = {}; // max user account name size is 10 chars, so this could go down to 0xB
+  bool isConnected = false;
+  nn::account::Uid playerID;
+  // Puppet Translation Info
+  sead::Vector3f playerPos = sead::Vector3f(0.f,0.f,0.f);
+  sead::Quatf playerRot = sead::Quatf(0.f,0.f,0.f,0.f);
+  // Puppet Stage Info
+  u8 scenarioNo = -1;
+  char stageName[0x40] = {};
+  bool isInSameStage = false;
+  // Puppet Costume Info
+  char costumeBody[0x20] = {};
+  char costumeHead[0x20] = {};
+  // Puppet Capture Info
+  char curHack[0x40] = {};
+  bool isCaptured = false;
+  bool isStartCapture = false;
+  // Puppet Model Info
+  s16 curAnim;
+  s16 curSubAnim;
+  char curAnimStr[0x30] = {};
+  char curSubAnimStr[0x30] = {};
+  float blendWeights[6] = {};
+  float animRate = 0.f;
+  bool is2D = false;
+  // Puppet Hack Cap Info
+  sead::Vector3f capPos = sead::Vector3f(0.f,0.f,0.f);
+  sead::Quatf capRot = sead::Quatf(0.f,0.f,0.f,0.f);
+  char capAnim[0x30] = {};
+  bool isCapThrow = false;
+  bool isHoldThrow = false;
+  // Hide and Seek Gamemode Info
+  bool isIt = false;
+  u8 seconds = 0;
+  u16 minutes = 0;
+};
+
+class Client {
+  public:
+
+  static int (*getConnectCount)();
+
+  static PuppetInfo* (*getPuppetInfo)(int idx);
+  static PuppetActor* (*getPuppet)(int idx);
+
+  static PuppetInfo* (*getDebugPuppetInfo)();
+  static PuppetActor* (*getDebugPuppet)();
+
+  static uintptr_t GetSMOOTargetOffset(uintptr_t offset) { return exl::util::GetModuleInfo(3).m_Total.m_Start + offset; }
+};
+
+int (*Client::getConnectCount)() = nullptr;
+
+PuppetInfo* (*Client::getDebugPuppetInfo)() = nullptr;
+PuppetActor* (*Client::getDebugPuppet)() = nullptr;
+
+PuppetInfo* (*Client::getPuppetInfo)(int idx) = nullptr;
+PuppetActor* (*Client::getPuppet)(int idx) = nullptr;
+
 namespace sp {
   namespace {
-    nvn::Program program;
     StaticManager* instance;
+
+    constexpr int triVertCount = 3;
+    constexpr int quadVertCount = triVertCount * 2;
+    constexpr int quadCount = 1; // modify to reflect how many quads need to be drawn per frame
+
+    constexpr int pointCount = quadVertCount * quadCount;
+
+    void createQuad(ImDrawVert *verts, int startIndex, int x, int y, int width, int height) {
+      float minXVal = x;
+      float maxXVal = x + width;
+      float minYVal = y; // 400
+      float maxYVal = y + height; // 400
+
+      // top left
+      ImDrawVert p1 = {
+          .pos = ImVec2(minXVal, minYVal),
+          .uv = ImVec2(0.0f, 0.0f)
+      };
+      // top right
+      ImDrawVert p2 = {
+          .pos = ImVec2(minXVal, maxYVal),
+          .uv = ImVec2(0.0f, 1.0f)
+      };
+      // bottom left
+      ImDrawVert p3 = {
+          .pos = ImVec2(maxXVal, minYVal),
+          .uv = ImVec2(1.0f, 0.0f)
+      };
+      // bottom right
+      ImDrawVert p4 = {
+          .pos = ImVec2(maxXVal, maxYVal),
+          .uv = ImVec2(1.0f, 1.0f)
+      };
+
+      verts[startIndex] = p4;
+      verts[startIndex + 1] = p2;
+      verts[startIndex + 2] = p1;
+
+      verts[startIndex + 3] = p1;
+      verts[startIndex + 4] = p3;
+      verts[startIndex + 5] = p4;
+    }
+
+    PuppetActor* findSmooPuppet(const char* name) {
+      for (int i = 0; i < Client::getConnectCount(); ++i) {
+        auto curPuppet = Client::getPuppetInfo(i);
+        if(al::isEqualString(curPuppet->puppetName, name))
+          return Client::getPuppet(i);
+      }
+      return nullptr;
+    }
   } // namespace
   void StaticManager::init() {
-    // Logger::log("init\n");
-    // // steps: load and create shader
-    //
-    // // auto shader = ImguiShaderCompiler::CompileShader("static");
-    // // auto binary = static_cast<u8*>(nn::init::GetAllocator()->Allocate(static_cast<s32>(static_bin_size)));
-    //
-    // auto shader = const_cast<u8*>(imgui_bin);
-    // auto shaderSize = imgui_bin_size;
-    // auto shaderBuffer =
-    //     alloc<MemoryBuffer>(shaderSize, nvn::MemoryPoolFlags::CPU_UNCACHED | nvn::MemoryPoolFlags::GPU_CACHED |
-    //                                         nvn::MemoryPoolFlags::SHADER_CODE);
-    //
-    // memcpy(shaderBuffer->memBuffer, static_bin, shaderSize);
-    // // auto shader = CompiledData{.ptr = static_cast<u8*>(shaderBuffer->memBuffer), .size = shaderSize};
-    // auto offsetData = BinaryHeader(reinterpret_cast<u32*>(shader));
-    //
-    // nvn::BufferAddress addr = shaderBuffer->GetBufferAddress();
-    //
-    // nvn::ShaderData shaders[2] = {};
-    // nvn::ShaderData& vertShaderData = shaders[0];
-    // vertShaderData.data = addr + offsetData.mVertexDataOffset;
-    // vertShaderData.control = shader + offsetData.mVertexControlOffset;
-    //
-    // nvn::ShaderData& fragShaderData = shaders[1];
-    // fragShaderData.data = addr + offsetData.mFragmentDataOffset;
-    // fragShaderData.control = shader + offsetData.mFragmentControlOffset;
-    //
-    // EXL_ASSERT(program.Initialize(ImguiNvnBackend::getBackendData()->device), "unable to init program!");
-    // EXL_ASSERT(program.SetShaders(2, shaders), "unable to set shaders!");
+    // verify we've loaded smoo first
+    const char* smooFirString = (const char*)Client::GetSMOOTargetOffset(0x136C0);
+    EXL_ASSERT(al::isEqualString(smooFirString, "Fir"), "Failed to load SMOO func offsets!");
+
+    // setup func ptrs for smoo stuff
+    Client::getConnectCount = reinterpret_cast<int (*)(void)>(Client::GetSMOOTargetOffset(0xB630));
+
+    Client::getDebugPuppetInfo = reinterpret_cast<PuppetInfo* (*)(void)>(Client::GetSMOOTargetOffset(0xAF30));
+    Client::getDebugPuppet = reinterpret_cast<PuppetActor* (*)(void)>(Client::GetSMOOTargetOffset(0xAF50));
+
+    Client::getPuppetInfo = reinterpret_cast<PuppetInfo* (*)(int)>(Client::GetSMOOTargetOffset(0xAE10));
+    Client::getPuppet = reinterpret_cast<PuppetActor* (*)(int)>(Client::GetSMOOTargetOffset(0xADD0));
+
+    auto bd = ImguiNvnBackend::getBackendData();
+    instance->cmdBuf = bd->cmdBuf;
+    instance->queue = bd->queue;
+
+    ImguiNvnBackend::orthoRH_ZO(instance->ubo.projMtx, 0.0f, 1600.0f, 900.0f, 0.0f, -1.0f, 1.0f);
+
+    instance->shaderBinary.size = static_bin_size;
+    instance->shaderBinary.ptr = (u8*)malloc(static_bin_size);
+    memcpy(instance->shaderBinary.ptr, static_bin, static_bin_size);
+
+    instance->shaderBuffer = IM_NEW(MemoryBuffer)(instance->shaderBinary.size, instance->shaderBinary.ptr,
+                                            nvn::MemoryPoolFlags::CPU_UNCACHED |
+                                                nvn::MemoryPoolFlags::GPU_CACHED |
+                                                nvn::MemoryPoolFlags::SHADER_CODE);
+
+    EXL_ASSERT(instance->shaderBuffer->IsBufferReady(), "Shader Buffer was not ready! unable to continue. Shader Size: %d", static_bin_size);
+
+    auto offsetData = BinaryHeader((u32 *) instance->shaderBinary.ptr);
+    nvn::BufferAddress addr = instance->shaderBuffer->GetBufferAddress();
+    nvn::ShaderData &vertShaderData = instance->shaderDatas[0];
+
+    vertShaderData.data = addr + offsetData.mVertexDataOffset;
+    vertShaderData.control = instance->shaderBinary.ptr + offsetData.mVertexControlOffset;
+
+    nvn::ShaderData &fragShaderData = instance->shaderDatas[1];
+    fragShaderData.data = addr + offsetData.mFragmentDataOffset;
+    fragShaderData.control = instance->shaderBinary.ptr + offsetData.mFragmentControlOffset;
+
+    EXL_ASSERT(instance->shaderProgram.Initialize(bd->device), "Unable to Init Program!");
+    EXL_ASSERT(instance->shaderProgram.SetShaders(2, instance->shaderDatas), "Unable to Set Shaders!");
+
+    instance->attribStates[0].SetDefaults().SetFormat(nvn::Format::RG32F, offsetof(ImDrawVert, pos)); // pos
+    instance->attribStates[1].SetDefaults().SetFormat(nvn::Format::RG32F, offsetof(ImDrawVert, uv)); // uv
+    instance->attribStates[2].SetDefaults().SetFormat(nvn::Format::RGBA8, offsetof(ImDrawVert, col)); // color
+
+    instance->streamState.SetDefaults().SetStride(sizeof(ImDrawVert));
+
+    instance->uniformBuffer = IM_NEW(MemoryBuffer)(UBOSIZE);
+
+    size_t totalVtxSize = pointCount * sizeof(ImDrawVert);
+
+    instance->vtxBuffer = IM_NEW(MemoryBuffer)(totalVtxSize);
+
+    ImDrawVert *verts = (ImDrawVert *) instance->vtxBuffer->GetMemPtr();
+    createQuad(verts, 0, 0, 0, 1600.0f, 900.0f);
   }
-  StaticManager::StaticManager(const al::ActorInitInfo& initInfo) {
-    instance = this;
-    // overScreen = alloc<al::LayoutActor>("StaticScreen");
-    // al::initLayoutActor(overScreen, al::getLayoutInitInfo(initInfo), "PlayGuideMovie", nullptr);
-    // al::startAction(overScreen, "Wait", nullptr);
-    // noiseTextureKeeper = unsafeRef<al::NoiseTextureKeeper*>(al::getGraphicsSystemInfo(initInfo), 0x278);
-    // Logger::log("static texture keeper: %s\n", getTypename(noiseTextureKeeper));
-    // textureInfo = al::createTextureInfo(al::getBlack2DTexture());
-    // noiseTextureKeeper->declareUsingSimpleNoiseTexture();
-    // Logger::log("appearin %d\n", overScreen->mIsAlive);
-    // // overScreen->appear();
-    // auto sampler = nvn::SamplerBuilder()
-    //                    .SetDefaults()
-    //                    .SetDevice(ImguiNvnBackend::getBackendData()->device)
-    //                    .SetMinMagFilter(nvn::MinFilter::LINEAR, nvn::MagFilter::LINEAR)
-    //                    .SetWrapMode(nvn::WrapMode::REPEAT, nvn::WrapMode::REPEAT, nvn::WrapMode::REPEAT);
-    //
-    // // moviePlayer = static_cast<MoviePlayer*>(al::createSceneObj(overScreen, 0x24));
-    // this->sampler.Initialize(&sampler);
-    // static auto self = this;
-    // static int lol = 65535;
-    // // moviePlayer->play("content:/MovieData/TvStatic.mp4");
-    // // nvnImGui::addDrawFunc([] {
-    // //   ImGui::SetNextWindowPos({});
-    // //   ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
-    // //   ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-    // //   ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-    // //   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{});
-    // //   ImGui::Begin("named window", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize);
-    // //
-    // //   // auto texture = self->noiseTextureKeeper->simple->data->textureData;
-    // //   auto texture = &self->moviePlayer->getTexture();
-    // //   // auto* texture = &al::getBlack2DTexture();
-    // //   // auto id = &unsafeRef<u32>(&texture->data->textureSampler->mTextureData._58, 0xc0);
-    // //   // Logger::log("texture id: %u\n", texture->mTexture.mTextureID);
-    // //   ImguiNvnBackend::getBackendData()->texPool.RegisterTexture(
-    // //       lol, reinterpret_cast<const nvn::Texture*>(&texture->mTexture), nullptr);
-    // //
-    // //   // ImGui::Image(&texture->data->textureData->mTexture.mTextureID, ImGui::GetIO().DisplaySize);
-    // //   ImGui::Image(&lol, ImGui::GetIO().DisplaySize);
-    // //   ImGui::End();
-    // //   ImGui::PopStyleVar(3);
-    // // });
-  }
+
+  StaticManager::StaticManager() { instance = this; }
+
   StaticManager::~StaticManager() { instance = nullptr; }
+
   void StaticManager::draw() {
-    // auto& commandBuffer = *ImguiNvnBackend::getBackendData()->cmdBuf;
-    // static nvn::CommandBuffer commandBuffer = nvn::CommandBuffer();
-    // commandBuffer.BeginRecording();
-    // agl::DrawContext drawContext = agl::DrawContext();
-    // ImguiNvnBackend::setRenderStates();
-    // ((nvn::CommandBuffer*)&drawContext.commandBuffer)
-    // ->BindProgram(&program, nvn::ShaderStageBits::VERTEX | nvn::ShaderStageBits::FRAGMENT);
-    // sead::ScopedCurrentHeapSetter setter(al::getSceneHeap() ?: al::getSequenceHeap());
-    // al::FullScreenQuadModel quadModel;
-    // quadModel.drawQuad(&drawContext);
-    // auto handle = .EndRecording();
-    // ImguiNvnBackend::getBackendData()->queue->SubmitCommands(0, &handle);
+    if(!instance->enableDraw)
+      return;
+
+    instance->cmdBuf->BeginRecording();
+    instance->cmdBuf->BindProgram(&instance->shaderProgram, nvn::ShaderStageBits::VERTEX | nvn::ShaderStageBits::FRAGMENT);
+    instance->cmdBuf->BindUniformBuffer(nvn::ShaderStage::VERTEX, 0, *instance->uniformBuffer, UBOSIZE);
+    instance->cmdBuf->UpdateUniformBuffer(*instance->uniformBuffer, UBOSIZE, 0, sizeof(instance->ubo), &instance->ubo);
+    instance->cmdBuf->BindVertexBuffer(0, (*instance->vtxBuffer), instance->vtxBuffer->GetPoolSize());
+
+    instance->setRenderStates();
+
+    instance->cmdBuf->DrawArrays(nvn::DrawPrimitive::TRIANGLES, 0, pointCount);
+
+    auto handle = instance->cmdBuf->EndRecording();
+    instance->queue->SubmitCommands(1, &handle);
+
+    instance->enableDraw = false;
   }
 
-  void StaticManager::update() const {
-    // moviePlayer->update();
-    // Logger::log("static texture keeper runtime: %s\n", getTypename(noiseTextureKeeper));
-    // Logger::log("floats %.02f %.02f %.02f %.02f %.02f %.02f %.02f\n", texture->floats[0], texture->floats[1],
-    //             texture->floats[2], texture->floats[3], texture->floats[4], texture->floats[5], texture->floats[6]);
-    // Logger::log("Texture %p\n", texture->data);
-    // Logger::log("Texture name max size %s\n", texture->data->name.cstr());
-    // Logger::log("Texture %p %p\n", texture->data->textureSampler, texture->data->textureData);
+  void StaticManager::update(PlayerActorHakoniwa* player) {
+    if(!player)
+      return;
 
-    // auto& simple = *texture->data->textureSampler;
+    // only attempt a draw while update is being run
+    instance->enableDraw = true;
 
-    // if (al::isPadHoldR(-1)) {
-    // al::updateTextureInfo(textureInfo, simple);
-    // al::setPaneTexture(overScreen, "PicMovie", textureInfo);
-    // } else {
-    // al::updateTextureInfo(textureInfo, al::getBlack2DTexture());
-    // }
+    // weird and jank af
+    instance->ubo.time += 0.0001f;
+    if (instance->ubo.time >= 1.3f)
+      instance->ubo.time -= 0.3f;
+
+    PuppetActor* spookyPuppet = findSmooPuppet("Fir");
+
+    if(!spookyPuppet) {
+      spookyPuppet = Client::getDebugPuppet();
+      if(!spookyPuppet)
+        return;
+    }
+
+    float actorDist = al::calcDistance(player, spookyPuppet);
+
+    float minEffectDist = par::get("StaticEffectStartDist", 2000.0f);
+    if(actorDist < minEffectDist)
+      instance->ubo.alphaValue = 1.0f - al::normalize(actorDist, 0.0f, minEffectDist);
   }
+
+  void StaticManager::setRenderStates() {
+    nvn::PolygonState polyState;
+    polyState.SetDefaults();
+    polyState.SetPolygonMode(nvn::PolygonMode::FILL);
+    polyState.SetCullFace(nvn::Face::NONE);
+    polyState.SetFrontFace(nvn::FrontFace::CCW);
+    cmdBuf->BindPolygonState(&polyState);
+
+    nvn::ColorState colorState;
+    colorState.SetDefaults();
+    colorState.SetLogicOp(nvn::LogicOp::COPY);
+    colorState.SetAlphaTest(nvn::AlphaFunc::ALWAYS);
+    for (int i = 0; i < 8; ++i) {
+      colorState.SetBlendEnable(i, true);
+    }
+    cmdBuf->BindColorState(&colorState);
+
+    nvn::BlendState blendState;
+    blendState.SetDefaults();
+    blendState.SetBlendFunc(nvn::BlendFunc::SRC_ALPHA, nvn::BlendFunc::ONE_MINUS_SRC_ALPHA, nvn::BlendFunc::ONE,
+                            nvn::BlendFunc::ZERO);
+    blendState.SetBlendEquation(nvn::BlendEquation::ADD, nvn::BlendEquation::ADD);
+    cmdBuf->BindBlendState(&blendState);
+
+    cmdBuf->BindVertexAttribState(3, attribStates);
+    cmdBuf->BindVertexStreamState(1, &streamState);
+  }
+
 } // namespace sp

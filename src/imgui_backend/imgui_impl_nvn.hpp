@@ -17,6 +17,8 @@ namespace ImguiNvnBackend {
 
   typedef float Matrix44f[4][4];
 
+  void orthoRH_ZO(Matrix44f& mtx, float left, float right, float bottom, float top, float zNear, float zFar);
+
   static constexpr int MaxTexDescriptors = 256 + 100;
   static constexpr int MaxSampDescriptors = 256 + 100;
 

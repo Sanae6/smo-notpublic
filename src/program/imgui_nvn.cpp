@@ -5,6 +5,7 @@
 #include "lib.hpp"
 #include "logger/Logger.hpp"
 #include "nvn_CppFuncPtrImpl.h"
+#include <spook/StaticManager.hpp>
 #include <utils/Helpers.h>
 
 nvn::Device* nvnDevice;
@@ -181,6 +182,7 @@ void nvnImGui::addDrawFunc(ProcDrawFunc func) {
 }
 
 void nvnImGui::procDraw() {
+  sp::StaticManager::draw();
 
   ImguiNvnBackend::newFrame();
   ImGui::NewFrame();

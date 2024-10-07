@@ -61,8 +61,6 @@ namespace sp {
     scene->mGameDataHolder.mData->mDataFile->mIsEnableCap = true;
     player->mHackCap->hide(false);
     player->mPlayerAnimator->forceCapOn();
-
-    // staticManager = alloc<StaticManager>(initInfo);
   }
 
   const struct Preset {
@@ -99,6 +97,8 @@ namespace sp {
 
     if (!isSpookActive)
       return;
+
+    StaticManager::update(player);
 
     if (al::isLessEqualStep(scene, 5)) {
       scene->mStageSceneLayout->end();
