@@ -133,7 +133,7 @@ namespace sp {
     PuppetActor* findSmooPuppet(const char* name) {
       for (int i = 0; i < Client::getConnectCount(); ++i) {
         auto curPuppet = Client::getPuppetInfo(i);
-        if(al::isEqualString(curPuppet->puppetName, name))
+        if(curPuppet && al::isEqualString(curPuppet->puppetName, name))
           return Client::getPuppet(i);
       }
       return nullptr;
@@ -145,13 +145,13 @@ namespace sp {
     EXL_ASSERT(al::isEqualString(smooFirString, "Fir"), "Failed to load SMOO func offsets!");
 
     // setup func ptrs for smoo stuff
-    Client::getConnectCount = reinterpret_cast<int (*)(void)>(Client::GetSMOOTargetOffset(0xB630));
+    Client::getConnectCount = reinterpret_cast<int (*)(void)>(Client::GetSMOOTargetOffset(0xB620));
 
-    Client::getDebugPuppetInfo = reinterpret_cast<PuppetInfo* (*)(void)>(Client::GetSMOOTargetOffset(0xAF30));
-    Client::getDebugPuppet = reinterpret_cast<PuppetActor* (*)(void)>(Client::GetSMOOTargetOffset(0xAF50));
+    Client::getDebugPuppetInfo = reinterpret_cast<PuppetInfo* (*)(void)>(Client::GetSMOOTargetOffset(0xAF20));
+    Client::getDebugPuppet = reinterpret_cast<PuppetActor* (*)(void)>(Client::GetSMOOTargetOffset(0xAF40));
 
-    Client::getPuppetInfo = reinterpret_cast<PuppetInfo* (*)(int)>(Client::GetSMOOTargetOffset(0xAE10));
-    Client::getPuppet = reinterpret_cast<PuppetActor* (*)(int)>(Client::GetSMOOTargetOffset(0xADD0));
+    Client::getPuppetInfo = reinterpret_cast<PuppetInfo* (*)(int)>(Client::GetSMOOTargetOffset(0xAE00));
+    Client::getPuppet = reinterpret_cast<PuppetActor* (*)(int)>(Client::GetSMOOTargetOffset(0xADC0));
 
     auto bd = ImguiNvnBackend::getBackendData();
     instance->cmdBuf = bd->cmdBuf;
@@ -205,8 +205,10 @@ namespace sp {
   StaticManager::~StaticManager() { instance = nullptr; }
 
   void StaticManager::draw() {
-    if(!instance->enableDraw)
+    if(!instance->enableDraw) {
+      instance->ubo.alphaValue = 0.0f;
       return;
+    }
 
     instance->cmdBuf->BeginRecording();
     instance->cmdBuf->BindProgram(&instance->shaderProgram, nvn::ShaderStageBits::VERTEX | nvn::ShaderStageBits::FRAGMENT);
@@ -249,6 +251,8 @@ namespace sp {
     float minEffectDist = par::get("StaticEffectStartDist", 2000.0f);
     if(actorDist < minEffectDist)
       instance->ubo.alphaValue = 1.0f - al::normalize(actorDist, 0.0f, minEffectDist);
+    else
+      instance->ubo.alphaValue = 0.0f;
   }
 
   void StaticManager::setRenderStates() {
