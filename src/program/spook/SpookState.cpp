@@ -342,7 +342,7 @@ namespace sp {
         return Orig(actor, left, right);
       }
     };
-    PlayerReceiveMsg::InstallAtSymbol("_ZN19PlayerActorHakoniwa10receiveMsgEPKN2al9SensorMsgEPNS0_9HitSensorES5_");
+    // PlayerReceiveMsg::InstallAtSymbol("_ZN19PlayerActorHakoniwa10receiveMsgEPKN2al9SensorMsgEPNS0_9HitSensorES5_");
     patch::CodePatcher patcher(0xa93450);
     patcher.Write(inst::Movz(W0, 1));
     patcher.Seek(0xa582c8);
