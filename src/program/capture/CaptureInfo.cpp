@@ -24,7 +24,7 @@ namespace cs {
     static sead::Vector3f storedPosition = sead::Vector3f::zero;
     static const CaptureInfo captures[]{
         CaptureInfo{"Frog", nullptr},
-        CaptureInfo{"KuriboWing",
+        CaptureInfo{"KuriboWing", nullptr,
                     []() {
                       patch::CodePatcher patcher(0x15b12c);
                       patcher.WriteInst(inst::Movz(reg::X0, 1));
@@ -48,12 +48,12 @@ namespace cs {
                     }},
         CaptureInfo{"TRex", nullptr},
         CaptureInfo{"Megane", nullptr},
-        CaptureInfo{"KuriboPossessed", nullptr},
+        CaptureInfo{"KuriboPossessed", "Kuribo"},
         CaptureInfo{"Kakku", nullptr},
         CaptureInfo{"JugemFishing", nullptr},
-        CaptureInfo{"Pukupuku", nullptr, nullptr, nullptr, sead::Vector3f::ey * 110.f},
+        CaptureInfo{"Pukupuku", nullptr, nullptr, nullptr, nullptr, sead::Vector3f::ey * 110.f},
         CaptureInfo{"Senobi", nullptr},
-        CaptureInfo{"FireBrosPossessed",
+        CaptureInfo{"FireBrosPossessed", "FireBros",
                     []() {
                       struct FixBros : Replace<FixBros> {
                         static void Callback(void* keyPoseUpdater, sead::Vector3f* output) { *output = storedPosition; }
@@ -80,7 +80,7 @@ namespace cs {
                     }},
         CaptureInfo{"Tank", nullptr},
         CaptureInfo{"Gamane", nullptr},
-        CaptureInfo{"Imomu",
+        CaptureInfo{"Imomu", nullptr,
                     []() {
                       struct IommuControl : Trampoline<IommuControl> {
                         static void Callback(al::LiveActor* actor) {
@@ -95,7 +95,7 @@ namespace cs {
                       };
                       IommuControl::InstallAtSymbol("_ZN5Imomu7controlEv");
                     }},
-        CaptureInfo{"RadiconNpc",
+        CaptureInfo{"RadiconNpc", "Radicon",
                     []() {
                       patch::CodePatcher patcher(0x3bc704);
                       patcher.BranchLinkInst(0x83e204);
@@ -122,14 +122,14 @@ namespace cs {
                     [](al::LiveActor* actor) {
                       target = alloc<al::ActorCameraTarget>(unsafeRef<al::LiveActor*>(actor, 0x130), 0, nullptr);
                     }},
-        CaptureInfo{"Byugo", nullptr, nullptr, nullptr, sead::Vector3f::ey * 500.f},
-        CaptureInfo{"Yukimaru",
+        CaptureInfo{"Byugo", nullptr, nullptr, nullptr, nullptr, sead::Vector3f::ey * 500.f},
+        CaptureInfo{"Yukimaru", nullptr,
                     []() {
                       patch::CodePatcher patch(0x3f1538);
                       patch.WriteInst(inst::Ret());
                     }},
-        CaptureInfo{"Hosui", []() { /*patch::CodePatcher(0x11b1fc).WriteInst(inst::Movz(reg::X0, 1));*/ }},
-        CaptureInfo{"HammerBrosPossessed", nullptr,
+        CaptureInfo{"Hosui",  nullptr,[]() { /*patch::CodePatcher(0x11b1fc).WriteInst(inst::Movz(reg::X0, 1));*/ }},
+        CaptureInfo{"HammerBrosPossessed",  "HammerBros",nullptr,
                     [](auto actor, auto p) {
                       storedPosition = p;
                       unsafeRef<bool>(actor, 0x168) = true;
@@ -138,7 +138,7 @@ namespace cs {
         CaptureInfo{"Statue", nullptr},
         CaptureInfo{"KaronWing", nullptr},
         CaptureInfo{"Bull", nullptr},
-        CaptureInfo{"Koopa",
+        CaptureInfo{"Koopa", nullptr,
                     []() {
                       patch::CodePatcher p(0x7de80);
                       p.WriteInst(inst::Nop());
@@ -153,7 +153,7 @@ namespace cs {
                       CheckForCapture::InstallAtSymbol("_ZN2rs26setFlagOnStartKoopaCaptureEPKN2al9LiveActorE");
                     }},
         CaptureInfo{"AnagramAlphabetCharacter", nullptr},
-        CaptureInfo{"Yoshi",
+        CaptureInfo{"Yoshi", nullptr,
                     []() {
                       struct YoshiNeverSpawned : Trampoline<YoshiNeverSpawned> {
                         static void Callback(al::ActorStateBase* state) {
@@ -173,7 +173,7 @@ namespace cs {
                       auto egg = unsafeRef<al::LiveActor*>(unsafeRef<al::NerveStateBase*>(actor, 0x168), 0x38);
                       //                      func(egg);
                     }},
-        CaptureInfo{"KillerLauncher", nullptr, [](al::LiveActor* actor, auto) {
+        CaptureInfo{"KillerLauncher", "Killer", nullptr, [](al::LiveActor* actor, auto) {
                       patch::CodePatcher patch(0x147eb4);
                       patch.WriteInst(inst::Movz(reg::W0, par::get("BanzaiBill", false)));
                     }, [](auto) {
@@ -184,11 +184,11 @@ namespace cs {
                         pos += sead::Vector3f::ey * par::get("BanzaiBillHeight", 300.f);
                       }
                     }},
-        CaptureInfo{"Fukankun"},
-        CaptureInfo{"Wanwan"},
+        // CaptureInfo{"Fukankun"},
+        // CaptureInfo{"Wanwan"},
 //        CaptureInfo{"PossessedMapParts"},
-        CaptureInfo{"HackFork"},
-        CaptureInfo{"PackunFire"},
+        // CaptureInfo{"HackFork"},
+        // CaptureInfo{"PackunFire"},
     };
 
     return {std::data(captures), std::size(captures)};

@@ -361,13 +361,17 @@ public:
     ~FullScreenQuadModel();
     void drawQuad(agl::DrawContext*) const;
   };
+
+  char16_t* getSystemMessageString(al::IUseMessageSystem const*, char const*, char const*);
 } // namespace al
 namespace rs {
   bool isActiveDemo(const al::LiveActor* actor);
   bool isPlayer2D(const al::LiveActor* actor);
   bool isPlayerInWater(const al::LiveActor*);
   IUsePlayerHack* startHack(al::HitSensor*, al::HitSensor*, al::LiveActor* actor = nullptr);
+  void endHack(IUsePlayerHack** hack);
   CapTargetInfo* createCapTargetInfo(al::LiveActor*, const char*);
+  bool isTriggerUiDecide(al::IUseSceneObjHolder const*);
 } // namespace rs
 namespace alAudioKeeperFunction {
   al::AudioKeeper* createAudioKeeper(const al::AudioDirector* director);

@@ -32,12 +32,14 @@
       with pkgs;
       {
         formatter = nixfmt-tree;
-        devShells.default = mkShell.override { stdenv = devkitNix.stdenvA64; } {
+        devShells.default = mkShell.override { stdenv = pkgs.devkitNix.stdenvA64; } {
           buildInputs = [
             cmake
             ninja
             curl
             ncftp
+
+            llvmPackages.bintools-unwrapped
           ];
         };
       }

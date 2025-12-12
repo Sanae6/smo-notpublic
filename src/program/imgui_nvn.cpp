@@ -182,7 +182,7 @@ void nvnImGui::addDrawFunc(ProcDrawFunc func) {
 }
 
 void nvnImGui::procDraw() {
-  sp::StaticManager::draw();
+  // sp::StaticManager::draw();
 
   ImguiNvnBackend::newFrame();
   ImGui::NewFrame();

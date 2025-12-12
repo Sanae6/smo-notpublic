@@ -1,21 +1,36 @@
 #include "CaptureState.hpp"
 #include "CaptureInfo.hpp"
+#include "al/Library/Base/String.h"
 #include "al/Library/File/FileUtil.h"
+#include "al/Library/Layout/LayoutActor.h"
 #include "al/Library/LiveActor/ActorFlagFunction.h"
 #include "al/Library/LiveActor/ActorMovementFunction.h"
 #include "al/Library/LiveActor/ActorPoseKeeper.h"
 #include "al/Library/LiveActor/ActorSensorFunction.h"
+#include "al/Library/LiveActor/LiveActor.h"
+#include "al/Library/Nerve/Nerve.h"
+#include "al/Library/Nerve/NerveKeeper.h"
+#include "al/Library/Nerve/NerveStateBase.h"
+#include "al/Library/Nerve/NerveUtil.h"
 #include "al/Library/Placement/PlacementFunction.h"
 #include "al/Library/Placement/PlacementInfo.h"
 #include "al/Library/Player/PlayerHolder.h"
 #include "al/Library/Resource/ResourceHolder.h"
 #include "al/Library/Scene/Scene.h"
+#include "al/Library/Yaml/ByamlIter.h"
+#include "al/Library/Yaml/ByamlUtil.h"
+#include "armv8/instructions/op100x/move_wide_immediate/movz.hpp"
+#include "armv8/instructions/opx101/logical_shifted_register/mov_register.hpp"
+#include "armv8/register.hpp"
+#include "diag/assert.hpp"
+#include "fs/fs_types.hpp"
 #include "game/GameData/GameDataHolderAccessor.h"
 #include "game/Player/PlayerActorHakoniwa.h"
 #include "game/Player/States/PlayerStateHack.h"
 #include "game/Scene/ProjectActorFactory.h"
 #include "logger/Logger.hpp"
 #include "logger/Params.h"
+#include "prim/seadSafeString.h"
 #include "rs/util/SensorUtil.h"
 #include "utils/ForwardDecls.hpp"
 #include "utils/Helpers.h"
@@ -176,13 +191,157 @@ namespace cs {
       }
     };
 
+    struct HijackPlayerStartPosition : Trampoline<HijackPlayerStartPosition> {
+      static void Callback(PlayerActorHakoniwa* player, const al::ActorInitInfo& info,
+                           const PlayerInitInfo& playerInfo) {
+        SavedPlayerLocation& savedLocation = instance()->lastPlayerLocation;
+        if (savedLocation.isSaved) {
+          savedLocation.isSaved = false;
+          playerInfo.position = savedLocation.position;
+          playerInfo.rotation = savedLocation.rotation;
+          Logger::log("loaded saved player location!\n");
+        } else {
+          Logger::log("normal player spawn\n");
+        }
+        Orig(player, info, playerInfo);
+      }
+    }; // PlayerActorHakoniwa::initPlayer
+
     for (auto& capture : CaptureInfo::getCaptures()) {
       if (capture.setup)
         capture.setup();
     }
 
+    static bool (*hackListIsDebug)(const al::ByamlIter&, const char*) = [](const al::ByamlIter& iter, const char* key) {
+      const char* hackName = al::getByamlKeyString(iter, "HackName");
+      const auto& infos = CaptureInfo::getCaptures();
+      for (int i = 0; i < infos.size(); i++) {
+        const CaptureInfo& info = infos[i];
+        if (al::isEqualString(hackName, info.hackName ? info.hackName : info.gameName)) {
+          return instance()->capturesChosen[i];
+        }
+      }
+      return true;
+    };
+
     // lyl crafty
     patch::CodePatcher p(0x1F365C);
+    HijackPlayerStartPosition::InstallAtSymbol(
+        "_ZN19PlayerActorHakoniwa10initPlayerERKN2al13ActorInitInfoERK14PlayerInitInfo");
+    if (!par::get("MoonGet", true)) {
+      p.Seek(0x1cd878);
+      ph::pretendBoolean(p, false); // disable moon grabbing
+    }
+
+    // hack list modding
+    p.Seek(0x1ecd04);
+    p.BranchLinkInst((void*)hackListIsDebug); // disable non-supported captures
+    p.Seek(0x1ece78);
+    p.BranchLinkInst((void*)hackListIsDebug); // same
+    p.Seek("_ZN16GameDataFunction23isExistInHackDictionaryE22GameDataHolderAccessorPKc", 0x00);
+    ph::writeBooleanAndReturn(p, true);
+    p.Seek(0x1ecc5c);
+    static char16_t* (*hackListFooterMessage)(al::IUseMessageSystem const*, char const*, char const*) =
+        [](al::IUseMessageSystem const* a, char const* b, char const* c) {
+          Logger::log("stupid: %s\n", c);
+          return al::getSystemMessageString(a, b, "MenuMessage_Footer");
+        };
+    p.BranchLinkInst((void*)hackListFooterMessage);
+    p.Seek(0x4dba80);
+    p.WriteInst(inst::Movz(reg::X1, 2)); // increase states
+    p.Seek(0x4ca95c);
+    p.WriteInst(inst::Movz(reg::X0, 0x130));
+    static struct CollectionListShineNerve : public al::Nerve {
+      void execute(al::NerveKeeper* keeper) const override {
+        StageSceneStateGetShine* state = reinterpret_cast<StageSceneStateGetShine*>(keeper->mParent);
+        if (al::isFirstStep(keeper->mParent)) {
+          auto* ptr = unsafeRef<StageSceneStateCollectionList*>(state, 0x128);
+          Logger::log("first state frame %p!\n", ptr);
+          setNerveOffset(reinterpret_cast<al::IUseNerve*>(ptr), 0x1d8d730);
+        }
+        al::updateNerveStateAndNextNerve(keeper->mParent, nerveAt(0x1d8dc50));
+      }
+    } CollectionList;
+    struct SetupCollectionStateInGet : Trampoline<SetupCollectionStateInGet> {
+      static void Callback(StageScene* scene, const al::ActorInitInfo& initInfo) {
+        Orig(scene, initInfo);
+        if (isSameType<StageScene>(scene)) {
+          Logger::log("prepping get shine state\n");
+          unsafeRef<StageSceneStateCollectionList*>(scene->mStateGetShine, 0x128) = scene->mStateCollectionList;
+          al::addNerveState(reinterpret_cast<al::IUseNerve*>(scene->mStateGetShine),
+                            reinterpret_cast<al::NerveStateBase*>(scene->mStateCollectionList), &CollectionList,
+                            "CollectionList :3");
+        }
+      }
+    };
+    SetupCollectionStateInGet::InstallAtSymbol("_ZN2al5Scene7endInitERKNS_13ActorInitInfoE");
+    static void (*nerveFixer)(al::IUseNerve* user, const al::Nerve* nerve) = [](al::IUseNerve* user,
+                                                                                const al::Nerve* nerve) {
+      Logger::log("fixer upper: %s %s, %d\n", getTypename(user->getNerveKeeper()->getCurrentNerve()),
+                  getTypename(nerve), nerve == nerveAt(0x1d8dc50));
+      if (nerve == nerveAt(0x1d8dc50)) {
+        StageSceneStateGetShine* state = reinterpret_cast<StageSceneStateGetShine*>(user->getNerveKeeper()->mParent);
+        StageSceneStateCollectionList* ptr = unsafeRef<StageSceneStateCollectionList*>(state, 0x128);
+        unsafeRef<s32>(ptr, 0x80) = false;
+        unsafeRef<bool>(ptr, 0x84) = false;
+        unsafeRef<bool>(ptr, 0x91) = false;
+        unsafeRef<bool>(ptr, 0x95) = true;
+        al::setNerve(user, &CollectionList);
+        unsafeRef<al::LayoutActor*>(ptr, 0x28)->appear();
+      } else
+        al::setNerve(user, nerve);
+    };
+    p.Seek(0x4dc6f8);
+    p.BranchLinkInst((void*)nerveFixer);
+    p.Seek(0x4dcc10);
+    p.BranchInst((void*)nerveFixer);
+
+    p.Seek(0x4da9c4);
+    p.WriteInst(inst::MovRegister(reg::X0, reg::X19));
+    static bool (*shouldClose)(StageSceneStateCollectionList*) = [](StageSceneStateCollectionList* state) {
+      if (rs::isTriggerUiDecide(unsafeRef<al::Scene*>(state, 0x18))) {
+        struct HackPartsData {
+          sead::FixedSafeString<64>* name;
+          bool hasBeenCaptured;
+        };
+        void* hackListLayout = unsafeRef<void*>(state, 0x28);
+        HackPartsData* hackPartsData = unsafeRef<HackPartsData*>(hackListLayout, 0x138);
+        struct CommonHorizontalList* list = unsafeRef<CommonHorizontalList*>(hackListLayout, 0x130);
+        s32 index = unsafeRef<s32>(list, 0x3c);
+        auto captureInfos = CaptureInfo::getCaptures();
+        for (int j = 0; j < captureInfos.size(); j++) {
+          auto& info = captureInfos[j];
+          if (al::isEqualString(hackPartsData[index].name->cstr(), info.hackName ? info.hackName : info.gameName)) {
+            instance()->chosenCapture = j;
+            instance()->capturesChosen[j] = true;
+            Logger::log("savering %s %d\n", hackPartsData[index].name->cstr(), j);
+            SavedPlayerLocation& savedLocation = instance()->lastPlayerLocation;
+            savedLocation.isSaved = true;
+            savedLocation.position = al::getTrans(instance()->player);
+            savedLocation.rotation = al::getQuat(instance()->player);
+            PlayerHelper::warpPlayer(GameDataFunction::getCurrentStageName(instance()->player), instance()->player);
+            instance()->saveState();
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+    p.BranchLinkInst((void*)shouldClose);
+    p.Seek(0x4daa04);
+    ph::pretendBoolean(p, false);
+    p.Seek(0x4daa70);
+    ph::pretendBoolean(p, false);
+
+    struct ResourceCategoryOverrider : Trampoline<ResourceCategoryOverrider>{
+      static void Callback(struct ResourceSystem* system, const sead::SafeString& resource) {
+        if (instance()->overrideResourceCategory)
+          return "シーン";
+        return Orig(system, resource);
+      }
+    };
+    ResourceCategoryOverrider::InstallAtSymbol("_ZNK2al14ResourceSystem25findCategoryNameFromTableERKN4sead14SafeStringBaseIcEE");
+
     // forces isExistHome to always return true (specifically for MapLayout, so it shows the odyssey warp point)
     //    p.Seek(0x1F365C);
     //    p.WriteInst(inst::Movz(reg::W0, 1));
@@ -201,36 +360,36 @@ namespace cs {
     //    p.WriteInst(inst::Ret());
 
     // make lost globing work fine
-//    p.Seek(0x534ec0);
-//    p.WriteInst(inst::CmpImmediate(reg::W8, 4));
-//    p.Seek(0x534ec8);
-//    p.WriteInst(inst::Movz(reg::W8, 5));
+    //    p.Seek(0x534ec0);
+    //    p.WriteInst(inst::CmpImmediate(reg::W8, 4));
+    //    p.Seek(0x534ec8);
+    //    p.WriteInst(inst::Movz(reg::W8, 5));
 
     // make ruined globing work fine
-//    p.Seek(0x534f00);
-//    p.WriteInst(inst::CmpImmediate(reg::W8, 6));
-//    p.Seek(0x534f08);
-//    p.WriteInst(inst::Movz(reg::W8, 7));
+    //    p.Seek(0x534f00);
+    //    p.WriteInst(inst::CmpImmediate(reg::W8, 6));
+    //    p.Seek(0x534f08);
+    //    p.WriteInst(inst::Movz(reg::W8, 7));
 
     // make cloud globing work fine
-//    p.Seek(0x534ea0);
-//    p.WriteInst(inst::Movz(reg::W8, 5));
-//    p.Seek(0x30c398);
-//    p.WriteInst(inst::Movz(reg::W8, 5));
-//    p.Seek(0x30f5dc);
-//    p.WriteInst(inst::Movz(reg::X0, 0));
+    //    p.Seek(0x534ea0);
+    //    p.WriteInst(inst::Movz(reg::W8, 5));
+    //    p.Seek(0x30c398);
+    //    p.WriteInst(inst::Movz(reg::W8, 5));
+    //    p.Seek(0x30f5dc);
+    //    p.WriteInst(inst::Movz(reg::X0, 0));
 
-//    static bool (*isCrashHome)(GameDataHolderAccessor holder) = [](GameDataHolderAccessor holder) {
-//      auto progress = holder.mData->mDataFile->mGameProgressData;
-//      if (progress->mHomeStatus == HomeShipStates::CRASH)
-//        progress->mHomeStatus = HomeShipStates::REPAIR;
-//      if (progress->mHomeStatus == HomeShipStates::CRASHRUINED)
-//        progress->mHomeStatus = HomeShipStates::REPAIRRUINED;
-//
-//      return false;
-//    };
-//    p.Seek(0x30da30);
-//    p.BranchLinkInst((void*)isCrashHome);
+    //    static bool (*isCrashHome)(GameDataHolderAccessor holder) = [](GameDataHolderAccessor holder) {
+    //      auto progress = holder.mData->mDataFile->mGameProgressData;
+    //      if (progress->mHomeStatus == HomeShipStates::CRASH)
+    //        progress->mHomeStatus = HomeShipStates::REPAIR;
+    //      if (progress->mHomeStatus == HomeShipStates::CRASHRUINED)
+    //        progress->mHomeStatus = HomeShipStates::REPAIRRUINED;
+    //
+    //      return false;
+    //    };
+    //    p.Seek(0x30da30);
+    //    p.BranchLinkInst((void*)isCrashHome);
 
     // disable home status correction in GameProgressData::checkAndChangeCorrectStatus
     p.Seek(0x534df0);
@@ -290,19 +449,50 @@ namespace cs {
     {
       auto holder = ((HakoniwaSequence*)GameSystemFunction::getGameSystem()->mCurSequence)->mGameDataHolder.mData;
       struct NoMoreStageLocks : public Replace<NoMoreStageLocks> {
-        static int Callback() {
-          return 0;
-        }
+        static int Callback() { return 0; }
       };
 
-//      NoMoreStageLocks::InstallAtSymbol("_ZNK14GameDataHolder18findUnlockShineNumEPbi");
+      //      NoMoreStageLocks::InstallAtSymbol("_ZNK14GameDataHolder18findUnlockShineNumEPbi");
     }
+  }
+  void CaptureState::loadState() {
+    nn::fs::FileHandle handle{};
+    auto res = nn::fs::OpenFile(&handle, stateFilePath, nn::fs::OpenMode_Read);
+    if (R_FAILED(res)) {
+      Logger::log("state not yet...\n");
+      return;
+    }
+
+    nn::fs::ReadFile(handle, 0, &chosenCapture, sizeof(chosenCapture));
+    nn::fs::ReadFile(handle, sizeof(chosenCapture), capturesChosen.data(), sizeof(capturesChosen));
+    nn::fs::CloseFile(handle);
+  }
+  void CaptureState::saveState() {
+    bool set = true;
+    for (int i = 0; i < capturesChosen.size(); i++) {
+      if (!capturesChosen[i])
+        set = false;
+    }
+    if (set) {
+      capturesChosen = {};
+    }
+    nn::fs::FileHandle handle{};
+    Logger::log("wrigning state %s\n", stateFilePath);
+    nn::fs::DeleteFile(stateFilePath);
+    nn::fs::CreateFile(stateFilePath, 64);
+    nn::fs::OpenFile(&handle, stateFilePath, nn::fs::OpenMode_Write);
+    nn::fs::WriteFile(handle, 0, &chosenCapture, sizeof(chosenCapture),
+                      nn::fs::WriteOption{0});
+    nn::fs::WriteFile(handle, sizeof(chosenCapture), capturesChosen.data(), sizeof(capturesChosen),
+                      nn::fs::WriteOption{nn::fs::WriteOptionFlag_Flush});
+    nn::fs::CloseFile(handle);
   }
   void CaptureState::initAfterPlacementSceneObj(const al::ActorInitInfo& initInfo) {
     player = reinterpret_cast<PlayerActorHakoniwa*>(al::getPlayerActor(initInfo.mActorSceneInfo.mPlayerHolder, 0));
     ((GameDataHolder*)initInfo.mActorSceneInfo.mSceneObjHolder->getObj(18))->mDataFile->mIsEnableCap = true;
     player->mHackCap->hide(false);
     player->mPlayerAnimator->forceCapOn();
+    instance()->overrideResourceCategory = true;
     auto& captureInfo = getActiveCaptureInfo();
     Logger::log("Creating capture %s\n", captureInfo.gameName);
     if (isAnagramAlphabetCharacter()) {
@@ -324,11 +514,12 @@ namespace cs {
     Logger::log("Object name %s\n", namePtr);
     if (captureInfo.hackStart)
       captureInfo.hackStart(capture, instance()->calcPosition());
-    
+
     al::initCreateActorWithPlacementInfo(capture, actorInitInfo, placementInfo);
     if (captureInfo.hackStarted)
       captureInfo.hackStarted(capture);
 
+    instance()->overrideResourceCategory = false;
     Logger::log("Created %s to be magically captured\n", captureInfo.gameName);
   }
   void CaptureState::update() {
@@ -404,8 +595,8 @@ namespace cs {
         capture->appear(); // try to bring it back, if this fails then give up lol
     }
 
-//    if (isSameType<Pukupuku>(capture))
-//      unsafeRef<int>(capture, 0x150) = 0;
+    //    if (isSameType<Pukupuku>(capture))
+    //      unsafeRef<int>(capture, 0x150) = 0;
 
     static int (*calculateDepth)(al::NerveKeeper*) = [](al::NerveKeeper* keeper) {
       if (!keeper)

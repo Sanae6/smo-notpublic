@@ -1,4 +1,5 @@
 #include "ExceptionHandler.h"
+#include "al/Library/Memory/HeapUtil.h"
 #include "fs.h"
 #include "helpers/InputHelper.h"
 #include "helpers/PlayerHelper.h"
@@ -136,8 +137,9 @@ struct ReplaceSeadPrint : public ::exl::hook::impl::ReplaceHook<ReplaceSeadPrint
 
 struct GameSystemInit : public ::exl::hook::impl::TrampolineHook<GameSystemInit> {
   static void Callback(GameSystem* thisPtr) {
-    alloc<sp::StaticManager>();
-    sp::StaticManager::init();
+    cs::CaptureState::init();
+    // alloc<sp::StaticManager>();
+    // sp::StaticManager::init();
 
     sead::Heap* curHeap = sead::HeapMgr::instance()->getCurrentHeap();
 
@@ -166,6 +168,8 @@ struct GameSystemInit : public ::exl::hook::impl::TrampolineHook<GameSystemInit>
     Orig(thisPtr);
 
     sead::ScopedCurrentHeapSetter setter(al::getSequenceHeap());
+    auto instance = cs::CaptureState::createInstance(al::getSequenceHeap());
+        instance->loadState();
     // mob::MonsterState::createInstance(nullptr);
     // mob::MonsterState::init();
   }
@@ -244,7 +248,7 @@ extern "C" void exl_main(void* x0, void* x1) {
   nvnImGui::InstallHooks();
 
   // svcBreak(1, 1, 1);
-  sp::spookyInit();
+  // sp::spookyInit();
   // svcBreak(1, 1, 2);
   sb::speedbootPatches();
   // svcBreak(1, 1, 3);

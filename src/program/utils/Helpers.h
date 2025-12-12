@@ -70,9 +70,11 @@ Func getFunc(const char* name) {
   return (Func)ptr;
 }
 
-static inline void setNerveOffset(al::IUseNerve* user, ptrdiff_t offsetMain) {
-  al::setNerve(user, reinterpret_cast<const al::Nerve*>(exl::util::GetMainModuleInfo().m_Text.m_Start + offsetMain));
+static inline const al::Nerve* nerveAt(ptrdiff_t offsetMain) {
+  return reinterpret_cast<const al::Nerve*>(exl::util::GetMainModuleInfo().m_Text.m_Start + offsetMain);
 }
+
+static inline void setNerveOffset(al::IUseNerve* user, ptrdiff_t offsetMain) { al::setNerve(user, nerveAt(offsetMain)); }
 
 static inline f32 abs(f32 value) { return value < 0 ? -value : value; }
 

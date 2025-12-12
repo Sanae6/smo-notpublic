@@ -10,6 +10,7 @@ namespace cs {
   using CalcOffset = void(*)(sead::Vector3f& pos);
   struct CaptureInfo {
     const char* gameName;
+    const char* hackName = nullptr;
     CaptureSetup setup = nullptr;
     CaptureHackStart hackStart = nullptr;
     CaptureHackStarted hackStarted = nullptr;

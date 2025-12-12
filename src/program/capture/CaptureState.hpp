@@ -16,12 +16,18 @@ namespace cs {
     CaptureState() = default;
 
 public:
-
-    s32 chosenCapture = 0;
     PlayerActorHakoniwa* player = nullptr;
+    struct SavedPlayerLocation {
+      bool isSaved = false;
+      sead::Vector3f position;
+      sead::Quatf rotation;
+    } lastPlayerLocation;
+    u8 chosenCapture = 0;
+    std::array<bool, 26> capturesChosen = {};
     al::LiveActor* capture = nullptr;
     sead::Vector3f lastCapturePos{};
     bool loadingSave = false;
+    bool overrideResourceCategory = false;
 
     [[nodiscard]] sead::Vector3f calcPosition() const {
       sead::Vector3f front;
@@ -32,15 +38,12 @@ public:
       return result;
     }
 
-    [[nodiscard]] static const CaptureInfo& getActiveCaptureInfo() {
-      s32 value = par::get("SelectedCapture", 0);
-      if (value >= CaptureInfo::getCaptures().size())
-        value = (s32) CaptureInfo::getCaptures().size() - 1;
-      return CaptureInfo::getCaptures()[value];
+    [[nodiscard]] const CaptureInfo& getActiveCaptureInfo() const {
+      return CaptureInfo::getCaptures()[chosenCapture];
     }
 
     static bool isAnagramAlphabetCharacter() {
-      return al::isEqualString(getActiveCaptureInfo().gameName, "AnagramAlphabetCharacter");
+      return al::isEqualString(instance()->getActiveCaptureInfo().gameName, "AnagramAlphabetCharacter");
     }
 
     static void init();
@@ -48,6 +51,8 @@ public:
     void initAfterPlacementSceneObj(const al::ActorInitInfo&) override;
     void update();
     void draw(sead::TextWriter*);
+    void loadState();
+    void saveState();
 
     [[nodiscard]] al::LiveActor* getMario() const { return player; }
     [[nodiscard]] al::LiveActor* getCapture() const { return capture; }
@@ -56,4 +61,5 @@ public:
     static bool initialized() { return sInstance; }
   };
 
+  constexpr const char* stateFilePath = "sd:/capturemodstate.save";
 } // namespace cs
