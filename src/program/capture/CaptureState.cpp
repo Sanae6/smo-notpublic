@@ -1,13 +1,16 @@
 #include "CaptureState.hpp"
 #include "CaptureInfo.hpp"
 #include "al/Library/Base/String.h"
+#include "al/Library/File/FileLoader.h"
 #include "al/Library/File/FileUtil.h"
 #include "al/Library/Layout/LayoutActor.h"
+#include "al/Library/Layout/LayoutActorUtil.h"
 #include "al/Library/LiveActor/ActorFlagFunction.h"
 #include "al/Library/LiveActor/ActorMovementFunction.h"
 #include "al/Library/LiveActor/ActorPoseKeeper.h"
 #include "al/Library/LiveActor/ActorSensorFunction.h"
 #include "al/Library/LiveActor/LiveActor.h"
+#include "al/Library/Memory/HeapUtil.h"
 #include "al/Library/Nerve/Nerve.h"
 #include "al/Library/Nerve/NerveKeeper.h"
 #include "al/Library/Nerve/NerveStateBase.h"
@@ -17,8 +20,11 @@
 #include "al/Library/Player/PlayerHolder.h"
 #include "al/Library/Resource/ResourceHolder.h"
 #include "al/Library/Scene/Scene.h"
+#include "al/Library/System/SystemKit.h"
 #include "al/Library/Yaml/ByamlIter.h"
 #include "al/Library/Yaml/ByamlUtil.h"
+#include "al/Project/ArchiveEntry.h"
+#include "al/Project/ArchiveHolder.h"
 #include "armv8/instructions/op100x/move_wide_immediate/movz.hpp"
 #include "armv8/instructions/opx101/logical_shifted_register/mov_register.hpp"
 #include "armv8/register.hpp"
@@ -333,14 +339,54 @@ namespace cs {
     p.Seek(0x4daa70);
     ph::pretendBoolean(p, false);
 
-    struct ResourceCategoryOverrider : Trampoline<ResourceCategoryOverrider>{
-      static void Callback(struct ResourceSystem* system, const sead::SafeString& resource) {
-        if (instance()->overrideResourceCategory)
-          return "シーン";
+    struct ResourceCategoryOverrider : Trampoline<ResourceCategoryOverrider> {
+      static const char* Callback(al::ResourceSystem* system, const sead::SafeString& resource) {
+        if (instance() && instance()->overrideResourceCategory && !resource.startsWith("SoundData/")) {
+          Logger::log("overriding resource category %s\n", resource.cstr());
+          return "Captures";
+        }
         return Orig(system, resource);
       }
     };
-    ResourceCategoryOverrider::InstallAtSymbol("_ZNK2al14ResourceSystem25findCategoryNameFromTableERKN4sead14SafeStringBaseIcEE");
+    ResourceCategoryOverrider::InstallAtSymbol(
+        "_ZNK2al14ResourceSystem25findCategoryNameFromTableERKN4sead14SafeStringBaseIcEE");
+    struct DestroySceneHeapResource : Trampoline<DestroySceneHeapResource> {
+      static void Callback(bool unloadResources) {
+        Logger::log("removing capture category\n");
+        al::ResourceSystem* system = alProjectInterface::getSystemKit()->getResourceSystem();
+        for (int i = 0; i < system->count; i++) {
+          al::ResourceCategory* cat = system->categories[i];
+          if (al::isEqualString(cat->name, "Captures")) {
+            Logger::log("Clearing all archives for Captures resource cat\n");
+            cat->aa.forEach([](const sead::SafeString& key, al::Resource* resource) {
+              al::ArchiveHolder* holder = alProjectInterface::getSystemKit()->getFileLoader()->mArchiveHolder;
+              al::StringTmp<152> keyFilename("%s.szs", key.cstr());
+
+              al::ArchiveEntry* entry = holder->tryFindEntry(keyFilename);
+              if (!entry)
+                EXL_ABORT(0, "entry failed to find %s", keyFilename.cstr());
+
+              Logger::log("cleared archive for %s\n", keyFilename);
+              entry->clear();
+            });
+          }
+        }
+        al::removeResourceCategory("Captures");
+        Orig(unloadResources);
+      }
+    };
+    DestroySceneHeapResource::InstallAtSymbol("_ZN2al16destroySceneHeapEb");
+    struct KillRollParts : Trampoline<KillRollParts> {
+      static void Callback(StageSceneStateCollectionList* list) {
+        auto* layout = unsafeRef<al::LayoutActor*>(list, 0x70);
+        al::hidePane(layout, "TxtPage");
+        al::hidePane(layout, "GuideLR");
+        auto* hackLayout = unsafeRef<al::LayoutActor*>(list, 0x28);
+        al::hidePaneRoot(unsafeRef<al::LayoutActor*>(hackLayout, 0x180));
+        Orig(list);
+      }
+    };
+    KillRollParts::InstallAtSymbol("_ZN29StageSceneStateCollectionList15exeViewHackListEv");
 
     // forces isExistHome to always return true (specifically for MapLayout, so it shows the odyssey warp point)
     //    p.Seek(0x1F365C);
@@ -481,8 +527,7 @@ namespace cs {
     nn::fs::DeleteFile(stateFilePath);
     nn::fs::CreateFile(stateFilePath, 64);
     nn::fs::OpenFile(&handle, stateFilePath, nn::fs::OpenMode_Write);
-    nn::fs::WriteFile(handle, 0, &chosenCapture, sizeof(chosenCapture),
-                      nn::fs::WriteOption{0});
+    nn::fs::WriteFile(handle, 0, &chosenCapture, sizeof(chosenCapture), nn::fs::WriteOption{0});
     nn::fs::WriteFile(handle, sizeof(chosenCapture), capturesChosen.data(), sizeof(capturesChosen),
                       nn::fs::WriteOption{nn::fs::WriteOptionFlag_Flush});
     nn::fs::CloseFile(handle);
@@ -492,7 +537,10 @@ namespace cs {
     ((GameDataHolder*)initInfo.mActorSceneInfo.mSceneObjHolder->getObj(18))->mDataFile->mIsEnableCap = true;
     player->mHackCap->hide(false);
     player->mPlayerAnimator->forceCapOn();
+
     instance()->overrideResourceCategory = true;
+    al::addResourceCategory("Captures", 64, al::getSceneHeap());
+
     auto& captureInfo = getActiveCaptureInfo();
     Logger::log("Creating capture %s\n", captureInfo.gameName);
     if (isAnagramAlphabetCharacter()) {

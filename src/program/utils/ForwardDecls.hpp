@@ -1,6 +1,8 @@
 #pragma once
 
 #include "al/Library/Audio/IUseAudioKeeper.h"
+#include "heap/seadHeap.h"
+#include "prim/seadSafeString.h"
 #include <agl/TextureData.h>
 #include <agl/gpu.h>
 #include <agl/util.h>
@@ -12,6 +14,7 @@
 #include <al/Library/Nerve/NerveSetupUtil.h>
 #include <al/Library/Scene/Scene.h>
 #include <container/seadPtrArray.h>
+#include <container/seadStrTreeMap.h>
 #include <container/seadTList.h>
 #include <gfx/gfx_DescriptorSlot.h>
 #include <gfx/gfx_Device.h>
@@ -363,6 +366,19 @@ public:
   };
 
   char16_t* getSystemMessageString(al::IUseMessageSystem const*, char const*, char const*);
+
+  struct ResourceCategory {
+    sead::FixedSafeString<128> name;
+    sead::Heap* heap;
+    sead::StrTreeMap<156, al::Resource*> aa;
+  };
+  class ResourceSystem {
+public:
+    ResourceCategory** categories;
+    int a[2];
+    int count;
+    void findResourceCategory(sead::SafeStringBase<char> const&);
+  };
 } // namespace al
 namespace rs {
   bool isActiveDemo(const al::LiveActor* actor);
